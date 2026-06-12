@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<!-- SPDX-FileCopyrightText: William Moreno Reyes CP | MBA -->
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="csrf-token" content="{{ csrf_token() }}">
+<title>Admiral - Admin Console</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+<link rel="stylesheet" href="https://unpkg.com/@patternfly/patternfly@6.5.2/patternfly.min.css">
+<link rel="stylesheet" href="/static/css/app.css">
+</head>
+<body>
+<div id="app">
+  <div v-if="checkingAuth" class="loading">Loading Admiral Console...</div>
+
+  <login-view v-else-if="!authenticated"></login-view>
+
+  <change-password-standalone v-else-if="authenticated && passwordChangeRequired"></change-password-standalone>
+
+  <div v-else>
+    <header class="mobile-topbar">
+      <button class="mobile-menu-button" type="button" @click="toggleSidebar" aria-label="Toggle navigation">
+        <i class="fas fa-bars"></i>
+      </button>
+      <div class="mobile-topbar-title">
+        <img src="/static/img/admiral-flagship.png" alt="Admiral" class="mobile-topbar-logo">
+        <span>Admiral</span>
+      </div>
+      <button class="mobile-logout-button" type="button" @click="logout" aria-label="Logout">
+        <i class="fas fa-sign-out-alt"></i>
+      </button>
+    </header>
+    <div class="pf-c-page admiral-shell" :class="{ 'sidebar-open': sidebarOpen, 'sidebar-collapsed': sidebarCollapsed }">
+    <div class="pf-c-page__sidebar pf-m-dark admiral-shell__sidebar">
+      <div class="sidebar-brand">
+        <img src="/static/img/admiral-flagship.png" alt="Admiral" class="sidebar-brand-logo">
+        <div>
+          <div class="sidebar-brand-text">Admiral</div>
+          <div class="sidebar-brand-version">Admin Console</div>
+        </div>
+        <button class="sidebar-collapse-button" type="button" @click="toggleSidebar" aria-label="Toggle sidebar">
+          <i class="fas" :class="sidebarCollapsed ? 'fa-chevron-right' : 'fa-chevron-left'"></i>
+        </button>
+      </div>
+      <nav class="pf-c-nav" aria-label="Admiral global navigation">
+        <ul class="pf-c-nav__list">
+            <li class="pf-c-nav__item">
+              <router-link to="/dashboard" class="pf-c-nav__link" exact-active-class="pf-m-current">
+                <i class="fas fa-home pf-u-mr-sm"></i><span>Dashboard</span>
+              </router-link>
+            </li>
+            <li class="pf-c-nav__item">
+              <router-link to="/nodes" class="pf-c-nav__link" exact-active-class="pf-m-current">
+                <i class="fas fa-server pf-u-mr-sm"></i><span>Nodes</span>
+              </router-link>
+            </li>
+            <li class="pf-c-nav__item">
+              <router-link to="/catalog/apps" class="pf-c-nav__link" exact-active-class="pf-m-current">
+                <i class="fas fa-cubes pf-u-mr-sm"></i><span>Apps</span>
+              </router-link>
+            </li>
+            <li class="pf-c-nav__item">
+              <router-link to="/instances" class="pf-c-nav__link" exact-active-class="pf-m-current">
+                <i class="fas fa-cube pf-u-mr-sm"></i><span>Instances</span>
+              </router-link>
+            </li>
+            <li class="pf-c-nav__item">
+              <router-link to="/backups" class="pf-c-nav__link" exact-active-class="pf-m-current">
+                <i class="fas fa-database pf-u-mr-sm"></i><span>Backups</span>
+              </router-link>
+            </li>
+            <li class="pf-c-nav__item">
+              <router-link to="/jobs" class="pf-c-nav__link" exact-active-class="pf-m-current">
+                <i class="fas fa-tasks pf-u-mr-sm"></i><span>Jobs</span>
+              </router-link>
+            </li>
+
+          </ul>
+        </nav>
+        <div class="pf-c-page__sidebar-body pf-m-dark">
+          <div class="sidebar-user-name"><i class="fas fa-user-circle"></i>{{ username }}</div>
+          <router-link to="/change-password" class="sidebar-change-password" title="Change Password"><i class="fas fa-key pf-u-mr-sm"></i><span>Change Password</span></router-link>
+          <a href="#" @click.prevent="logout" class="sidebar-logout" title="Logout"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a>
+        </div>
+      </div>
+    <main class="pf-c-page__main admiral-shell__main">
+      <router-view :key="$route.fullPath"></router-view>
+    </main>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toast-container"></div>
+
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<script src="https://unpkg.com/vue-router@4"></script>
+<script src="/static/js/app.js"></script>
+</body>
+</html>

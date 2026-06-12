@@ -1,0 +1,14 @@
+[build-system]
+requires = ["flit_core>=3.8"]
+build-backend = "flit_core.buildapi"
+
+[project]
+name = "admiral-flagship"
+version = "0.0.1alpha2"
+description = "Admiral administrative web console"
+requires-python = ">=3.11"
+dependencies = [
+    "flask>=3.0",
+    "gunicorn>=23.0",
+    "requests>=2.31",
+]

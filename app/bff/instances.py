@@ -179,7 +179,7 @@ def provision_instance():
         if data.get("logical_instance_id"):
             body["logical_instance_id"] = data["logical_instance_id"]
         if data.get("target_node_id"):
-            body["target_node_id"] = data["target_node_id"]
+            body["node_id"] = data["target_node_id"]
         result = api_post("/api/v1/customer-apps", body)
         return jsonify(result)
     except Exception as e:

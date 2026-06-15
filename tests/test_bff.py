@@ -390,7 +390,7 @@ class TestBFFProvisionWithLogicalID:
         def check_body(path, body=None):
             assert body is not None
             assert body["logical_instance_id"] == "li_001"
-            assert body["target_node_id"] == "worker-02"
+            assert body["node_id"] == "worker-02"
             return {"operation_id": "op1", "status": "queued"}
         with patch("app.bff.instances.api_post", check_body):
             resp = client.post("/flagship/api/instances/provision", json={
@@ -438,5 +438,4 @@ class TestBFFBackupSettingsTest:
         with patch("app.bff.backups.api_post", _mock_api_post_failure()):
             resp = client.post("/flagship/api/backups/settings/test")
             assert resp.status_code == 502
-
 

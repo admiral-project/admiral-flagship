@@ -368,3 +368,75 @@ class TestBFFInstanceTiersAndOps:
             assert resp.status_code == 502
 
 
+class TestBFFInstanceMigrate:
+    def test_migrate_instance(self, client):
+        with patch("app.bff.instances.api_post", _mock_api_post({"operation_id": "op1", "status": "running"})):
+            resp = client.post("/flagship/api/instances/i1/migrate", json={"target_node_id": "worker-02"})
+            assert resp.status_code == 200
+            assert resp.json["operation_id"] == "op1"
+
+    def test_migrate_instance_missing_target(self, client):
+        resp = client.post("/flagship/api/instances/i1/migrate", json={})
+        assert resp.status_code == 400
+
+    def test_migrate_instance_failure(self, client):
+        with patch("app.bff.instances.api_post", _mock_api_post_failure()):
+            resp = client.post("/flagship/api/instances/i1/migrate", json={"target_node_id": "worker-02"})
+            assert resp.status_code == 502
+
+
+class TestBFFProvisionWithLogicalID:
+    def test_provision_with_logical_id(self, client):
+        def check_body(path, body=None):
+            assert body is not None
+            assert body["logical_instance_id"] == "li_001"
+            assert body["target_node_id"] == "worker-02"
+            return {"operation_id": "op1", "status": "queued"}
+        with patch("app.bff.instances.api_post", check_body):
+            resp = client.post("/flagship/api/instances/provision", json={
+                "app_definition_name": "whoami",
+                "tier_name": "starter",
+                "customer_id": "cust1",
+                "logical_instance_id": "li_001",
+                "target_node_id": "worker-02",
+            })
+            assert resp.status_code == 200
+            assert resp.json["operation_id"] == "op1"
+
+
+class TestBFFBackupSettingsUpdate:
+    def test_update_backup_settings(self, client):
+        with patch("app.bff.backups.api_put", _mock_api_put({"success": True})):
+            resp = client.put("/flagship/api/backups/settings", json={
+                "backend": "s3",
+                "bucket": "admiral-backups",
+                "region": "us-east-1",
+                "endpoint": "https://s3.example.com",
+            })
+            assert resp.status_code == 200
+            assert resp.json["success"] is True
+
+    def test_update_backup_settings_missing_backend(self, client):
+        resp = client.put("/flagship/api/backups/settings", json={})
+        assert resp.status_code == 400
+
+    def test_update_backup_settings_failure(self, client):
+        def mock_put(path, body=None):
+            raise Exception("Connection refused")
+        with patch("app.bff.backups.api_put", mock_put):
+            resp = client.put("/flagship/api/backups/settings", json={"backend": "s3"})
+            assert resp.status_code == 502
+
+
+class TestBFFBackupSettingsTest:
+    def test_test_backup_settings(self, client):
+        with patch("app.bff.backups.api_post", _mock_api_post({"success": True})):
+            resp = client.post("/flagship/api/backups/settings/test")
+            assert resp.status_code == 200
+
+    def test_test_backup_settings_failure(self, client):
+        with patch("app.bff.backups.api_post", _mock_api_post_failure()):
+            resp = client.post("/flagship/api/backups/settings/test")
+            assert resp.status_code == 502
+
+

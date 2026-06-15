@@ -144,6 +144,23 @@ def instance_action(instance_id):
         return jsonify({"error": msg}), 502
 
 
+@bp.route("/<instance_id>/migrate", methods=["POST"])
+def migrate_instance(instance_id):
+    from app.security import sanitize_error_message
+
+    data = request.get_json(silent=True) or {}
+    if not data.get("target_node_id"):
+        return jsonify({"error": "target_node_id required"}), 400
+    try:
+        result = api_post(f"/api/admin/instances/{instance_id}/migrate", {
+            "target_node_id": data["target_node_id"],
+        })
+        return jsonify(result)
+    except Exception as e:
+        msg = sanitize_error_message(e, "migrate_instance")
+        return jsonify({"error": msg}), 502
+
+
 @bp.route("/provision", methods=["POST"])
 def provision_instance():
     from app.security import sanitize_error_message
@@ -154,11 +171,16 @@ def provision_instance():
     if missing:
         return jsonify({"error": ", ".join(missing) + " required"}), 400
     try:
-        result = api_post("/api/v1/customer-apps", {
+        body = {
             "app_definition_name": data["app_definition_name"],
             "tier_name": data["tier_name"],
             "customer_id": data["customer_id"],
-        })
+        }
+        if data.get("logical_instance_id"):
+            body["logical_instance_id"] = data["logical_instance_id"]
+        if data.get("target_node_id"):
+            body["target_node_id"] = data["target_node_id"]
+        result = api_post("/api/v1/customer-apps", body)
         return jsonify(result)
     except Exception as e:
         msg = sanitize_error_message(e, "provision_instance")

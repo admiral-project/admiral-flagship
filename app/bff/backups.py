@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from flask import Blueprint, jsonify, request
-from app.admiral_client import api_get, api_post, api_delete
+from app.admiral_client import api_get, api_post, api_put, api_delete
 from app.bff.pagination import normalize_page, parse_paging_args
 
 bp = Blueprint("bff_backups", __name__, url_prefix="/flagship/api/backups")
@@ -36,6 +36,33 @@ def backup_settings():
         return jsonify(data if isinstance(data, dict) else {"settings": data})
     except Exception as e:
         msg = sanitize_error_message(e, "backup_settings")
+        return jsonify({"error": msg}), 502
+
+
+@bp.route("/settings", methods=["PUT"])
+def update_backup_settings():
+    from app.security import sanitize_error_message
+
+    data = request.get_json(silent=True) or {}
+    if not data.get("backend"):
+        return jsonify({"error": "backend required (local or s3)"}), 400
+    try:
+        result = api_put("/api/admin/settings/backup-storage", data)
+        return jsonify(result)
+    except Exception as e:
+        msg = sanitize_error_message(e, "update_backup_settings")
+        return jsonify({"error": msg}), 502
+
+
+@bp.route("/settings/test", methods=["POST"])
+def test_backup_settings():
+    from app.security import sanitize_error_message
+
+    try:
+        result = api_post("/api/admin/settings/backup-storage/test")
+        return jsonify(result)
+    except Exception as e:
+        msg = sanitize_error_message(e, "test_backup_settings")
         return jsonify({"error": msg}), 502
 
 

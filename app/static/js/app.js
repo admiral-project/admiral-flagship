@@ -1089,6 +1089,16 @@ var NodeDetailView = {
           };
         }
       }
+      if (this.node.health_status === 'degraded') {
+        var reasonText = this.node.health_reason_codes ? (' Reason: ' + this.node.health_reason_codes) : '';
+        return {
+          severity: 'warning',
+          title: 'Node health is degraded',
+          text: 'This node is reporting degraded health.' + reasonText,
+          canRefresh: true,
+          canToggleMaintenance: true
+        };
+      }
       return null;
     },
     ramUsageBarClass: function() {

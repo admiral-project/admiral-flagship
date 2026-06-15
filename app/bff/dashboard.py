@@ -163,6 +163,12 @@ def dashboard():
         if _status_lower(instance) in ("error", "failed")
     ]
 
+    degraded_nodes = [
+        node for node in nodes
+        if node.get("health_status") == "degraded"
+        and _status_lower(node) not in ("offline", "unreachable", "down")
+    ]
+
     alerts = []
     if offline_nodes:
         alerts.append(
@@ -171,6 +177,15 @@ def dashboard():
                 "title": "Node availability",
                 "message": f"{len(offline_nodes)} node(s) offline",
                 "target": "/nodes?status=offline",
+            }
+        )
+    if degraded_nodes:
+        alerts.append(
+            {
+                "severity": "warning",
+                "title": "Node health",
+                "message": f"{len(degraded_nodes)} node(s) degraded",
+                "target": "/nodes",
             }
         )
     if error_instances:

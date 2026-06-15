@@ -371,7 +371,7 @@ class TestBFFInstanceTiersAndOps:
 class TestBFFInstanceMigrate:
     def test_migrate_instance(self, client):
         with patch("app.bff.instances.api_post", _mock_api_post({"operation_id": "op1", "status": "running"})):
-            resp = client.post("/flagship/api/instances/i1/migrate", json={"target_node_id": "worker-02"})
+            resp = client.post("/flagship/api/instances/i1/migrate", json={"node_id": "worker-02"})
             assert resp.status_code == 200
             assert resp.json["operation_id"] == "op1"
 
@@ -379,9 +379,15 @@ class TestBFFInstanceMigrate:
         resp = client.post("/flagship/api/instances/i1/migrate", json={})
         assert resp.status_code == 400
 
+    def test_migrate_instance_accepts_legacy_target_node_id(self, client):
+        with patch("app.bff.instances.api_post", _mock_api_post({"operation_id": "op1", "status": "running"})):
+            resp = client.post("/flagship/api/instances/i1/migrate", json={"target_node_id": "worker-02"})
+            assert resp.status_code == 200
+            assert resp.json["operation_id"] == "op1"
+
     def test_migrate_instance_failure(self, client):
         with patch("app.bff.instances.api_post", _mock_api_post_failure()):
-            resp = client.post("/flagship/api/instances/i1/migrate", json={"target_node_id": "worker-02"})
+            resp = client.post("/flagship/api/instances/i1/migrate", json={"node_id": "worker-02"})
             assert resp.status_code == 502
 
 
@@ -398,6 +404,21 @@ class TestBFFProvisionWithLogicalID:
                 "tier_name": "starter",
                 "customer_id": "cust1",
                 "logical_instance_id": "li_001",
+                "node_id": "worker-02",
+            })
+            assert resp.status_code == 200
+            assert resp.json["operation_id"] == "op1"
+
+    def test_provision_accepts_legacy_target_node_id(self, client):
+        def check_body(path, body=None):
+            assert body is not None
+            assert body["node_id"] == "worker-02"
+            return {"operation_id": "op1", "status": "queued"}
+        with patch("app.bff.instances.api_post", check_body):
+            resp = client.post("/flagship/api/instances/provision", json={
+                "app_definition_name": "whoami",
+                "tier_name": "starter",
+                "customer_id": "cust1",
                 "target_node_id": "worker-02",
             })
             assert resp.status_code == 200
@@ -438,4 +459,3 @@ class TestBFFBackupSettingsTest:
         with patch("app.bff.backups.api_post", _mock_api_post_failure()):
             resp = client.post("/flagship/api/backups/settings/test")
             assert resp.status_code == 502
-

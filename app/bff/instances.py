@@ -147,13 +147,14 @@ def instance_action(instance_id):
 @bp.route("/<instance_id>/migrate", methods=["POST"])
 def migrate_instance(instance_id):
     from app.security import sanitize_error_message
-
+    
     data = request.get_json(silent=True) or {}
-    if not data.get("target_node_id"):
-        return jsonify({"error": "target_node_id required"}), 400
+    node_id = (data.get("node_id") or data.get("target_node_id") or "").strip()
+    if not node_id:
+        return jsonify({"error": "node_id required"}), 400
     try:
         result = api_post(f"/api/admin/instances/{instance_id}/migrate", {
-            "target_node_id": data["target_node_id"],
+            "target_node_id": node_id,
         })
         return jsonify(result)
     except Exception as e:
@@ -178,8 +179,9 @@ def provision_instance():
         }
         if data.get("logical_instance_id"):
             body["logical_instance_id"] = data["logical_instance_id"]
-        if data.get("target_node_id"):
-            body["node_id"] = data["target_node_id"]
+        node_id = (data.get("node_id") or data.get("target_node_id") or "").strip()
+        if node_id:
+            body["node_id"] = node_id
         result = api_post("/api/v1/customer-apps", body)
         return jsonify(result)
     except Exception as e:

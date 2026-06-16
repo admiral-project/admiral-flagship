@@ -10,7 +10,14 @@ def test_dashboard_aggregation(client):
         side_effect=[
             [{"id": "n1", "status": "online"}, {"id": "n2", "status": "offline"}],
             [{"id": "i1", "status": "running"}, {"id": "i2", "status": "error"}],
-            [{"id": "o1", "status": "failed", "created_at": "2026-06-06T10:00:00Z", "updated_at": "2026-06-06T10:05:00Z"}],
+            [
+                {
+                    "id": "o1",
+                    "status": "failed",
+                    "created_at": "2026-06-06T10:00:00Z",
+                    "updated_at": "2026-06-06T10:05:00Z",
+                }
+            ],
             [{"id": "b1", "status": "failed"}],
         ],
     ):
@@ -73,4 +80,7 @@ def test_dashboard_exposes_failed_backup_diagnostics(client):
         response = client.get("/flagship/api/dashboard")
         assert response.status_code == 200
         assert response.json["recent_failed_backups"][0]["detail_path"] == "/backups/b1"
-        assert response.json["recent_failed_backups"][0]["error_message"] == "checksum mismatch"
+        assert (
+            response.json["recent_failed_backups"][0]["error_message"]
+            == "checksum mismatch"
+        )

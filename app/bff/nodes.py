@@ -7,11 +7,11 @@ from app.bff.pagination import normalize_page, parse_paging_args, paginate_items
 
 bp = Blueprint("bff_nodes", __name__, url_prefix="/flagship/api/nodes")
 
+
 @bp.route("")
 def list_nodes():
     from app.security import sanitize_error_message
-    from urllib.parse import urlencode
-    
+
     page, page_size = parse_paging_args()
     status = request.args.get("status", "").strip().lower()
     try:
@@ -20,21 +20,32 @@ def list_nodes():
         items = payload["items"]
         if status:
             items = [
-                node for node in items
-                if str(node.get("status", "")).lower() == status
+                node for node in items if str(node.get("status", "")).lower() == status
             ]
         result = paginate_items(items, page, page_size)
         result["nodes"] = result["items"]
         return jsonify(result)
     except Exception as e:
         msg = sanitize_error_message(e, "list_nodes")
-        return jsonify({"error": msg, "nodes": [], "items": [], "page": page, "page_size": page_size, "total": 0}), 502
+        return (
+            jsonify(
+                {
+                    "error": msg,
+                    "nodes": [],
+                    "items": [],
+                    "page": page,
+                    "page_size": page_size,
+                    "total": 0,
+                }
+            ),
+            502,
+        )
 
 
 @bp.route("/register", methods=["POST"])
 def register_node():
     from app.security import sanitize_error_message
-    
+
     body = request.get_json(force=True, silent=True) or {}
     node_id = body.get("node_id", "").strip()
     hostname = body.get("hostname", "").strip()
@@ -52,7 +63,7 @@ def register_node():
 @bp.route("/<node_id>")
 def node_detail(node_id):
     from app.security import sanitize_error_message
-    
+
     try:
         node = api_get(f"/api/admin/nodes/{node_id}")
         try:

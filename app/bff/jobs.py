@@ -7,11 +7,11 @@ from app.bff.pagination import normalize_page, parse_paging_args, paginate_items
 
 bp = Blueprint("bff_jobs", __name__, url_prefix="/flagship/api/jobs")
 
+
 @bp.route("")
 def list_jobs():
     from app.security import sanitize_error_message
-    from urllib.parse import urlencode
-    
+
     page, page_size = parse_paging_args()
     status = request.args.get("status", "").strip().lower()
     try:
@@ -20,25 +20,35 @@ def list_jobs():
         items = payload["items"]
         if status:
             items = [
-                job for job in items
-                if str(job.get("status", "")).lower() == status
+                job for job in items if str(job.get("status", "")).lower() == status
             ]
         result = paginate_items(items, page, page_size)
         result["jobs"] = result["items"]
         return jsonify(result)
     except Exception as e:
         msg = sanitize_error_message(e, "list_jobs")
-        return jsonify({"error": msg, "jobs": [], "items": [], "page": page, "page_size": page_size, "total": 0}), 502
+        return (
+            jsonify(
+                {
+                    "error": msg,
+                    "jobs": [],
+                    "items": [],
+                    "page": page,
+                    "page_size": page_size,
+                    "total": 0,
+                }
+            ),
+            502,
+        )
+
 
 @bp.route("/<job_id>")
 def job_detail(job_id):
     from app.security import sanitize_error_message
-    
+
     try:
         data = api_get(f"/api/admin/tasks/{job_id}")
         return jsonify(data)
     except Exception as e:
         msg = sanitize_error_message(e, "job_detail")
         return jsonify({"error": msg}), 502
-
-

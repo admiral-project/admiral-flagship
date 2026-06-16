@@ -37,7 +37,13 @@ def _extract_tiers(yaml_text):
         if indent == 2 and stripped.endswith(":"):
             if current:
                 tiers.append(current)
-            current = {"name": stripped[:-1], "cpu": None, "memory": None, "storage": None, "price_monthly": None}
+            current = {
+                "name": stripped[:-1],
+                "cpu": None,
+                "memory": None,
+                "storage": None,
+                "price_monthly": None,
+            }
             current_indent = indent
             continue
 
@@ -58,29 +64,44 @@ def _bump_version(yaml_text):
     current = match.group(1).strip()
     parts = current.split(".")
     if not all(part.isdigit() for part in parts):
-        raise ValueError("version must use only numeric segments to support automatic increment")
+        raise ValueError(
+            "version must use only numeric segments to support automatic increment"
+        )
 
     parts[-1] = str(int(parts[-1]) + 1)
     bumped = ".".join(parts)
     return _VERSION_RE.sub(f"version: {bumped}", yaml_text, count=1), bumped
 
+
 @bp.route("/apps")
 def list_apps():
     from app.security import sanitize_error_message
-    
+
     page, page_size = parse_paging_args()
     try:
         data = api_get("/api/v1/apps")
         return jsonify(normalize_page(data, "apps", page, page_size))
     except Exception as e:
         msg = sanitize_error_message(e, "list_apps")
-        return jsonify({"error": msg, "apps": [], "items": [], "page": page, "page_size": page_size, "total": 0}), 502
+        return (
+            jsonify(
+                {
+                    "error": msg,
+                    "apps": [],
+                    "items": [],
+                    "page": page,
+                    "page_size": page_size,
+                    "total": 0,
+                }
+            ),
+            502,
+        )
 
 
 @bp.route("/apps/<app_id>")
 def app_detail(app_id):
     from app.security import sanitize_error_message
-    
+
     try:
         app = api_get(f"/api/admin/apps/{app_id}")
         return jsonify({"app": app})
@@ -92,7 +113,7 @@ def app_detail(app_id):
 @bp.route("/apps/<app_id>/yaml")
 def app_yaml(app_id):
     from app.security import sanitize_error_message
-    
+
     try:
         yaml_text = api_get_text(f"/api/admin/apps/{app_id}/yaml")
         return jsonify({"yaml": yaml_text})
@@ -104,7 +125,7 @@ def app_yaml(app_id):
 @bp.route("/apps/<app_id>/provisioning")
 def app_provisioning(app_id):
     from app.security import sanitize_error_message
-    
+
     try:
         app = api_get(f"/api/admin/apps/{app_id}")
         yaml_text = api_get_text(f"/api/admin/apps/{app_id}/yaml")
@@ -123,7 +144,7 @@ def app_provisioning(app_id):
 @bp.route("/apps/save", methods=["POST"])
 def save_app():
     from app.security import sanitize_error_message
-    
+
     payload = request.get_json(silent=True) or {}
     yaml_text = payload.get("yaml", "")
     app_id = payload.get("app_id", "")
@@ -148,7 +169,7 @@ def save_app():
 @bp.route("/apps/<app_id>/tiers")
 def app_tiers(app_id):
     from app.security import sanitize_error_message
-    
+
     try:
         tiers = api_get(f"/api/admin/apps/{app_id}/tiers")
         return jsonify({"tiers": tiers if isinstance(tiers, list) else []})
@@ -160,7 +181,7 @@ def app_tiers(app_id):
 @bp.route("/apps/<app_id>/tiers", methods=["POST"])
 def save_app_tier(app_id):
     from app.security import sanitize_error_message
-    
+
     body = request.get_json(silent=True) or {}
     if not body.get("tier"):
         return jsonify({"error": "tier object required"}), 400
@@ -175,7 +196,7 @@ def save_app_tier(app_id):
 @bp.route("/apps/<app_id>/versions")
 def app_versions(app_id):
     from app.security import sanitize_error_message
-    
+
     try:
         versions = api_get(f"/api/admin/apps/{app_id}/versions")
         return jsonify({"versions": versions if isinstance(versions, list) else []})
@@ -187,7 +208,7 @@ def app_versions(app_id):
 @bp.route("/apps/<app_id>/disable", methods=["POST"])
 def disable_app(app_id):
     from app.security import sanitize_error_message
-    
+
     try:
         result = api_put(f"/api/admin/apps/{app_id}/status", {"status": "inactive"})
         return jsonify(result)

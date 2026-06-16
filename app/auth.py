@@ -33,22 +33,26 @@ def login():
     # Check rate limit
     ip = request.remote_addr
     allowed, remaining = login_limiter.is_allowed(ip)
-    
+
     if not allowed:
         logger.warning(
-            "login rate limited",
-            extra={"ip": ip, "remaining_seconds": remaining}
+            "login rate limited", extra={"ip": ip, "remaining_seconds": remaining}
         )
         return (
-            jsonify({"error": f"Too many login attempts. Try again in {remaining} second(s)."}),
-            429
+            jsonify(
+                {
+                    "error": f"Too many login attempts. Try again in {remaining} second(s)."
+                }
+            ),
+            429,
         )
-    
+
     data = request.get_json()
     if not data or not data.get("username") or not data.get("password"):
         return jsonify({"error": "username and password required"}), 400
-    
+
     from app.admiral_client import login_admin
+
     try:
         result = login_admin(data["username"], data["password"])
         # Reset rate limit on successful login
@@ -61,20 +65,30 @@ def login():
             session["csrf_token"] = csrf_token
         session["admin_token"] = result["token"]
         session["admin_username"] = data["username"]
-        session["password_change_required"] = result.get("password_change_required", False)
+        session["password_change_required"] = result.get(
+            "password_change_required", False
+        )
         session[SESSION_STARTED_AT_KEY] = int(time.time())
         if session["password_change_required"]:
-            return jsonify({"password_change_required": True, "username": data["username"]})
+            return jsonify(
+                {"password_change_required": True, "username": data["username"]}
+            )
         logger.info("admin login ok", extra={"username": data["username"]})
         return jsonify({"status": "ok", "username": data["username"]})
     except requests.HTTPError as e:
         status = e.response.status_code if e.response is not None else 401
         detail = _extract_error(e)
-        logger.warning("admin login failed", extra={"username": data["username"], "status": status, "error": detail})
+        logger.warning(
+            "admin login failed",
+            extra={"username": data["username"], "status": status, "error": detail},
+        )
         return jsonify({"error": detail}), status
     except Exception as e:
-        logger.warning("admin login failed", extra={"username": data["username"], "error": str(e)})
+        logger.warning(
+            "admin login failed", extra={"username": data["username"], "error": str(e)}
+        )
         return jsonify({"error": "Login failed"}), 401
+
 
 @bp.route("/logout", methods=["POST"])
 def logout():
@@ -84,12 +98,14 @@ def logout():
     session.clear()
     if token:
         from app.admiral_client import logout_admin
+
         try:
             logout_admin(token)
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.debug("logout_admin call failed", extra={"error": str(exc)})
     logger.info("admin logout", extra={"username": username})
     return jsonify({"status": "logged_out"})
+
 
 def _session_is_expired():
     started_at = session.get(SESSION_STARTED_AT_KEY)
@@ -105,6 +121,7 @@ def _validate_session_or_expire(username):
         logger.warning("admin session expired by timeout", extra={"username": username})
         return jsonify({"error": "session expired"}), 401
     from app.admiral_client import api_get
+
     last_error = None
     for attempt in range(AUTH_ME_MAX_ATTEMPTS):
         try:
@@ -135,11 +152,13 @@ def me():
             session.clear()
             return jsonify({"error": "session expired"}), 401
         session[SESSION_STARTED_AT_KEY] = int(time.time())
-        return jsonify({
-            "username": username,
-            "authenticated": True,
-            "password_change_required": True,
-        })
+        return jsonify(
+            {
+                "username": username,
+                "authenticated": True,
+                "password_change_required": True,
+            }
+        )
 
     if not token:
         return jsonify({"error": "not authenticated"}), 401
@@ -147,11 +166,14 @@ def me():
     if expired_response is not None:
         return expired_response
     session[SESSION_STARTED_AT_KEY] = int(time.time())
-    return jsonify({
-        "username": username,
-        "authenticated": True,
-        "password_change_required": session.get("password_change_required", False),
-    })
+    return jsonify(
+        {
+            "username": username,
+            "authenticated": True,
+            "password_change_required": session.get("password_change_required", False),
+        }
+    )
+
 
 @bp.route("/change-password", methods=["POST"])
 def change_password():
@@ -165,6 +187,7 @@ def change_password():
         if expired_response is not None:
             return expired_response
     from app.admiral_client import api_post
+
     payload = {
         "current_password": data["current_password"],
         "new_password": data["new_password"],
@@ -177,7 +200,9 @@ def change_password():
         except requests.HTTPError as e:
             status = e.response.status_code if e.response is not None else 400
             detail = _extract_error(e)
-            logger.warning("password change failed", extra={"status": status, "error": detail})
+            logger.warning(
+                "password change failed", extra={"status": status, "error": detail}
+            )
             return jsonify({"error": detail}), status
         except Exception as e:
             logger.warning("password change failed", extra={"error": str(e)})
@@ -185,7 +210,10 @@ def change_password():
     else:
         username = data.get("username")
         if not username:
-            return jsonify({"error": "username required for first-login password change"}), 400
+            return (
+                jsonify({"error": "username required for first-login password change"}),
+                400,
+            )
         payload["username"] = username
         try:
             result = api_post("/api/admin/auth/change-password", payload)
@@ -194,7 +222,9 @@ def change_password():
         except requests.HTTPError as e:
             status = e.response.status_code if e.response is not None else 400
             detail = _extract_error(e)
-            logger.warning("password change failed", extra={"status": status, "error": detail})
+            logger.warning(
+                "password change failed", extra={"status": status, "error": detail}
+            )
             return jsonify({"error": detail}), status
         except Exception as e:
             logger.warning("password change failed", extra={"error": str(e)})

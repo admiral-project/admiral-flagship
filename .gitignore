@@ -6,3 +6,5 @@ dist/
 build/
 .env
 *.swp
+node_modules/
+.coverage

@@ -12,3 +12,6 @@ dependencies = [
     "gunicorn>=23.0",
     "requests>=2.31",
 ]
+
+[tool.flit.module]
+name = "app"

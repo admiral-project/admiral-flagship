@@ -1953,6 +1953,7 @@ var InstanceDetailView = {
                 <div class="action-buttons pf-u-mt-md">\
                   <button v-if="instance.status !== 'running'" class="pf-c-button pf-m-primary" @click="doAction('resume')" :disabled="actionBusy"><i class="fas fa-play"></i>Resume</button>\
                   <button v-if="instance.status === 'running'" class="pf-c-button pf-m-secondary" @click="doActionWithConfirm('pause')" :disabled="actionBusy"><i class="fas fa-pause"></i>Pause</button>\
+                  <button class="pf-c-button pf-m-secondary" @click="openMigrateModal" :disabled="actionBusy"><i class="fas fa-truck"></i>Migrate</button>\
                   <button class="pf-c-button pf-m-secondary" @click="showDangerZone = !showDangerZone" :aria-expanded="showDangerZone ? 'true' : 'false'"><i class="fas fa-shield-alt"></i>{{ showDangerZone ? 'Hide' : 'Review' }} destructive actions</button>\
                 </div>\
               </div>\
@@ -2067,6 +2068,44 @@ var InstanceDetailView = {
           </div>\
         </div>\
       </div>\
+      <div v-if="showMigrateModal" class="admiral-modal-backdrop" @click.self="closeMigrateModal">\
+        <div class="admiral-modal" role="dialog" aria-modal="true" aria-labelledby="migrate-modal-title">\
+          <div class="admiral-modal__header">\
+            <h2 id="migrate-modal-title" class="pf-c-title pf-m-xl"><i class="fas fa-truck"></i> Migrate Instance</h2>\
+            <button class="pf-c-button pf-m-plain" type="button" aria-label="Close migrate dialog" @click="closeMigrateModal">\
+              <i class="fas fa-times" aria-hidden="true"></i>\
+            </button>\
+          </div>\
+          <div class="admiral-modal__body">\
+            <div class="pf-c-alert pf-m-info pf-m-inline pf-u-mb-md" role="alert">\
+              <div class="pf-c-alert__icon"><i class="fas fa-fw fa-info-circle" aria-hidden="true"></i></div>\
+              <p class="pf-c-alert__title">Migrate this instance to a different worker node. The instance will be moved to the selected node.</p>\
+            </div>\
+            <div class="pf-c-form__group pf-u-mb-md">\
+              <label class="pf-c-form__label" for="migrate-node-select"><span class="pf-c-form__label-text">Target node</span></label>\
+              <select v-if="availableNodes.length > 0" id="migrate-node-select" class="pf-c-form-control" v-model="migrateNodeId">\
+                <option value="">Select a target node</option>\
+                <option v-for="node in availableNodes" :key="node.id" :value="node.id" :disabled="node.id === (instance.node_id || '').trim()">{{ (node.hostname || node.id) }} | {{ node.status || 'unknown' }} {{ node.id === (instance.node_id || '').trim() ? '(current)' : '' }}</option>\
+              </select>\
+              <div v-else class="loading-sm"><i class="fas fa-spinner fa-spin"></i> Loading available nodes...</div>\
+            </div>\
+            <div v-if="migrateError" class="pf-c-alert pf-m-danger pf-m-inline pf-u-mt-md" role="alert">\
+              <div class="pf-c-alert__icon"><i class="fas fa-fw fa-exclamation-circle" aria-hidden="true"></i></div>\
+              <p class="pf-c-alert__title">{{ migrateError }}</p>\
+            </div>\
+            <div v-if="migrateSuccess" class="pf-c-alert pf-m-success pf-m-inline pf-u-mt-md" role="alert">\
+              <div class="pf-c-alert__icon"><i class="fas fa-fw fa-check-circle" aria-hidden="true"></i></div>\
+              <p class="pf-c-alert__title">{{ migrateSuccess }}</p>\
+            </div>\
+          </div>\
+          <div class="admiral-modal__footer">\
+            <button class="pf-c-button pf-m-link" type="button" @click="closeMigrateModal">Cancel</button>\
+            <button class="pf-c-button pf-m-primary" type="button" @click="doMigrate" :disabled="migrateBusy || !migrateNodeId">\
+              <i class="fas fa-truck"></i>{{ migrateBusy ? 'Migrating...' : 'Start migration' }}\
+            </button>\
+          </div>\
+        </div>\
+      </div>\
     </section>`,
   data: function() {
     return {
@@ -2076,6 +2115,7 @@ var InstanceDetailView = {
       tiers: [], tiersLoading: false, selectedTier: '', resizeBusy: false, resizeResult: '',
       operations: [], opsLoading: false,
       showDangerZone: false, showDeprovisionModal: false, deprovisionConfirmInput: '', deprovisionError: '',
+      showMigrateModal: false, migrateNodeId: '', migrateBusy: false, migrateError: '', migrateSuccess: '', availableNodes: [],
       instanceBackups: [], backupsLoading: false
     };
   },
@@ -2084,6 +2124,14 @@ var InstanceDetailView = {
       if (!open) {
         this.deprovisionConfirmInput = '';
         this.deprovisionError = '';
+      }
+    },
+    showMigrateModal: function(open) {
+      if (open) {
+        this.migrateNodeId = '';
+        this.migrateError = '';
+        this.migrateSuccess = '';
+        this.loadAvailableNodes();
       }
     }
   },
@@ -2114,6 +2162,41 @@ var InstanceDetailView = {
     },
     closeDeprovisionModal: function() {
       this.showDeprovisionModal = false;
+    },
+    openMigrateModal: function() {
+      this.showMigrateModal = true;
+    },
+    closeMigrateModal: function() {
+      this.showMigrateModal = false;
+    },
+    doMigrate: async function() {
+      var id = this.instanceId;
+      if (!id || !this.migrateNodeId) return;
+      this.migrateBusy = true;
+      this.migrateError = '';
+      this.migrateSuccess = '';
+      try {
+        var result = await bffFetch('/flagship/api/instances/' + id + '/migrate', {
+          method: 'POST',
+          body: JSON.stringify({ node_id: this.migrateNodeId })
+        });
+        this.migrateSuccess = 'Migration queued successfully' + (result.operation_id ? ' (operation: ' + result.operation_id + ')' : '');
+        window.showToast('success', 'Migration queued for instance ' + id);
+        setTimeout(this.closeMigrateModal, 2000);
+      } catch (e) {
+        this.migrateError = e.message;
+        window.showToast('danger', 'Migration failed: ' + e.message);
+      } finally {
+        this.migrateBusy = false;
+      }
+    },
+    loadAvailableNodes: async function() {
+      try {
+        var data = await bffFetch('/flagship/api/nodes?page=1&page_size=1000');
+        this.availableNodes = normalizePagedData(data, 'nodes').items || data.nodes || [];
+      } catch (e) {
+        this.availableNodes = [];
+      }
     },
     confirmDeprovision: function() {
       if (!this.deprovisionReady) {

@@ -45,7 +45,9 @@ def _get_instance_port(instance):
                             "container_port": int(container_port),
                         }
         except FileNotFoundError:
-            logger.debug("pod file not found for instance", extra={"instance_id": instance_id})
+            logger.debug(
+                "pod file not found for instance", extra={"instance_id": instance_id}
+            )
     except Exception:
         logger.debug("failed to get instance port", extra={"instance_id": instance_id})
     return None

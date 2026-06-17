@@ -188,9 +188,9 @@ def validate_production_config(config):
             logger.warning(
                 "FLAGSHIP_SECRET_KEY is using the development default; set it explicitly for production"
             )
-        if config.get("ADMIRAL_SHARED_TOKEN", "").startswith("dev-"):
+        if config.get("ADMIRAL_ADMIN_TOKEN", "").startswith("dev-"):
             logger.warning(
-                "ADMIRAL_SHARED_TOKEN is using the development default; set it explicitly for production"
+                "ADMIRAL_ADMIN_TOKEN is using the development default; set it explicitly for production"
             )
         logger.warning("Running in non-production mode - some security checks relaxed")
         return
@@ -204,10 +204,10 @@ def validate_production_config(config):
     if len(config.get("SECRET_KEY", "")) < 32:
         errors.append("SECRET_KEY must be at least 32 characters in production")
 
-    # Check ADMIRAL_SHARED_TOKEN not dev default
-    if config.get("ADMIRAL_SHARED_TOKEN", "").startswith("dev-"):
+    # Check ADMIRAL_ADMIN_TOKEN not dev default
+    if config.get("ADMIRAL_ADMIN_TOKEN", "").startswith("dev-"):
         errors.append(
-            "ADMIRAL_SHARED_TOKEN must not use development default in production"
+            "ADMIRAL_ADMIN_TOKEN must not use development default in production"
         )
 
     # Check HTTPS enabled

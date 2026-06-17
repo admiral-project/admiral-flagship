@@ -13,7 +13,7 @@ def _headers(path):
     if path.startswith("/api/admin/"):
         token = session.get("admin_token", "")
         return {"X-Admiral-Admin-Token": token}
-    return {"X-Admiral-Token": current_app.config["ADMIRAL_SHARED_TOKEN"]}
+    return {"X-Admiral-Token": current_app.config["ADMIRAL_ADMIN_TOKEN"]}
 
 
 def _verify():

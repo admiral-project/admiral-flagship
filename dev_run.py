@@ -32,7 +32,7 @@ MOCK_PORT = int(os.environ.get("ADMIRAL_MOCK_PORT", "18099"))
 FLAGSHIP_HOST = os.environ.get("FLAGSHIP_HTTP_ADDR", "127.0.0.1")
 FLAGSHIP_PORT = int(os.environ.get("FLAGSHIP_HTTP_PORT", "5000"))
 DEBUG = os.environ.get("DEV_RUN_DEBUG", "0") == "1"
-SHARED_TOKEN = os.environ.get("ADMIRAL_SHARED_TOKEN", "dev-token")
+SHARED_TOKEN = os.environ.get("ADMIRAL_ADMIN_TOKEN", "dev-token")
 
 logging.basicConfig(
     level=logging.DEBUG if DEBUG else logging.INFO,
@@ -856,7 +856,7 @@ def _wait_for_mock(host, port, timeout=10):
 
 def main():
     os.environ["ADMIRAL_API_URL"] = f"http://{HOST}:{MOCK_PORT}"
-    os.environ.setdefault("ADMIRAL_SHARED_TOKEN", SHARED_TOKEN)
+    os.environ.setdefault("ADMIRAL_ADMIN_TOKEN", SHARED_TOKEN)
     os.environ.setdefault("FLAGSHIP_SECRET_KEY", "dev-secret-key-change-in-production")
 
     mock_daemon = threading.Thread(

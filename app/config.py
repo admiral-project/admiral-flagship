@@ -22,8 +22,8 @@ class Config:
         prod_mode=True,
     )
 
-    ADMIRAL_SHARED_TOKEN = get_required_env_var(
-        "ADMIRAL_SHARED_TOKEN", default="dev-token-change-in-production", prod_mode=True
+    ADMIRAL_ADMIN_TOKEN = get_required_env_var(
+        "ADMIRAL_ADMIN_TOKEN", default="dev-token-change-in-production", prod_mode=True
     )
 
     ADMIRAL_API_URL = os.environ.get("ADMIRAL_API_URL", "https://127.0.0.1:8080")

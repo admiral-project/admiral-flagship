@@ -104,12 +104,13 @@ def test_state_changing_request_accepts_valid_csrf_token(client):
 
 
 def test_login_missing_fields(client):
-    resp = client.post("/flagship/api/auth/login", json={})
-    assert resp.status_code == 400
-    assert "username" in resp.json["error"]
+    with patch("app.admiral_client.check_rate_limit", return_value=(True, 0)):
+        resp = client.post("/flagship/api/auth/login", json={})
+        assert resp.status_code == 400
+        assert "username" in resp.json["error"]
 
-    resp = client.post("/flagship/api/auth/login", json={"username": "admin"})
-    assert resp.status_code == 400
+        resp = client.post("/flagship/api/auth/login", json={"username": "admin"})
+        assert resp.status_code == 400
 
 
 def test_logout_clears_session(client):

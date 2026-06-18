@@ -164,3 +164,65 @@ def logout_admin(token):
     except requests.RequestException as e:
         logger.warning("admin logout request failed", extra={"error": str(e)})
         return False
+
+
+def check_rate_limit(identifier, max_attempts=5, window_seconds=60):
+    """Check rate limit via admirald API.
+
+    Returns (allowed: bool, remaining: int).
+    Falls back to allowed on failure.
+    """
+    path = "/api/v1/rate-limit/check"
+    payload = {
+        "identifier": identifier,
+        "max_attempts": max_attempts,
+        "window_seconds": window_seconds,
+    }
+    try:
+        resp = requests.post(
+            current_app.config["ADMIRAL_API_URL"] + path,
+            headers=_headers(path),
+            json=payload,
+            verify=_verify(),
+            timeout=10,
+        )
+        if resp.status_code == 200:
+            data = resp.json()
+            return data.get("allowed", True), data.get("remaining", 0)
+        logger.warning(
+            "rate limit check failed",
+            extra={"status": resp.status_code, "identifier": identifier},
+        )
+    except requests.RequestException as e:
+        logger.warning(
+            "rate limit check request failed",
+            extra={"identifier": identifier, "error": str(e)},
+        )
+    return True, 0
+
+
+def reset_rate_limit(identifier):
+    """Reset rate limit for identifier via admirald API.
+
+    Falls back silently on failure.
+    """
+    path = "/api/v1/rate-limit/reset"
+    payload = {"identifier": identifier}
+    try:
+        resp = requests.post(
+            current_app.config["ADMIRAL_API_URL"] + path,
+            headers=_headers(path),
+            json=payload,
+            verify=_verify(),
+            timeout=10,
+        )
+        if resp.status_code != 200:
+            logger.warning(
+                "rate limit reset failed",
+                extra={"status": resp.status_code, "identifier": identifier},
+            )
+    except requests.RequestException as e:
+        logger.warning(
+            "rate limit reset request failed",
+            extra={"identifier": identifier, "error": str(e)},
+        )

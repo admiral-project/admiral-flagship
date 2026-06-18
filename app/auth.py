@@ -7,17 +7,12 @@ import time
 import requests
 from flask import Blueprint, request, jsonify, session, current_app
 
-from app.rate_limit import RateLimiter
-
 logger = logging.getLogger("admiral-flagship")
 
 bp = Blueprint("auth", __name__, url_prefix="/flagship/api/auth")
 AUTH_ME_MAX_ATTEMPTS = 2
 AUTH_ME_RETRY_DELAY_SECONDS = 0.2
 SESSION_STARTED_AT_KEY = "session_started_at"
-
-# Rate limiter: 5 attempts per 60 seconds
-login_limiter = RateLimiter(max_attempts=5, window_seconds=60)
 
 
 def _extract_error(err):
@@ -30,9 +25,11 @@ def _extract_error(err):
 
 @bp.route("/login", methods=["POST"])
 def login():
-    # Check rate limit
+    # Check rate limit via admirald (shared across workers)
     ip = request.remote_addr
-    allowed, remaining = login_limiter.is_allowed(ip)
+    from app.admiral_client import check_rate_limit, reset_rate_limit
+
+    allowed, remaining = check_rate_limit(ip)
 
     if not allowed:
         logger.warning(
@@ -56,7 +53,7 @@ def login():
     try:
         result = login_admin(data["username"], data["password"])
         # Reset rate limit on successful login
-        login_limiter.reset(ip)
+        reset_rate_limit(ip)
         # Preserve CSRF token across session clear
         csrf_token = session.pop("csrf_token", None)
         session.clear()

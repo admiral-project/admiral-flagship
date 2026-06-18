@@ -845,7 +845,9 @@ def _wait_for_mock(host, port, timeout=10):
     start = time.time()
     while time.time() - start < timeout:
         try:
-            resp = urllib.request.urlopen(f"http://{host}:{port}/health", timeout=1)  # nosec - controlled dev mock
+            resp = urllib.request.urlopen(
+                f"http://{host}:{port}/health", timeout=1
+            )  # nosec - controlled dev mock
             if resp.status == 200:
                 return True
         except Exception:

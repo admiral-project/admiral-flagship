@@ -3,6 +3,7 @@
 
 import logging
 import os
+import re
 import subprocess
 
 from flask import Blueprint, jsonify, request
@@ -15,11 +16,19 @@ bp = Blueprint("bff_instances", __name__, url_prefix="/flagship/api/instances")
 
 FLEET_ROOTLESS_USER = os.environ.get("ADMIRAL_FLEET_ROOTLESS_USER", "admiral-apps")
 
+_INSTANCE_ID_RE = re.compile(r"^[a-zA-Z0-9_-]+$")
+
+
+def validate_instance_id(instance_id):
+    if not instance_id or not _INSTANCE_ID_RE.match(instance_id):
+        raise ValueError(f"invalid instance_id: {instance_id!r}")
+
 
 def _get_instance_port(instance):
     instance_id = instance.get("id")
     if not instance_id:
         return None
+    validate_instance_id(instance_id)
     pod_id = instance_id.replace("inst_", "", 1)
     try:
         uid = subprocess.run(

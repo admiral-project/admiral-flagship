@@ -204,6 +204,9 @@ def validate_production_config(config):
     if len(config.get("SECRET_KEY", "")) < 32:
         errors.append("SECRET_KEY must be at least 32 characters in production")
 
+    if len(set(config.get("SECRET_KEY", ""))) <= 1:
+        errors.append("SECRET_KEY must not be a simple repeating character")
+
     # Check ADMIRAL_ADMIN_TOKEN not dev default
     if config.get("ADMIRAL_ADMIN_TOKEN", "").startswith("dev-"):
         errors.append(

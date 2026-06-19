@@ -16,8 +16,9 @@ def _extract_tiers(yaml_text):
     tiers = []
     lines = yaml_text.splitlines()
     in_tiers = False
+    parent_indent = None
+    tier_indent = None
     current = None
-    current_indent = None
 
     for raw_line in lines:
         line = raw_line.rstrip("\n")
@@ -26,15 +27,23 @@ def _extract_tiers(yaml_text):
             continue
 
         indent = len(line) - len(line.lstrip(" "))
+
         if not in_tiers:
             if stripped == "tiers:":
                 in_tiers = True
+                parent_indent = indent
             continue
 
-        if indent == 0:
+        if indent <= parent_indent:
             break
 
-        if indent == 2 and stripped.endswith(":"):
+        if tier_indent is None:
+            tier_indent = indent
+
+        if indent < tier_indent:
+            break
+
+        if indent == tier_indent and stripped.endswith(":"):
             if current:
                 tiers.append(current)
             current = {
@@ -44,10 +53,7 @@ def _extract_tiers(yaml_text):
                 "storage": None,
                 "price_monthly": None,
             }
-            current_indent = indent
-            continue
-
-        if current and indent > current_indent and ":" in stripped:
+        elif current and indent > tier_indent and ":" in stripped:
             key, value = stripped.split(":", 1)
             current[key.strip()] = value.strip().strip('"').strip("'")
 

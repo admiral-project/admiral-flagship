@@ -77,8 +77,6 @@ def init_csrf_protection(app):
         if not hmac.compare_digest(token, session_token):
             return jsonify({"error": "CSRF token invalid"}), 403
 
-        # Rotate token after successful validation
-        session["csrf_token"] = _generate_token()
         return None
 
     @app.after_request
@@ -119,8 +117,6 @@ def require_csrf_token(f):
         if not hmac.compare_digest(token, session_token):
             return jsonify({"error": "CSRF token invalid"}), 403
 
-        # Rotate token after successful validation
-        session["csrf_token"] = _generate_token()
         return f(*args, **kwargs)
 
     return decorated_function

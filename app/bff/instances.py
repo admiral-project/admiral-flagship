@@ -121,10 +121,13 @@ def instance_detail(instance_id):
     from app.security import sanitize_error_message
 
     try:
+        validate_instance_id(instance_id)
         data = api_get(f"/api/admin/instances/{instance_id}")
         normalize_instance(data)
         data["port"] = _get_instance_port(data) or {}
         return jsonify(data)
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
     except Exception as e:
         msg = sanitize_error_message(e, "instance_detail")
         return jsonify({"error": msg}), 502
@@ -135,6 +138,7 @@ def instance_tiers(instance_id):
     from app.security import sanitize_error_message
 
     try:
+        validate_instance_id(instance_id)
         instance = api_get(f"/api/admin/instances/{instance_id}")
         app_id = (
             instance.get("app_id")
@@ -150,6 +154,8 @@ def instance_tiers(instance_id):
                 "current_tier": instance.get("tier_id") or instance.get("tier"),
             }
         )
+    except ValueError as e:
+        return jsonify({"error": str(e), "tiers": []}), 400
     except Exception as e:
         msg = sanitize_error_message(e, "instance_tiers")
         return jsonify({"error": msg, "tiers": []}), 502
@@ -160,6 +166,7 @@ def instance_operations(instance_id):
     from app.security import sanitize_error_message
 
     try:
+        validate_instance_id(instance_id)
         data = api_get("/api/admin/tasks")
         items = (
             data
@@ -172,6 +179,8 @@ def instance_operations(instance_id):
             if op.get("instance_id") == instance_id or op.get("instance") == instance_id
         ]
         return jsonify({"operations": related[:20]})
+    except ValueError as e:
+        return jsonify({"error": str(e), "operations": []}), 400
     except Exception as e:
         msg = sanitize_error_message(e, "instance_operations")
         return jsonify({"error": msg, "operations": []}), 502
@@ -185,8 +194,11 @@ def instance_action(instance_id):
     if not data or not data.get("action"):
         return jsonify({"error": "action is required"}), 400
     try:
+        validate_instance_id(instance_id)
         result = api_post(f"/api/admin/instances/{instance_id}/{data['action']}", data)
         return jsonify(result)
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
     except Exception as e:
         msg = sanitize_error_message(e, "instance_action")
         return jsonify({"error": msg}), 502
@@ -201,6 +213,7 @@ def migrate_instance(instance_id):
     if not node_id:
         return jsonify({"error": "node_id required"}), 400
     try:
+        validate_instance_id(instance_id)
         result = api_post(
             f"/api/admin/instances/{instance_id}/migrate",
             {
@@ -208,6 +221,8 @@ def migrate_instance(instance_id):
             },
         )
         return jsonify(result)
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
     except Exception as e:
         msg = sanitize_error_message(e, "migrate_instance")
         return jsonify({"error": msg}), 502

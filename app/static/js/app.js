@@ -902,6 +902,7 @@ var NodeDetailView = {
           <div class="detail-hero__actions">\
             <button class="pf-c-button pf-m-secondary" @click="reloadNode" :disabled="loadingAction"><i class="fas fa-sync-alt"></i>Refresh status</button>\
             <button class="pf-c-button pf-m-secondary" @click="toggleMaintenance" :disabled="loadingAction">{{ node.manual_disabled ? 'Exit maintenance' : 'Enter maintenance' }}</button>\
+            <button class="pf-c-button pf-m-danger pf-m-secondary" @click="removeNode" :disabled="loadingAction"><i class="fas fa-trash pf-u-mr-xs"></i>Remove node</button>\
           </div>\
         </div>\
       </div>\
@@ -1141,6 +1142,20 @@ var NodeDetailView = {
     },
     reloadNode: async function() {
       await this.loadNode();
+    },
+    removeNode: async function() {
+      if (!this.node || !this.node.id) return;
+      if (!confirm('Remove node ' + (this.node.hostname || this.node.id) + '? This action cannot be undone.')) return;
+      this.loadingAction = true;
+      try {
+        await bffFetch('/flagship/api/nodes/' + this.node.id, { method: 'DELETE' });
+        window.showToast('success', 'Node ' + (this.node.hostname || this.node.id) + ' removed.');
+        this.$router.push('/nodes');
+      } catch (e) {
+        this.error = e.message;
+      } finally {
+        this.loadingAction = false;
+      }
     },
     toggleMaintenance: async function() {
       if (!this.node || !this.node.id) return;

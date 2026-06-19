@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from flask import Blueprint, jsonify, request
-from app.admiral_client import api_get, api_post
+from app.admiral_client import api_get, api_post, api_delete
 from app.bff.pagination import normalize_page, parse_paging_args, paginate_items
 
 bp = Blueprint("bff_nodes", __name__, url_prefix="/flagship/api/nodes")
@@ -98,3 +98,18 @@ def enable_node(node_id):
     except Exception as e:
         msg = sanitize_error_message(e, "enable_node")
         return jsonify({"error": msg}), 502
+
+
+@bp.route("/<node_id>", methods=["DELETE"])
+def remove_node(node_id):
+    from app.security import sanitize_error_message
+
+    try:
+        data = api_delete(f"/api/v1/nodes/{node_id}")
+        return jsonify(data)
+    except Exception as e:
+        msg = sanitize_error_message(e, "remove_node")
+        status = 502
+        if "has active instance" in str(e).lower():
+            status = 409
+        return jsonify({"error": msg}), status

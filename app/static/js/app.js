@@ -902,7 +902,7 @@ var NodeDetailView = {
           <div class="detail-hero__actions">\
             <button class="pf-c-button pf-m-secondary" @click="reloadNode" :disabled="loadingAction"><i class="fas fa-sync-alt"></i>Refresh status</button>\
             <button class="pf-c-button pf-m-secondary" @click="toggleMaintenance" :disabled="loadingAction">{{ node.manual_disabled ? 'Exit maintenance' : 'Enter maintenance' }}</button>\
-            <button class="pf-c-button pf-m-danger pf-m-secondary" @click="removeNode" :disabled="loadingAction"><i class="fas fa-trash pf-u-mr-xs"></i>Remove node</button>\
+            <button class="pf-c-button pf-m-danger pf-m-secondary" @click="openRemoveModal" :disabled="loadingAction"><i class="fas fa-trash pf-u-mr-xs"></i>Remove node</button>\
           </div>\
         </div>\
       </div>\
@@ -1044,8 +1044,43 @@ var NodeDetailView = {
           </div>\
         </div>\
       </template>\
+      <div v-if="showRemoveModal" class="admiral-modal-backdrop" @click.self="closeRemoveModal">\
+        <div class="admiral-modal" role="dialog" aria-modal="true" aria-labelledby="remove-node-modal-title">\
+          <div class="admiral-modal__header">\
+            <h2 id="remove-node-modal-title" class="pf-c-title pf-m-xl"><i class="fas fa-trash-alt"></i> Confirm Node Removal</h2>\
+            <button class="pf-c-button pf-m-plain" type="button" aria-label="Close remove dialog" @click="closeRemoveModal">\
+              <i class="fas fa-times" aria-hidden="true"></i>\
+            </button>\
+          </div>\
+          <div class="admiral-modal__body">\
+            <div class="pf-c-alert pf-m-danger pf-m-inline pf-u-mb-md" role="alert">\
+              <div class="pf-c-alert__icon"><i class="fas fa-fw fa-exclamation-circle" aria-hidden="true"></i></div>\
+              <p class="pf-c-alert__title">This removes the node, its routes, backups, and customer apps from the platform. If the node has active instances the operation will be refused unless forced.</p>\
+            </div>\
+            <dl class="pf-c-description-list compact-description-list">\
+              <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Node</dt><dd class="pf-c-description-list__description">{{ node.hostname || node.id }}</dd></div>\
+              <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Status</dt><dd class="pf-c-description-list__description">{{ node.status || 'unknown' }}</dd></div>\
+              <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Instances</dt><dd class="pf-c-description-list__description">{{ (node.pods_active || 0) + (node.pods_paused || 0) + (node.pods_failed || 0) }} pods</dd></div>\
+            </dl>\
+            <div class="danger-zone-list-wrapper">\
+              <label class="pf-c-form__label" for="remove-confirm-input"><span class="pf-c-form__label-text">Type the node ID to confirm</span></label>\
+              <input id="remove-confirm-input" class="pf-c-form-control" type="text" v-model="removeConfirmInput" :placeholder="removeConfirmPlaceholder">\
+            </div>\
+            <div v-if="removeError" class="pf-c-alert pf-m-danger pf-m-inline pf-u-mt-md" role="alert">\
+              <div class="pf-c-alert__icon"><i class="fas fa-fw fa-exclamation-circle" aria-hidden="true"></i></div>\
+              <p class="pf-c-alert__title">{{ removeError }}</p>\
+            </div>\
+          </div>\
+          <div class="admiral-modal__footer">\
+            <button class="pf-c-button pf-m-link" type="button" @click="closeRemoveModal">Cancel</button>\
+            <button class="pf-c-button pf-m-danger" type="button" @click="confirmRemove" :disabled="loadingAction || !removeReady">\
+              <i class="fas fa-trash"></i>{{ loadingAction ? 'Removing...' : 'Confirm removal' }}\
+            </button>\
+          </div>\
+        </div>\
+      </div>\
     </section>`,
-  data: function() { return { loading: true, error: null, node: null, metrics: null, loadingAction: false }; },
+  data: function() { return { loading: true, error: null, node: null, metrics: null, loadingAction: false, showRemoveModal: false, removeConfirmInput: '', removeError: '' }; },
   computed: {
     nodeId: function() { return this.$route.params.id; },
     heartbeatLabel: function() {
@@ -1108,6 +1143,12 @@ var NodeDetailView = {
       if (pct >= 75) return 'dashboard-progress-fill-orange';
       return 'dashboard-progress-fill-green';
     },
+    removeReady: function() {
+      return (this.removeConfirmInput || '').trim() === this.removeConfirmPlaceholder;
+    },
+    removeConfirmPlaceholder: function() {
+      return this.node ? this.node.id || '' : '';
+    },
     diskUsageBarClass: function() {
       var pct = this.capacityPercent(this.node.disk_used_bytes, this.node.disk_total_bytes);
       if (pct >= 90) return 'dashboard-progress-fill-red';
@@ -1143,16 +1184,25 @@ var NodeDetailView = {
     reloadNode: async function() {
       await this.loadNode();
     },
-    removeNode: async function() {
+    openRemoveModal: function() {
+      this.showRemoveModal = true;
+      this.removeConfirmInput = '';
+      this.removeError = '';
+    },
+    closeRemoveModal: function() {
+      this.showRemoveModal = false;
+      this.removeConfirmInput = '';
+      this.removeError = '';
+    },
+    confirmRemove: async function() {
       if (!this.node || !this.node.id) return;
-      if (!confirm('Remove node ' + (this.node.hostname || this.node.id) + '? This action cannot be undone.')) return;
       this.loadingAction = true;
       try {
         await bffFetch('/flagship/api/nodes/' + this.node.id, { method: 'DELETE' });
         window.showToast('success', 'Node ' + (this.node.hostname || this.node.id) + ' removed.');
         this.$router.push('/nodes');
       } catch (e) {
-        this.error = e.message;
+        this.removeError = e.message;
       } finally {
         this.loadingAction = false;
       }

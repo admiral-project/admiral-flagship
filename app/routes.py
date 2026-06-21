@@ -1,9 +1,28 @@
 # SPDX-FileCopyrightText: William Moreno Reyes CP | MBA
 # SPDX-License-Identifier: Apache-2.0
 
-from flask import Blueprint, render_template, jsonify
+import ipaddress
+from datetime import datetime, timezone
+
+from flask import Blueprint, render_template, jsonify, request
+from app.admiral_client import api_get
 
 bp = Blueprint("main", __name__, url_prefix="/")
+
+
+def _ip_allowed():
+    addr = request.remote_addr or ""
+    try:
+        ip = ipaddress.ip_address(addr)
+        if ip == ipaddress.ip_address("127.0.0.1"):
+            return True
+        if ip == ipaddress.ip_address("::1"):
+            return True
+        if ip in ipaddress.ip_network("10.99.0.0/16"):
+            return True
+    except ValueError:
+        pass
+    return False
 
 
 @bp.route("/")
@@ -13,4 +32,26 @@ def index():
 
 @bp.route("/flagship/api/health")
 def health():
+    if not _ip_allowed():
+        return jsonify({"status": "forbidden"}), 403
     return jsonify({"status": "healthy"})
+
+
+@bp.route("/flagship/api/ready")
+def ready():
+    if not _ip_allowed():
+        return jsonify({"status": "forbidden"}), 403
+    try:
+        api_get("/api/v1/status")
+        return jsonify({
+            "status": "ok",
+            "admirald": "ok",
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        })
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "admirald": "error",
+            "error": str(e),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        })

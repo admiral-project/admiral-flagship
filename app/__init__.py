@@ -120,6 +120,14 @@ def create_app():
             session[SESSION_STARTED_AT_KEY] = int(time.time())
             unauthorized_limiter.reset(limiter_key)
 
+    @app.errorhandler(ValueError)
+    def handle_value_error(error):
+        from app.security import sanitize_error_message
+        msg = sanitize_error_message(error)
+        if wants_json_response():
+            return jsonify({"error": msg}), 400
+        return unauthenticated_response(msg)
+
     @app.after_request
     def after_request(response):
         # If an unauthenticated backend call was flagged, return 401

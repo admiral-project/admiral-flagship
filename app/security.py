@@ -117,7 +117,7 @@ def sanitize_error_message(error: Exception, context: str = "") -> str:
     ):
         return "Not authorized for this action"
 
-    if any(
+    if error_type == "ValueError" or any(
         phrase in error_str for phrase in ["400", "bad request", "invalid", "malformed"]
     ):
         return "Invalid request parameters"

@@ -5,7 +5,7 @@ import ipaddress
 import os
 from datetime import datetime, timezone
 
-from flask import Blueprint, render_template, jsonify, request, current_app
+from flask import Blueprint, render_template, jsonify, request
 from app.admiral_client import api_get
 
 bp = Blueprint("main", __name__, url_prefix="/")

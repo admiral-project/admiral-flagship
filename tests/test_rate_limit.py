@@ -1,5 +1,20 @@
 from unittest.mock import patch, Mock
 
+from app.rate_limit import RateLimiter
+
+
+def test_local_rate_limiter_blocks_and_resets():
+    limiter = RateLimiter(max_attempts=2, window_seconds=10)
+
+    assert limiter.is_allowed("198.51.100.10") == (True, 0)
+    assert limiter.is_allowed("198.51.100.10") == (True, 0)
+    allowed, remaining = limiter.is_allowed("198.51.100.10")
+    assert allowed is False
+    assert remaining >= 1
+
+    limiter.reset("198.51.100.10")
+    assert limiter.is_allowed("198.51.100.10") == (True, 0)
+
 
 def test_check_rate_limit_allowed(app):
     with app.app_context():

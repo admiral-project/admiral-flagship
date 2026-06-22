@@ -8,6 +8,7 @@ from flask import Flask, g, request, session, jsonify, redirect, url_for
 
 from app.log_config import configure_logging
 from app.csrf import init_csrf_protection, generate_csrf_token
+from app.rate_limit import RateLimiter
 from app.security import init_security_headers, validate_production_config
 
 
@@ -18,6 +19,7 @@ def create_app():
     validate_production_config(app.config)
 
     logger = logging.getLogger("admiral-flagship")
+    unauthorized_limiter = RateLimiter(max_attempts=10, window_seconds=300)
 
     # Initialize security modules
     init_csrf_protection(app)
@@ -35,6 +37,11 @@ def create_app():
     def unauthenticated_response(error_message):
         if wants_json_response():
             return jsonify({"error": "unauthorized"}), 401
+        return redirect(url_for("main.index"))
+
+    def blocked_response():
+        if wants_json_response():
+            return jsonify({"error": "too many authentication failures"}), 429
         return redirect(url_for("main.index"))
 
     @app.before_request
@@ -63,10 +70,23 @@ def create_app():
             # Verify active session
             token = session.get("admin_token")
             username = session.get("admin_username", "unknown")
+            ip = request.remote_addr or "unknown"
+            limiter_key = f"unauth-bff:{ip}"
             if not token:
+                allowed, remaining = unauthorized_limiter.is_allowed(limiter_key)
+                if not allowed:
+                    logger.warning(
+                        "bff ip temporarily blocked after repeated unauthorized access",
+                        extra={
+                            "path": request.path,
+                            "ip": ip,
+                            "remaining_seconds": remaining,
+                        },
+                    )
+                    return blocked_response()
                 logger.warning(
                     "unauthorized bff access attempt blocked",
-                    extra={"path": request.path, "ip": request.remote_addr},
+                    extra={"path": request.path, "ip": ip},
                 )
                 return unauthenticated_response("not authenticated")
 
@@ -83,6 +103,7 @@ def create_app():
 
             # Reset the sliding inactivity window
             session[SESSION_STARTED_AT_KEY] = int(time.time())
+            unauthorized_limiter.reset(limiter_key)
 
     @app.after_request
     def after_request(response):

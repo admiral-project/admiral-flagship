@@ -152,6 +152,17 @@ def test_bff_endpoint_requires_auth(client):
     assert resp.json["error"] == "unauthorized"
 
 
+def test_bff_endpoint_temporarily_blocks_repeated_unauthenticated_access(client):
+    headers = {"X-Requested-With": "XMLHttpRequest"}
+    for _ in range(10):
+        resp = client.get("/flagship/api/nodes", headers=headers)
+        assert resp.status_code == 401
+
+    resp = client.get("/flagship/api/nodes", headers=headers)
+    assert resp.status_code == 429
+    assert resp.json["error"] == "too many authentication failures"
+
+
 def test_bff_endpoint_browser_navigation_redirects_to_login(client):
     resp = client.get(
         "/flagship/api/nodes", headers={"Accept": "text/html"}, follow_redirects=False

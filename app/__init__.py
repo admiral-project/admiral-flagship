@@ -46,6 +46,7 @@ def create_app():
             # Exclude public endpoints
             public_endpoints = [
                 "/flagship/api/health",
+                "/flagship/api/ready",
                 "/flagship/api/auth/login",
                 "/flagship/api/auth/me",
             ]

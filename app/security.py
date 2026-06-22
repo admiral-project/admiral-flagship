@@ -6,10 +6,34 @@ Security utilities: secret validation, safe error messages, security headers.
 """
 
 import os
+import re
 import logging
 from typing import Optional
 
 logger = logging.getLogger("admiral-flagship")
+
+# Safe character set for resource identifiers (alphanumeric, underscores, hyphens)
+_ID_RE = re.compile(r"^[a-zA-Z0-9_-]+$")
+
+
+def validate_resource_id(resource_id: str, context: str = "resource") -> None:
+    """
+    Validate that a resource identifier contains only safe characters.
+    Prevents path traversal and injection-style attacks.
+
+    Args:
+        resource_id: The ID to validate
+        context: Name of the resource for error messaging
+
+    Raises:
+        ValueError: If ID is invalid
+    """
+    if not resource_id or not _ID_RE.match(resource_id):
+        logger.warning(
+            "Invalid resource identifier blocked",
+            extra={"id": resource_id, "context": context},
+        )
+        raise ValueError(f"Invalid {context} identifier: {resource_id!r}")
 
 
 def get_required_env_var(

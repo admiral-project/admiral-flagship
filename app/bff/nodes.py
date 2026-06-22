@@ -4,8 +4,13 @@
 from flask import Blueprint, jsonify, request
 from app.admiral_client import api_get, api_post, api_delete
 from app.bff.pagination import normalize_page, parse_paging_args, paginate_items
+from app.security import validate_resource_id
 
 bp = Blueprint("bff_nodes", __name__, url_prefix="/flagship/api/nodes")
+
+
+def validate_node_id(node_id):
+    validate_resource_id(node_id, "node")
 
 
 @bp.route("")
@@ -63,6 +68,7 @@ def register_node():
 @bp.route("/<node_id>")
 def node_detail(node_id):
     from app.security import sanitize_error_message
+    validate_node_id(node_id)
 
     try:
         node = api_get(f"/api/admin/nodes/{node_id}")
@@ -79,6 +85,7 @@ def node_detail(node_id):
 @bp.route("/<node_id>/disable", methods=["POST"])
 def disable_node(node_id):
     from app.security import sanitize_error_message
+    validate_node_id(node_id)
 
     try:
         data = api_post(f"/api/admin/nodes/{node_id}/disable")
@@ -91,6 +98,7 @@ def disable_node(node_id):
 @bp.route("/<node_id>/enable", methods=["POST"])
 def enable_node(node_id):
     from app.security import sanitize_error_message
+    validate_node_id(node_id)
 
     try:
         data = api_post(f"/api/admin/nodes/{node_id}/enable")
@@ -103,6 +111,7 @@ def enable_node(node_id):
 @bp.route("/<node_id>", methods=["DELETE"])
 def remove_node(node_id):
     from app.security import sanitize_error_message
+    validate_node_id(node_id)
 
     try:
         data = api_delete(f"/api/v1/nodes/{node_id}")

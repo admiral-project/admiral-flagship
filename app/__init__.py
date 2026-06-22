@@ -2,9 +2,11 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import logging
+import os
 import time
 
 from flask import Flask, g, request, session, jsonify, redirect, url_for
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 from app.log_config import configure_logging
 from app.csrf import init_csrf_protection, generate_csrf_token
@@ -16,6 +18,19 @@ def create_app():
     configure_logging()
     app = Flask(__name__)
     app.config.from_object("app.config.Config")
+
+    # Handle X-Forwarded-For headers if behind a proxy
+    # Default to 0 (no trust) for internet-exposed operation
+    num_proxies = int(os.environ.get("FLAGSHIP_PROXIES_COUNT", "0"))
+    app.wsgi_app = ProxyFix(
+        app.wsgi_app,
+        x_for=num_proxies,
+        x_proto=num_proxies,
+        x_host=num_proxies,
+        x_port=num_proxies,
+        x_prefix=num_proxies,
+    )
+
     validate_production_config(app.config)
 
     logger = logging.getLogger("admiral-flagship")

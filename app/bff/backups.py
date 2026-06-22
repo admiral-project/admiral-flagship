@@ -4,8 +4,13 @@
 from flask import Blueprint, jsonify, request
 from app.admiral_client import api_get, api_post, api_put, api_delete
 from app.bff.pagination import normalize_page, parse_paging_args
+from app.security import validate_resource_id
 
 bp = Blueprint("bff_backups", __name__, url_prefix="/flagship/api/backups")
+
+
+def validate_backup_id(backup_id):
+    validate_resource_id(backup_id, "backup")
 
 
 @bp.route("")
@@ -82,6 +87,7 @@ def test_backup_settings():
 @bp.route("/<backup_id>")
 def backup_detail(backup_id):
     from app.security import sanitize_error_message
+    validate_backup_id(backup_id)
 
     try:
         data = api_get(f"/api/admin/backups/{backup_id}")
@@ -131,6 +137,7 @@ def prune_backups():
 @bp.route("/<backup_id>", methods=["DELETE"])
 def delete_backup(backup_id):
     from app.security import sanitize_error_message
+    validate_backup_id(backup_id)
 
     try:
         result = api_delete(f"/api/admin/backups/{backup_id}")

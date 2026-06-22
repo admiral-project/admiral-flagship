@@ -8,6 +8,24 @@ def test_health(client):
     assert resp.json["status"] == "healthy"
 
 
+def test_health_rejects_external_ip(client):
+    resp = client.get(
+        "/flagship/api/health",
+        environ_overrides={"REMOTE_ADDR": "198.51.100.10"},
+    )
+    assert resp.status_code == 403
+    assert resp.json["status"] == "forbidden"
+
+
+def test_ready_rejects_external_ip(client):
+    resp = client.get(
+        "/flagship/api/ready",
+        environ_overrides={"REMOTE_ADDR": "198.51.100.10"},
+    )
+    assert resp.status_code == 403
+    assert resp.json["status"] == "forbidden"
+
+
 def test_index_returns_html(client):
     resp = client.get("/")
     assert resp.status_code == 200

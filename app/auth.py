@@ -23,6 +23,10 @@ def _extract_error(err):
         return "Request failed"
 
 
+def _generic_auth_failure(status=401):
+    return jsonify({"error": "unauthorized"}), status
+
+
 @bp.route("/login", methods=["POST"])
 def login():
     # Check rate limit via admirald (shared across workers)
@@ -79,12 +83,12 @@ def login():
             "admin login failed",
             extra={"username": data["username"], "status": status, "error": detail},
         )
-        return jsonify({"error": detail}), status
+        return _generic_auth_failure(status if status in (401, 403) else 401)
     except Exception as e:
         logger.warning(
             "admin login failed", extra={"username": data["username"], "error": str(e)}
         )
-        return jsonify({"error": "Login failed"}), 401
+        return _generic_auth_failure()
 
 
 @bp.route("/logout", methods=["POST"])
@@ -116,7 +120,7 @@ def _validate_session_or_expire(username):
     if _session_is_expired():
         session.clear()
         logger.warning("admin session expired by timeout", extra={"username": username})
-        return jsonify({"error": "session expired"}), 401
+        return _generic_auth_failure()
     from app.admiral_client import api_get
 
     last_error = None
@@ -134,7 +138,7 @@ def _validate_session_or_expire(username):
                     "admin session expired after admirald check failed",
                     extra={"username": username, "error": str(last_error)},
                 )
-                return jsonify({"error": "session expired"}), 401
+                return _generic_auth_failure()
 
 
 @bp.route("/me")
@@ -147,7 +151,7 @@ def me():
     if not token and pwd_change_required and username:
         if _session_is_expired():
             session.clear()
-            return jsonify({"error": "session expired"}), 401
+            return _generic_auth_failure()
         session[SESSION_STARTED_AT_KEY] = int(time.time())
         return jsonify(
             {
@@ -158,7 +162,7 @@ def me():
         )
 
     if not token:
-        return jsonify({"error": "not authenticated"}), 401
+        return _generic_auth_failure()
     expired_response = _validate_session_or_expire(username)
     if expired_response is not None:
         return expired_response
@@ -200,10 +204,10 @@ def change_password():
             logger.warning(
                 "password change failed", extra={"status": status, "error": detail}
             )
-            return jsonify({"error": detail}), status
+            return _generic_auth_failure(status if status in (401, 403) else 400)
         except Exception as e:
             logger.warning("password change failed", extra={"error": str(e)})
-            return jsonify({"error": "Password change failed"}), 400
+            return jsonify({"error": "password change failed"}), 400
     else:
         username = data.get("username")
         if not username:
@@ -222,7 +226,7 @@ def change_password():
             logger.warning(
                 "password change failed", extra={"status": status, "error": detail}
             )
-            return jsonify({"error": detail}), status
+            return _generic_auth_failure(status if status in (401, 403) else 400)
         except Exception as e:
             logger.warning("password change failed", extra={"error": str(e)})
-            return jsonify({"error": "Password change failed"}), 400
+            return jsonify({"error": "password change failed"}), 400

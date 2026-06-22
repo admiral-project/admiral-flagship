@@ -5,7 +5,7 @@ from unittest.mock import patch
 def test_auth_me_unauthenticated(client):
     resp = client.get("/flagship/api/auth/me")
     assert resp.status_code == 401
-    assert resp.json["error"] == "not authenticated"
+    assert resp.json["error"] == "unauthorized"
 
 
 def test_auth_me_authenticated(client):
@@ -54,7 +54,7 @@ def test_auth_me_expired_session_after_retries(client):
     ):
         resp = client.get("/flagship/api/auth/me")
     assert resp.status_code == 401
-    assert resp.json["error"] == "session expired"
+    assert resp.json["error"] == "unauthorized"
     assert sleep_mock.call_count == 1
     with client.session_transaction() as sess:
         assert "admin_token" not in sess
@@ -140,7 +140,7 @@ def test_change_password_requires_active_session(client):
             headers={"X-Requested-With": "XMLHttpRequest"},
         )
     assert resp.status_code == 401
-    assert resp.json["error"] == "session expired"
+    assert resp.json["error"] == "unauthorized"
     post_mock.assert_not_called()
 
 
@@ -149,7 +149,7 @@ def test_bff_endpoint_requires_auth(client):
         "/flagship/api/nodes", headers={"X-Requested-With": "XMLHttpRequest"}
     )
     assert resp.status_code == 401
-    assert resp.json["error"] == "not authenticated"
+    assert resp.json["error"] == "unauthorized"
 
 
 def test_bff_endpoint_browser_navigation_redirects_to_login(client):
@@ -169,7 +169,7 @@ def test_bff_endpoint_session_expired_inactivity(client):
         "/flagship/api/nodes", headers={"X-Requested-With": "XMLHttpRequest"}
     )
     assert resp.status_code == 401
-    assert resp.json["error"] == "session expired"
+    assert resp.json["error"] == "unauthorized"
     with client.session_transaction() as sess:
         assert "admin_token" not in sess
 
@@ -191,9 +191,9 @@ def test_bff_endpoint_token_revoked_by_backend(client):
     with patch("app.admiral_client.requests.get", side_effect=http_error):
         resp = client.get(
             "/flagship/api/nodes", headers={"X-Requested-With": "XMLHttpRequest"}
-        )
+    )
 
     assert resp.status_code == 401
-    assert resp.json["error"] == "session expired"
+    assert resp.json["error"] == "unauthorized"
     with client.session_transaction() as sess:
         assert "admin_token" not in sess

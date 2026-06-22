@@ -34,7 +34,7 @@ def create_app():
 
     def unauthenticated_response(error_message):
         if wants_json_response():
-            return jsonify({"error": error_message}), 401
+            return jsonify({"error": "unauthorized"}), 401
         return redirect(url_for("main.index"))
 
     @app.before_request

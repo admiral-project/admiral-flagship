@@ -79,3 +79,21 @@ def test_login_passes_rate_limit_then_resets(app, client):
         )
         assert resp.status_code == 200
         reset_mock.assert_called_once()
+
+
+def test_login_failure_returns_generic_unauthorized(app, client):
+    import requests
+    from unittest.mock import Mock
+
+    with patch("app.admiral_client.check_rate_limit", return_value=(True, 0)):
+        mock_response = Mock()
+        mock_response.status_code = 401
+        mock_response.json.return_value = {"error": "invalid credentials"}
+        http_error = requests.HTTPError("401 Unauthorized", response=mock_response)
+        with patch("app.admiral_client.login_admin", side_effect=http_error):
+            resp = client.post(
+                "/flagship/api/auth/login",
+                json={"username": "admin", "password": "secret"},
+            )
+    assert resp.status_code == 401
+    assert resp.json["error"] == "unauthorized"

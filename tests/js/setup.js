@@ -4,7 +4,7 @@ const path = require('path');
 
 const html = '<!DOCTYPE html><html><head><meta name="csrf-token" content="test-csrf-token"></head><body><div id="app"></div></body></html>';
 const dom = new JSDOM(html, {
-  url: 'http://localhost:5000/',
+  url: 'https://localhost:5000/',
   runScripts: 'dangerously',
   resources: 'usable'
 });

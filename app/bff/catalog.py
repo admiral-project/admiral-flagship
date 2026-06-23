@@ -6,10 +6,15 @@ import re
 from flask import Blueprint, jsonify, request
 from app.admiral_client import api_get, api_get_text, api_post, api_put
 from app.bff.pagination import normalize_page, parse_paging_args
+from app.security import validate_resource_id
 
 bp = Blueprint("bff_catalog", __name__, url_prefix="/flagship/api/catalog")
 
 _VERSION_RE = re.compile(r"(?m)^version:\s*[\"']?([^\"'\n]+)[\"']?\s*$")
+
+
+def validate_app_id(app_id):
+    validate_resource_id(app_id, "app")
 
 
 def _extract_tiers(yaml_text):
@@ -101,6 +106,7 @@ def list_apps():
 @bp.route("/apps/<app_id>")
 def app_detail(app_id):
     from app.security import sanitize_error_message
+    validate_app_id(app_id)
 
     try:
         app = api_get(f"/api/admin/apps/{app_id}")
@@ -113,6 +119,7 @@ def app_detail(app_id):
 @bp.route("/apps/<app_id>/yaml")
 def app_yaml(app_id):
     from app.security import sanitize_error_message
+    validate_app_id(app_id)
 
     try:
         yaml_text = api_get_text(f"/api/admin/apps/{app_id}/yaml")
@@ -125,6 +132,7 @@ def app_yaml(app_id):
 @bp.route("/apps/<app_id>/provisioning")
 def app_provisioning(app_id):
     from app.security import sanitize_error_message
+    validate_app_id(app_id)
 
     try:
         app = api_get(f"/api/admin/apps/{app_id}")
@@ -169,6 +177,7 @@ def save_app():
 @bp.route("/apps/<app_id>/tiers")
 def app_tiers(app_id):
     from app.security import sanitize_error_message
+    validate_app_id(app_id)
 
     try:
         tiers = api_get(f"/api/admin/apps/{app_id}/tiers")
@@ -181,6 +190,7 @@ def app_tiers(app_id):
 @bp.route("/apps/<app_id>/tiers", methods=["POST"])
 def save_app_tier(app_id):
     from app.security import sanitize_error_message
+    validate_app_id(app_id)
 
     body = request.get_json(silent=True) or {}
     if not body.get("tier"):
@@ -196,6 +206,7 @@ def save_app_tier(app_id):
 @bp.route("/apps/<app_id>/versions")
 def app_versions(app_id):
     from app.security import sanitize_error_message
+    validate_app_id(app_id)
 
     try:
         versions = api_get(f"/api/admin/apps/{app_id}/versions")
@@ -208,6 +219,7 @@ def app_versions(app_id):
 @bp.route("/apps/<app_id>/disable", methods=["POST"])
 def disable_app(app_id):
     from app.security import sanitize_error_message
+    validate_app_id(app_id)
 
     try:
         result = api_put(f"/api/admin/apps/{app_id}/status", {"status": "inactive"})
@@ -220,6 +232,7 @@ def disable_app(app_id):
 @bp.route("/apps/<app_id>/enable", methods=["POST"])
 def enable_app(app_id):
     from app.security import sanitize_error_message
+    validate_app_id(app_id)
 
     try:
         result = api_put(f"/api/admin/apps/{app_id}/status", {"status": "active"})

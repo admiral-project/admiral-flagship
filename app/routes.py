@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import ipaddress
+import os
 from datetime import datetime, timezone
 
 from flask import Blueprint, render_template, jsonify, request
@@ -12,14 +13,14 @@ bp = Blueprint("main", __name__, url_prefix="/")
 
 def _ip_allowed():
     addr = request.remote_addr or ""
+    allowed_cidrs = os.environ.get(
+        "FLAGSHIP_ALLOWED_HEALTH_IPS", "127.0.0.1/32,::1/128,10.99.0.0/16"
+    )
     try:
         ip = ipaddress.ip_address(addr)
-        if ip == ipaddress.ip_address("127.0.0.1"):
-            return True
-        if ip == ipaddress.ip_address("::1"):
-            return True
-        if ip in ipaddress.ip_network("10.99.0.0/16"):
-            return True
+        for cidr in allowed_cidrs.split(","):
+            if ip in ipaddress.ip_network(cidr.strip()):
+                return True
     except ValueError:
         pass
     return False

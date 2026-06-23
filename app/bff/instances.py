@@ -3,12 +3,12 @@
 
 import logging
 import os
-import re
 import subprocess
 
 from flask import Blueprint, jsonify, request
 from app.admiral_client import api_get, api_post
 from app.bff.pagination import normalize_page, parse_paging_args
+from app.security import validate_resource_id
 
 logger = logging.getLogger("admiral-flagship")
 
@@ -16,12 +16,9 @@ bp = Blueprint("bff_instances", __name__, url_prefix="/flagship/api/instances")
 
 FLEET_ROOTLESS_USER = os.environ.get("ADMIRAL_FLEET_ROOTLESS_USER", "admiral-apps")
 
-_INSTANCE_ID_RE = re.compile(r"^[a-zA-Z0-9_-]+$")
-
 
 def validate_instance_id(instance_id):
-    if not instance_id or not _INSTANCE_ID_RE.match(instance_id):
-        raise ValueError(f"invalid instance_id: {instance_id!r}")
+    validate_resource_id(instance_id, "instance")
 
 
 def _get_instance_port(instance):
@@ -119,6 +116,7 @@ def list_instances():
 @bp.route("/<instance_id>")
 def instance_detail(instance_id):
     from app.security import sanitize_error_message
+    validate_instance_id(instance_id)
 
     try:
         data = api_get(f"/api/admin/instances/{instance_id}")
@@ -133,6 +131,7 @@ def instance_detail(instance_id):
 @bp.route("/<instance_id>/tiers")
 def instance_tiers(instance_id):
     from app.security import sanitize_error_message
+    validate_instance_id(instance_id)
 
     try:
         instance = api_get(f"/api/admin/instances/{instance_id}")
@@ -158,6 +157,7 @@ def instance_tiers(instance_id):
 @bp.route("/<instance_id>/operations")
 def instance_operations(instance_id):
     from app.security import sanitize_error_message
+    validate_instance_id(instance_id)
 
     try:
         data = api_get("/api/admin/tasks")
@@ -180,6 +180,7 @@ def instance_operations(instance_id):
 @bp.route("/<instance_id>/action", methods=["POST"])
 def instance_action(instance_id):
     from app.security import sanitize_error_message
+    validate_instance_id(instance_id)
 
     data = request.get_json()
     if not data or not data.get("action"):
@@ -195,6 +196,7 @@ def instance_action(instance_id):
 @bp.route("/<instance_id>/migrate", methods=["POST"])
 def migrate_instance(instance_id):
     from app.security import sanitize_error_message
+    validate_instance_id(instance_id)
 
     data = request.get_json(silent=True) or {}
     node_id = (data.get("node_id") or data.get("target_node_id") or "").strip()

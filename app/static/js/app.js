@@ -1908,7 +1908,7 @@ var InstanceCreateView = {
     loadForm: async function() {
       try {
         var appsData = await bffFetch(buildPagedUrl('/flagship/api/catalog/apps', 1, 100));
-        var nodesData = await bffFetch(buildPagedUrl('/flagship/api/nodes', 1, 100));
+        var nodesData = await bffFetch(buildPagedUrl('/flagship/api/nodes', 1, 100, { node_role: 'worker' }));
         this.apps = normalizePagedData(appsData, 'apps').items;
         this.nodes = normalizePagedData(nodesData, 'nodes').items;
       } catch (e) {
@@ -2004,6 +2004,7 @@ var InstanceDetailView = {
                 <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Customer</dt><dd class="pf-c-description-list__description">{{ instance.customer_id || instance.customer || '-' }}</dd></div>\
                 <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">App</dt><dd class="pf-c-description-list__description">{{ instance.app_definition_name || instance.app_id || instance.app || '-' }}</dd></div>\
                 <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Tier</dt><dd class="pf-c-description-list__description">{{ instance.tier_name || instance.tier_id || instance.tier || '-' }}</dd></div>\
+                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Hostname</dt><dd class="pf-c-description-list__description">{{ instance.hostname || instance.host || '-' }}</dd></div>\
                 <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Node</dt><dd class="pf-c-description-list__description">{{ instance.node_id || instance.node || '-' }}</dd></div>\
                 <div class="pf-c-description-list__group" v-if="instance.port"><dt class="pf-c-description-list__term">Port</dt><dd class="pf-c-description-list__description">{{ instance.port.host_port || instance.port.container_port || '-' }}</dd></div>\
                 <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Created</dt><dd class="pf-c-description-list__description">{{ instance.created_at || instance.created || '-' }}</dd></div>\
@@ -2257,7 +2258,7 @@ var InstanceDetailView = {
     },
     loadAvailableNodes: async function() {
       try {
-        var data = await bffFetch('/flagship/api/nodes?page=1&page_size=1000');
+        var data = await bffFetch(buildPagedUrl('/flagship/api/nodes', 1, 1000, { node_role: 'worker' }));
         this.availableNodes = normalizePagedData(data, 'nodes').items || data.nodes || [];
       } catch (e) {
         this.availableNodes = [];

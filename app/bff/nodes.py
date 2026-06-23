@@ -19,6 +19,7 @@ def list_nodes():
 
     page, page_size = parse_paging_args()
     status = request.args.get("status", "").strip().lower()
+    node_role = request.args.get("node_role", "").strip().lower()
     try:
         data = api_get("/api/admin/nodes")
         payload = normalize_page(data, "nodes", 1, 1000)
@@ -26,6 +27,10 @@ def list_nodes():
         if status:
             items = [
                 node for node in items if str(node.get("status", "")).lower() == status
+            ]
+        if node_role:
+            items = [
+                node for node in items if str(node.get("node_role", "")).lower() == node_role
             ]
         result = paginate_items(items, page, page_size)
         result["nodes"] = result["items"]

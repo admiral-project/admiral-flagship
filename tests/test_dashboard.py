@@ -67,6 +67,25 @@ def test_dashboard_counts_billing_states(client):
         assert response.json["summary"]["suspended_instances"] == 1
 
 
+def test_dashboard_counts_initializing_and_setup_failed(client):
+    with patch(
+        "app.bff.dashboard.api_get",
+        side_effect=[
+            [{"id": "n1", "status": "active"}],
+            [
+                {"id": "i1", "status": "initializing"},
+                {"id": "i2", "status": "setup_failed"},
+            ],
+            [{"id": "o1", "status": "failed"}],
+            [{"id": "b1"}],
+        ],
+    ):
+        response = client.get("/flagship/api/dashboard")
+        assert response.status_code == 200
+        assert response.json["summary"]["provisioning_instances"] == 1
+        assert response.json["summary"]["error_instances"] == 1
+
+
 def test_dashboard_exposes_failed_backup_diagnostics(client):
     with patch(
         "app.bff.dashboard.api_get",

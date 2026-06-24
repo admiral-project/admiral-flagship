@@ -228,8 +228,8 @@ function instanceStatusClass(status) {
   if (s === 'running') return 'pf-m-green';
   if (s === 'paused') return 'pf-m-orange';
   if (s === 'stopped' || s === 'deprovisioned') return 'pf-m-slate';
-  if (s === 'error' || s === 'failed') return 'pf-m-red';
-  if (s === 'past_due' || s === 'suspended' || s === 'provisioning') return 'pf-m-blue';
+  if (s === 'error' || s === 'failed' || s === 'setup_failed') return 'pf-m-red';
+  if (s === 'past_due' || s === 'suspended' || s === 'provisioning' || s === 'initializing') return 'pf-m-blue';
   return 'pf-m-grey';
 }
 
@@ -1670,10 +1670,12 @@ var InstancesView = {
             <option value="running">Running</option>\
             <option value="paused">Paused</option>\
             <option value="provisioning">Provisioning</option>\
+            <option value="initializing">Initializing</option>\
             <option value="error">Error</option>\
             <option value="stopped">Stopped</option>\
             <option value="deprovisioned">Deprovisioned</option>\
             <option value="failed">Failed</option>\
+            <option value="setup_failed">Setup Failed</option>\
           </select>\
           <label for="inst-filter-customer">Customer:</label>\
           <input id="inst-filter-customer" class="pf-c-form-control" type="text" v-model="customerFilter" placeholder="customer ID">\

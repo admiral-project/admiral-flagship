@@ -228,6 +228,12 @@ describe('instanceStatusClass', function() {
   it('returns pf-m-red for error/failed', function() {
     expect(instanceStatusClass('error')).to.equal('pf-m-red');
     expect(instanceStatusClass('failed')).to.equal('pf-m-red');
+    expect(instanceStatusClass('setup_failed')).to.equal('pf-m-red');
+  });
+
+  it('returns pf-m-blue for provisioning states', function() {
+    expect(instanceStatusClass('provisioning')).to.equal('pf-m-blue');
+    expect(instanceStatusClass('initializing')).to.equal('pf-m-blue');
   });
 
   it('returns pf-m-grey for unknown status', function() {

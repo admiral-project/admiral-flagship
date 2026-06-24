@@ -97,6 +97,7 @@ def _instance_status_summary(instances):
         "paused_instances": 0,
         "stopped_instances": 0,
         "error_instances": 0,
+        "provisioning_instances": 0,
         "past_due_instances": 0,
         "suspended_instances": 0,
         "deprovisioned_instances": 0,
@@ -111,7 +112,11 @@ def _instance_status_summary(instances):
             counts["stopped_instances"] += 1
             if status == "deprovisioned":
                 counts["deprovisioned_instances"] += 1
+        elif status in ("provisioning", "pending_provision", "initializing"):
+            counts["provisioning_instances"] += 1
         elif status in ("error", "failed"):
+            counts["error_instances"] += 1
+        elif status == "setup_failed":
             counts["error_instances"] += 1
         elif status == "past_due":
             counts["past_due_instances"] += 1

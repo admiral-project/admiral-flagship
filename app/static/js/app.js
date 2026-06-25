@@ -1878,6 +1878,36 @@ var InstanceCreateView = {
           </div>\
         </div>\
       </div>\
+      <div v-if="provisionResult" class="pf-l-grid pf-m-gutter pf-u-mt-lg">\
+        <div class="pf-l-grid__item pf-m-12-col">\
+          <div class="pf-c-card pf-m-warning">\
+            <div class="pf-c-card__header"><h2 class="pf-c-title pf-m-lg"><i class="fas fa-key"></i> Deployment credentials</h2></div>\
+            <div class="pf-c-card__body">\
+              <p class="pf-c-content">Save these credentials securely. They are displayed now because the instance is initializing.</p>\
+              <p v-if="provisionResult.operation_id"><strong>Operation:</strong> {{ provisionResult.operation_id }}</p>\
+              <p v-if="provisionResult.hostname"><strong>Hostname:</strong> <a :href="\'https://\' + provisionResult.hostname" target="_blank" rel="noopener">{{ provisionResult.hostname }}</a></p>\
+              <div v-if="noticesForDisplay(provisionResult.credentials).length > 0" class="pf-u-mt-md">\
+                <div v-for="cred in noticesForDisplay(provisionResult.credentials)" :key="cred.name" class="pf-c-alert pf-m-info pf-m-inline pf-u-mb-sm" role="alert">\
+                  <p class="pf-c-alert__title">{{ cred.name }}: <code>{{ cred.value }}</code></p>\
+                </div>\
+              </div>\
+              <table v-if="credentialsForDisplay(provisionResult.credentials).length > 0" class="pf-c-table pf-u-mt-md" role="grid">\
+                <thead><tr><th>Service</th><th>Name</th><th>Value</th></tr></thead>\
+                <tbody>\
+                  <tr v-for="cred in credentialsForDisplay(provisionResult.credentials)" :key="cred.service + \'.\' + cred.name">\
+                    <td>{{ cred.service }}</td>\
+                    <td>{{ cred.name }}</td>\
+                    <td><code>{{ cred.value }}</code></td>\
+                  </tr>\
+                </tbody>\
+              </table>\
+              <div class="action-buttons pf-u-mt-md">\
+                <router-link to="/instances" class="pf-c-button pf-m-primary"><i class="fas fa-list"></i>Go to instances</router-link>\
+              </div>\
+            </div>\
+          </div>\
+        </div>\
+      </div>\
     </section>',
   data: function() {
     return {
@@ -1887,7 +1917,8 @@ var InstanceCreateView = {
       apps: [],
       nodes: [],
       tiers: [],
-      form: { customer_id: '', app_id: '', tier_name: '', node_id: '' }
+      form: { customer_id: '', app_id: '', tier_name: '', node_id: '' },
+      provisionResult: null
     };
   },
   computed: {
@@ -1933,6 +1964,7 @@ var InstanceCreateView = {
     createInstance: async function() {
       this.saving = true;
       this.error = '';
+      this.provisionResult = null;
       try {
         var result = await bffFetch('/flagship/api/instances/provision', {
           method: 'POST',
@@ -1943,13 +1975,19 @@ var InstanceCreateView = {
             node_id: this.form.node_id
           })
         });
+        this.provisionResult = result;
         window.showToast('success', 'Provision queued' + (result.operation_id ? ': ' + result.operation_id : ''));
-        this.$router.push('/instances');
       } catch (e) {
         this.error = e.message;
       } finally {
         this.saving = false;
       }
+    },
+    credentialsForDisplay: function(credentials) {
+      return (credentials || []).filter(function(c) { return c.kind !== 'notice'; });
+    },
+    noticesForDisplay: function(credentials) {
+      return (credentials || []).filter(function(c) { return c.kind === 'notice'; });
     }
   },
   mounted: function() { this.loadForm(); }
@@ -2076,6 +2114,23 @@ var InstanceDetailView = {
           </div>\
         </div>\
         <div class="pf-c-card detail-section-card">\
+          <div class="pf-c-card__header"><h2 class="detail-section-title"><i class="fas fa-key"></i>Access credentials</h2><p class="detail-section-meta">Exposed secrets and setup notices for the instance.</p></div>\
+          <div class="pf-c-card__body">\
+            <button class="pf-c-button pf-m-secondary" @click="toggleCredentials" :disabled="credentialsLoading"><i class="fas fa-eye"></i>{{ showCredentials ? 'Hide credentials' : 'Show credentials' }}</button>\
+            <div v-if="credentialsLoading" class="loading pf-u-mt-md"><i class="fas fa-spinner fa-spin pf-u-mr-sm"></i>Loading credentials...</div>\
+            <div v-else-if="credentialsError" class="pf-c-alert pf-m-danger pf-m-inline pf-u-mt-md" role="alert"><p class="pf-c-alert__title">{{ credentialsError }}</p></div>\
+            <template v-else-if="showCredentials">\
+              <div v-if="credentials.length === 0" class="pf-u-color-400 pf-u-mt-md">No credentials exposed for this instance.</div>\
+              <div v-else>\
+                <div v-for="cred in credentials" :key="(cred.service || \'\') + \'.\' + (cred.name || \'\')" class="pf-u-mb-sm">\
+                  <span v-if="cred.kind === 'notice'" class="pf-c-content"><strong>{{ cred.name }}:</strong> <code>{{ cred.value }}</code></span>\
+                  <span v-else class="pf-c-content"><strong>{{ cred.service }}.{{ cred.name }}:</strong> <code>{{ cred.value }}</code></span>\
+                </div>\
+              </div>\
+            </template>\
+          </div>\
+        </div>\
+        <div class="pf-c-card detail-section-card">\
           <div class="pf-c-card__header"><h2 class="detail-section-title"><i class="fas fa-clipboard-list"></i>Recent operations</h2><p class="detail-section-meta">Recent task history for the instance.</p></div>\
           <div class="pf-c-card__body pf-m-0">\
             <div v-if="opsLoading" class="loading"><i class="fas fa-spinner fa-spin pf-u-mr-sm"></i>Loading operations...</div>\
@@ -2184,7 +2239,8 @@ var InstanceDetailView = {
       operations: [], opsLoading: false,
       showDangerZone: false, showDeprovisionModal: false, deprovisionConfirmInput: '', deprovisionError: '',
       showMigrateModal: false, migrateNodeId: '', migrateBusy: false, migrateError: '', migrateSuccess: '', availableNodes: [],
-      instanceBackups: [], backupsLoading: false
+      instanceBackups: [], backupsLoading: false,
+      credentials: [], credentialsLoading: false, credentialsError: '', showCredentials: false
     };
   },
   watch: {
@@ -2356,6 +2412,27 @@ var InstanceDetailView = {
         this.instanceBackups = [];
       } finally {
         this.backupsLoading = false;
+      }
+    },
+    loadCredentials: async function() {
+      var id = this.instanceId;
+      if (!id) return;
+      this.credentialsLoading = true;
+      this.credentialsError = '';
+      try {
+        var data = await bffFetch('/flagship/api/instances/' + id + '/credentials');
+        this.credentials = Array.isArray(data) ? data : (data.credentials || []);
+      } catch (e) {
+        this.credentialsError = e.message;
+        this.credentials = [];
+      } finally {
+        this.credentialsLoading = false;
+      }
+    },
+    toggleCredentials: function() {
+      this.showCredentials = !this.showCredentials;
+      if (this.showCredentials && this.credentials.length === 0 && !this.credentialsLoading) {
+        this.loadCredentials();
       }
     },
     triggerBackup: async function(kind) {

@@ -128,6 +128,19 @@ def instance_detail(instance_id):
         return jsonify({"error": msg}), 502
 
 
+@bp.route("/<instance_id>/credentials")
+def credentials(instance_id):
+    from app.security import sanitize_error_message
+    validate_instance_id(instance_id)
+
+    try:
+        data = api_get(f"/api/v1/customer-apps/{instance_id}/credentials")
+        return jsonify(data if isinstance(data, list) else [])
+    except Exception as e:
+        msg = sanitize_error_message(e, "credentials")
+        return jsonify({"error": msg, "credentials": []}), 502
+
+
 @bp.route("/<instance_id>/tiers")
 def instance_tiers(instance_id):
     from app.security import sanitize_error_message

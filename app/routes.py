@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 
 from flask import Blueprint, render_template, jsonify, request
 from app.admiral_client import api_get
+from app.security import sanitize_error_message
 
 bp = Blueprint("main", __name__, url_prefix="/")
 
@@ -54,7 +55,7 @@ def ready():
             {
                 "status": "error",
                 "admirald": "error",
-                "error": str(e),
+                "error": sanitize_error_message(e, "ready"),
                 "timestamp": datetime.now(timezone.utc).isoformat(),
             }
         )

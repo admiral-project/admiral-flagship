@@ -38,10 +38,9 @@ def init_csrf_protection(app):
         if request.method in ("GET", "HEAD", "OPTIONS"):
             return None
 
-        # Skip CSRF check for public endpoints (login, logout from form are POST)
+        # Skip CSRF check for public endpoints (login from form is POST)
         public_post_endpoints = [
             "/flagship/api/auth/login",
-            "/flagship/api/auth/logout",
         ]
 
         if request.path in public_post_endpoints:

@@ -2,8 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import logging
-import os
-import subprocess
 
 from flask import Blueprint, jsonify, request
 from app.admiral_client import api_get, api_post
@@ -14,45 +12,9 @@ logger = logging.getLogger("admiral-flagship")
 
 bp = Blueprint("bff_instances", __name__, url_prefix="/flagship/api/instances")
 
-FLEET_ROOTLESS_USER = os.environ.get("ADMIRAL_FLEET_ROOTLESS_USER", "admiral-apps")
-
 
 def validate_instance_id(instance_id):
     validate_resource_id(instance_id, "instance")
-
-
-def _get_instance_port(instance):
-    instance_id = instance.get("id")
-    if not instance_id:
-        return None
-    validate_instance_id(instance_id)
-    pod_id = instance_id.replace("inst_", "", 1)
-    try:
-        uid = subprocess.run(
-            ["/usr/bin/id", "-u", FLEET_ROOTLESS_USER],
-            capture_output=True,
-            text=True,
-            timeout=5,
-        ).stdout.strip()
-        if not uid:
-            return None
-        # Read Quadlet .pod file directly instead of querying systemd
-        pod_file = f"/etc/containers/systemd/users/{uid}/admiral/admiral-inst_{pod_id}.pod"
-        try:
-            with open(pod_file) as f:
-                for line in f:
-                    if line.startswith("PublishPort="):
-                        parts = line.strip().split("=", 1)[1]
-                        host_port, container_port = parts.split(":", 1)
-                        return {
-                            "host_port": int(host_port),
-                            "container_port": int(container_port),
-                        }
-        except FileNotFoundError:
-            logger.debug("pod file not found for instance", extra={"instance_id": instance_id})
-    except Exception:
-        logger.debug("failed to get instance port", extra={"instance_id": instance_id})
-    return None
 
 
 def normalize_instance(data):
@@ -118,7 +80,6 @@ def instance_detail(instance_id):
     try:
         data = api_get(f"/api/admin/instances/{instance_id}")
         normalize_instance(data)
-        data["port"] = _get_instance_port(data) or {}
         return jsonify(data)
     except Exception as e:
         msg = sanitize_error_message(e, "instance_detail")

@@ -180,9 +180,7 @@ def init_security_headers(app):
         response.headers["Referrer-Policy"] = "same-origin"
 
         # Permissions policy (prevent access to sensitive features)
-        response.headers["Permissions-Policy"] = (
-            "geolocation=(), " "microphone=(), " "camera=(), " "usb=(), " "payment=()"
-        )
+        response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=(), usb=(), payment=()"
 
         return response
 

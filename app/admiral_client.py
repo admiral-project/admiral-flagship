@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import logging
+import os
 
 import requests
 from flask import session, current_app, g
@@ -17,6 +18,9 @@ def _headers(path):
 
 
 def _verify():
+    skip = os.environ.get("ADMIRAL_INSECURE_SKIP_VERIFY", "").lower() in ("1", "true", "yes")
+    if skip:
+        return False
     ca = current_app.config["ADMIRAL_CA_FILE"]
     return ca if ca else True
 
@@ -158,7 +162,7 @@ def check_rate_limit(identifier, max_attempts=5, window_seconds=60):
     """Check rate limit via admirald API.
 
     Returns (allowed: bool, remaining: int).
-    Falls back to allowed on failure.
+    Fails closed on error (deny access).
     """
     path = "/api/v1/rate-limit/check"
     payload = {
@@ -186,7 +190,7 @@ def check_rate_limit(identifier, max_attempts=5, window_seconds=60):
             "rate limit check request failed",
             extra={"identifier": identifier, "error": str(e)},
         )
-    return True, 0
+    return False, 0
 
 
 def reset_rate_limit(identifier):

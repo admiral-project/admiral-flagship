@@ -55,7 +55,7 @@ def test_check_rate_limit_fallback_on_failure(app):
             from app.admiral_client import check_rate_limit
 
             allowed, remaining = check_rate_limit("192.168.1.1")
-            assert allowed is True
+            assert allowed is False
             assert remaining == 0
 
 

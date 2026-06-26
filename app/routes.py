@@ -13,9 +13,7 @@ bp = Blueprint("main", __name__, url_prefix="/")
 
 def _ip_allowed():
     addr = request.remote_addr or ""
-    allowed_cidrs = os.environ.get(
-        "FLAGSHIP_ALLOWED_HEALTH_IPS", "127.0.0.1/32,::1/128,10.99.0.0/16"
-    )
+    allowed_cidrs = os.environ.get("FLAGSHIP_ALLOWED_HEALTH_IPS", "127.0.0.1/32,::1/128,10.99.0.0/16")
     try:
         ip = ipaddress.ip_address(addr)
         for cidr in allowed_cidrs.split(","):
@@ -44,15 +42,19 @@ def ready():
         return jsonify({"status": "forbidden"}), 403
     try:
         api_get("/api/v1/status")
-        return jsonify({
-            "status": "ok",
-            "admirald": "ok",
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-        })
+        return jsonify(
+            {
+                "status": "ok",
+                "admirald": "ok",
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            }
+        )
     except Exception as e:
-        return jsonify({
-            "status": "error",
-            "admirald": "error",
-            "error": str(e),
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-        })
+        return jsonify(
+            {
+                "status": "error",
+                "admirald": "error",
+                "error": str(e),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            }
+        )

@@ -71,9 +71,7 @@ def _mock_api_delete_failure():
 
 class TestBFFNodes:
     def test_nodes_list(self, client):
-        with patch(
-            "app.bff.nodes.api_get", _mock_api_get([{"id": "n1", "hostname": "node1"}])
-        ):
+        with patch("app.bff.nodes.api_get", _mock_api_get([{"id": "n1", "hostname": "node1"}])):
             resp = client.get("/flagship/api/nodes")
             assert resp.status_code == 200
             assert resp.json["nodes"][0]["id"] == "n1"
@@ -104,9 +102,7 @@ class TestBFFNodes:
 
 class TestBFFCatalog:
     def test_apps_list(self, client):
-        with patch(
-            "app.bff.catalog.api_get", _mock_api_get([{"id": "a1", "name": "whoami"}])
-        ):
+        with patch("app.bff.catalog.api_get", _mock_api_get([{"id": "a1", "name": "whoami"}])):
             resp = client.get("/flagship/api/catalog/apps")
             assert resp.status_code == 200
             assert resp.json["apps"][0]["name"] == "whoami"
@@ -168,7 +164,15 @@ class TestBFFCatalog:
             ),
             patch(
                 "app.bff.catalog.api_get_text",
-                lambda path: "name: whoami\ntiers:\n  starter:\n    cpu: 0.5\n    memory: 512Mi\n    storage: 5Gi\n    price_monthly: 9.99\n",
+                lambda path: (
+                    "name: whoami\n"
+                    "tiers:\n"
+                    "  starter:\n"
+                    "    cpu: 0.5\n"
+                    "    memory: 512Mi\n"
+                    "    storage: 5Gi\n"
+                    "    price_monthly: 9.99\n"
+                ),
             ),
         ):
             resp = client.get("/flagship/api/catalog/apps/whoami/provisioning")
@@ -180,9 +184,7 @@ class TestBFFInstances:
     def test_list_instances(self, client):
         with patch(
             "app.bff.instances.api_get",
-            _mock_api_get(
-                {"items": [{"id": "i1"}], "page": 1, "page_size": 20, "total": 1}
-            ),
+            _mock_api_get({"items": [{"id": "i1"}], "page": 1, "page_size": 20, "total": 1}),
         ):
             resp = client.get("/flagship/api/instances")
             assert resp.status_code == 200
@@ -214,20 +216,14 @@ class TestBFFInstances:
         assert resp.status_code == 400
 
     def test_instance_action(self, client):
-        with patch(
-            "app.bff.instances.api_post", _mock_api_post({"operation_id": "op1"})
-        ):
-            resp = client.post(
-                "/flagship/api/instances/i1/action", json={"action": "pause"}
-            )
+        with patch("app.bff.instances.api_post", _mock_api_post({"operation_id": "op1"})):
+            resp = client.post("/flagship/api/instances/i1/action", json={"action": "pause"})
             assert resp.status_code == 200
             assert resp.json["operation_id"] == "op1"
 
     def test_instance_action_failure(self, client):
         with patch("app.bff.instances.api_post", _mock_api_post_failure()):
-            resp = client.post(
-                "/flagship/api/instances/i1/action", json={"action": "pause"}
-            )
+            resp = client.post("/flagship/api/instances/i1/action", json={"action": "pause"})
             assert resp.status_code == 502
 
     def test_provision_instance(self, client):
@@ -251,9 +247,7 @@ class TestBFFBackups:
     def test_list_backups(self, client):
         with patch(
             "app.bff.backups.api_get",
-            _mock_api_get(
-                {"items": [{"id": "b1"}], "page": 1, "page_size": 20, "total": 1}
-            ),
+            _mock_api_get({"items": [{"id": "b1"}], "page": 1, "page_size": 20, "total": 1}),
         ):
             resp = client.get("/flagship/api/backups")
             assert resp.status_code == 200
@@ -282,9 +276,7 @@ class TestBFFBackups:
 
     def test_trigger_backup(self, client):
         with patch("app.bff.backups.api_post", _mock_api_post({"operation_id": "op1"})):
-            resp = client.post(
-                "/flagship/api/backups/trigger", json={"instance_id": "i1"}
-            )
+            resp = client.post("/flagship/api/backups/trigger", json={"instance_id": "i1"})
             assert resp.status_code == 200
 
     def test_restore_missing_fields(self, client):
@@ -306,9 +298,7 @@ class TestBFFJobs:
     def test_list_jobs(self, client):
         with patch(
             "app.bff.jobs.api_get",
-            _mock_api_get(
-                {"items": [{"id": "j1"}], "page": 1, "page_size": 20, "total": 1}
-            ),
+            _mock_api_get({"items": [{"id": "j1"}], "page": 1, "page_size": 20, "total": 1}),
         ):
             resp = client.get("/flagship/api/jobs")
             assert resp.status_code == 200
@@ -422,9 +412,7 @@ class TestBFFBackupVolumeTrigger:
 
 class TestBFFNodeRegister:
     def test_register_node(self, client):
-        with patch(
-            "app.bff.nodes.api_post", _mock_api_post({"success": True, "node_id": "n1"})
-        ):
+        with patch("app.bff.nodes.api_post", _mock_api_post({"success": True, "node_id": "n1"})):
             resp = client.post(
                 "/flagship/api/nodes/register",
                 json={"node_id": "n1", "hostname": "worker-1", "ip": "10.0.0.1"},
@@ -444,16 +432,10 @@ class TestBFFNodeRegister:
 class TestBFFInstanceTiersAndOps:
     def test_instance_tiers(self, client):
         def mock_get(path):
-            if (
-                "/instances/" in path
-                and "/tiers" not in path
-                and "/operations" not in path
-            ):
+            if "/instances/" in path and "/tiers" not in path and "/operations" not in path:
                 return {"id": "i1", "app_id": "whoami", "tier_id": "starter"}
             if "apps/" in path and "/tiers" in path:
-                return [
-                    {"name": "starter", "cpu": 0.5, "memory": "512Mi", "storage": "5Gi"}
-                ]
+                return [{"name": "starter", "cpu": 0.5, "memory": "512Mi", "storage": "5Gi"}]
             return {}
 
         with patch("app.bff.instances.api_get", mock_get):
@@ -469,9 +451,7 @@ class TestBFFInstanceTiersAndOps:
     def test_instance_operations(self, client):
         with patch(
             "app.bff.instances.api_get",
-            _mock_api_get(
-                {"items": [{"id": "op1", "action": "provision", "instance_id": "i1"}]}
-            ),
+            _mock_api_get({"items": [{"id": "op1", "action": "provision", "instance_id": "i1"}]}),
         ):
             resp = client.get("/flagship/api/instances/i1/operations")
             assert resp.status_code == 200
@@ -489,9 +469,7 @@ class TestBFFInstanceMigrate:
             "app.bff.instances.api_post",
             _mock_api_post({"operation_id": "op1", "status": "running"}),
         ):
-            resp = client.post(
-                "/flagship/api/instances/i1/migrate", json={"node_id": "worker-02"}
-            )
+            resp = client.post("/flagship/api/instances/i1/migrate", json={"node_id": "worker-02"})
             assert resp.status_code == 200
             assert resp.json["operation_id"] == "op1"
 
@@ -513,9 +491,7 @@ class TestBFFInstanceMigrate:
 
     def test_migrate_instance_failure(self, client):
         with patch("app.bff.instances.api_post", _mock_api_post_failure()):
-            resp = client.post(
-                "/flagship/api/instances/i1/migrate", json={"node_id": "worker-02"}
-            )
+            resp = client.post("/flagship/api/instances/i1/migrate", json={"node_id": "worker-02"})
             assert resp.status_code == 502
 
 

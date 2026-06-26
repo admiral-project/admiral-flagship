@@ -32,14 +32,10 @@ class Config:
     # Session security settings
     SESSION_COOKIE_NAME = "flagship_session"
     SESSION_COOKIE_HTTPONLY = True  # Prevent JavaScript access
-    SESSION_COOKIE_SECURE = _env_bool(
-        "FLAGSHIP_SESSION_COOKIE_SECURE", True
-    )  # HTTPS only
+    SESSION_COOKIE_SECURE = _env_bool("FLAGSHIP_SESSION_COOKIE_SECURE", True)  # HTTPS only
     SESSION_COOKIE_SAMESITE = "Strict"  # Strict CSRF protection (changed from Lax)
     SESSION_REFRESH_EACH_REQUEST = True  # Extend timeout on each request
-    SESSION_TIMEOUT_MINUTES = int(
-        os.environ.get("FLAGSHIP_SESSION_TIMEOUT_MINUTES", "30")
-    )
+    SESSION_TIMEOUT_MINUTES = int(os.environ.get("FLAGSHIP_SESSION_TIMEOUT_MINUTES", "30"))
     PERMANENT_SESSION_LIFETIME = timedelta(minutes=SESSION_TIMEOUT_MINUTES)
 
     # Additional security settings

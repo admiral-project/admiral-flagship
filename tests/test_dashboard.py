@@ -99,7 +99,4 @@ def test_dashboard_exposes_failed_backup_diagnostics(client):
         response = client.get("/flagship/api/dashboard")
         assert response.status_code == 200
         assert response.json["recent_failed_backups"][0]["detail_path"] == "/backups/b1"
-        assert (
-            response.json["recent_failed_backups"][0]["error_message"]
-            == "checksum mismatch"
-        )
+        assert response.json["recent_failed_backups"][0]["error_message"] == "checksum mismatch"

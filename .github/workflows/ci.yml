@@ -24,12 +24,17 @@ jobs:
       - run: pip install .
         name: Install project
 
-      - run: pip install pytest ruff bandit
+      - run: pip install pytest ruff bandit flake8 black
         name: Install test and lint tools
 
+      - run: black --check --diff .
+        name: black format check
+
       - run: ruff check .
-        continue-on-error: true
         name: ruff check
+
+      - run: flake8 .
+        name: flake8
 
       - run: bandit -r . -ll
         continue-on-error: true
@@ -37,6 +42,10 @@ jobs:
 
       - run: npm ci
         name: Install JS devDependencies
+
+      - run: npx eslint .
+        continue-on-error: true
+        name: eslint
 
       - run: python -m pytest tests/ -v
         name: pytest

@@ -36,15 +36,9 @@ def login():
     allowed, remaining = check_rate_limit(ip)
 
     if not allowed:
-        logger.warning(
-            "login rate limited", extra={"ip": ip, "remaining_seconds": remaining}
-        )
+        logger.warning("login rate limited", extra={"ip": ip, "remaining_seconds": remaining})
         return (
-            jsonify(
-                {
-                    "error": f"Too many login attempts. Try again in {remaining} second(s)."
-                }
-            ),
+            jsonify({"error": f"Too many login attempts. Try again in {remaining} second(s)."}),
             429,
         )
 
@@ -66,14 +60,10 @@ def login():
             session["csrf_token"] = csrf_token
         session["admin_token"] = result["token"]
         session["admin_username"] = data["username"]
-        session["password_change_required"] = result.get(
-            "password_change_required", False
-        )
+        session["password_change_required"] = result.get("password_change_required", False)
         session[SESSION_STARTED_AT_KEY] = int(time.time())
         if session["password_change_required"]:
-            return jsonify(
-                {"password_change_required": True, "username": data["username"]}
-            )
+            return jsonify({"password_change_required": True, "username": data["username"]})
         logger.info("admin login ok", extra={"username": data["username"]})
         return jsonify({"status": "ok", "username": data["username"]})
     except requests.HTTPError as e:
@@ -85,9 +75,7 @@ def login():
         )
         return _generic_auth_failure(status if status in (401, 403) else 401)
     except Exception as e:
-        logger.warning(
-            "admin login failed", extra={"username": data["username"], "error": str(e)}
-        )
+        logger.warning("admin login failed", extra={"username": data["username"], "error": str(e)})
         return _generic_auth_failure()
 
 
@@ -201,9 +189,7 @@ def change_password():
         except requests.HTTPError as e:
             status = e.response.status_code if e.response is not None else 400
             detail = _extract_error(e)
-            logger.warning(
-                "password change failed", extra={"status": status, "error": detail}
-            )
+            logger.warning("password change failed", extra={"status": status, "error": detail})
             return _generic_auth_failure(status if status in (401, 403) else 400)
         except Exception as e:
             logger.warning("password change failed", extra={"error": str(e)})
@@ -223,9 +209,7 @@ def change_password():
         except requests.HTTPError as e:
             status = e.response.status_code if e.response is not None else 400
             detail = _extract_error(e)
-            logger.warning(
-                "password change failed", extra={"status": status, "error": detail}
-            )
+            logger.warning("password change failed", extra={"status": status, "error": detail})
             return _generic_auth_failure(status if status in (401, 403) else 400)
         except Exception as e:
             logger.warning("password change failed", extra={"error": str(e)})

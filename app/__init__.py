@@ -45,8 +45,7 @@ def create_app():
             return True
         best = request.accept_mimetypes.best_match(["application/json", "text/html"])
         return best == "application/json" and (
-            request.accept_mimetypes["application/json"]
-            >= request.accept_mimetypes["text/html"]
+            request.accept_mimetypes["application/json"] >= request.accept_mimetypes["text/html"]
         )
 
     def unauthenticated_response(error_message):
@@ -76,10 +75,7 @@ def create_app():
                 return None
 
             # Exclude change-password if no token in session (first-time login password change)
-            if (
-                request.path == "/flagship/api/auth/change-password"
-                and "admin_token" not in session
-            ):
+            if request.path == "/flagship/api/auth/change-password" and "admin_token" not in session:
                 return None
 
             # Verify active session
@@ -123,6 +119,7 @@ def create_app():
     @app.errorhandler(ValueError)
     def handle_value_error(error):
         from app.security import sanitize_error_message
+
         msg = sanitize_error_message(error)
         if wants_json_response():
             return jsonify({"error": msg}), 400

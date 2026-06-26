@@ -34,10 +34,7 @@ def runner(app):
 @pytest.fixture(autouse=True)
 def auto_session(request, client):
     # Auto-login for BFF and Dashboard tests since they expect an authenticated session
-    if request.module and (
-        "test_bff" in request.module.__name__
-        or "test_dashboard" in request.module.__name__
-    ):
+    if request.module and ("test_bff" in request.module.__name__ or "test_dashboard" in request.module.__name__):
         with client.session_transaction() as sess:
             sess["admin_token"] = "test-admin-token"
             sess["admin_username"] = "admin"

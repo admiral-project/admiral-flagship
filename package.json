@@ -9,7 +9,9 @@
     "test:watch": "mocha 'tests/js/**/*.test.js' --watch --timeout 10000"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "chai": "^4.3.0",
+    "eslint": "^10.5.0",
     "jsdom": "^24.0.0",
     "mocha": "^10.4.0",
     "vue": "^3.4.0",

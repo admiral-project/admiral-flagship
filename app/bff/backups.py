@@ -87,6 +87,7 @@ def test_backup_settings():
 @bp.route("/<backup_id>")
 def backup_detail(backup_id):
     from app.security import sanitize_error_message
+
     validate_backup_id(backup_id)
 
     try:
@@ -109,13 +110,9 @@ def trigger_backup():
         return jsonify({"error": "kind must be 'database' or 'volumes'"}), 400
     try:
         if kind == "volumes":
-            result = api_post(
-                f"/api/admin/instances/{data['instance_id']}/backups/volumes"
-            )
+            result = api_post(f"/api/admin/instances/{data['instance_id']}/backups/volumes")
         else:
-            result = api_post(
-                f"/api/admin/instances/{data['instance_id']}/backups/database"
-            )
+            result = api_post(f"/api/admin/instances/{data['instance_id']}/backups/database")
         return jsonify(result)
     except Exception as e:
         msg = sanitize_error_message(e, "trigger_backup")
@@ -137,6 +134,7 @@ def prune_backups():
 @bp.route("/<backup_id>", methods=["DELETE"])
 def delete_backup(backup_id):
     from app.security import sanitize_error_message
+
     validate_backup_id(backup_id)
 
     try:

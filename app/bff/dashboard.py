@@ -72,12 +72,8 @@ def _duration_seconds(item):
     explicit = _first(item, "duration_seconds", "duration_secs", "duration")
     if isinstance(explicit, (int, float)):
         return int(explicit)
-    started = _parse_datetime(
-        _first(item, "started_at", "created_at", "created", "timestamp")
-    )
-    ended = _parse_datetime(
-        _first(item, "finished_at", "updated_at", "updated", "completed_at")
-    )
+    started = _parse_datetime(_first(item, "started_at", "created_at", "created", "timestamp"))
+    ended = _parse_datetime(_first(item, "finished_at", "updated_at", "updated", "completed_at"))
     if started is None or ended is None:
         return None
     return max(0, int((ended - started).total_seconds()))
@@ -134,9 +130,7 @@ def dashboard():
     except Exception as exc:
         msg = sanitize_error_message(exc, "dashboard.nodes")
         return (
-            jsonify(
-                {"error": msg, "nodes": [], "instances": [], "jobs": [], "backups": []}
-            ),
+            jsonify({"error": msg, "nodes": [], "instances": [], "jobs": [], "backups": []}),
             502,
         )
 
@@ -205,35 +199,18 @@ def dashboard():
     total_disk = sum(_safe_int(node.get("disk_total_bytes")) for node in nodes)
     committed_disk = sum(_safe_int(node.get("committed_disk_bytes")) for node in nodes)
 
-    offline_nodes = [
-        node
-        for node in nodes
-        if _status_lower(node) in ("offline", "unreachable", "down")
-    ]
-    active_nodes = [
-        node
-        for node in nodes
-        if _status_lower(node) not in ("offline", "unreachable", "down")
-    ]
-    failed_jobs = [
-        job for job in jobs if _status_lower(job) in ("failed", "error", "cancelled")
-    ]
-    failed_backups = [
-        backup for backup in backups if _status_lower(backup) in ("failed", "error")
-    ]
+    offline_nodes = [node for node in nodes if _status_lower(node) in ("offline", "unreachable", "down")]
+    active_nodes = [node for node in nodes if _status_lower(node) not in ("offline", "unreachable", "down")]
+    failed_jobs = [job for job in jobs if _status_lower(job) in ("failed", "error", "cancelled")]
+    failed_backups = [backup for backup in backups if _status_lower(backup) in ("failed", "error")]
 
     instance_summary = _instance_status_summary(instances)
-    error_instances = [
-        instance
-        for instance in instances
-        if _status_lower(instance) in ("error", "failed")
-    ]
+    error_instances = [instance for instance in instances if _status_lower(instance) in ("error", "failed")]
 
     degraded_nodes = [
         node
         for node in nodes
-        if node.get("health_status") == "degraded"
-        and _status_lower(node) not in ("offline", "unreachable", "down")
+        if node.get("health_status") == "degraded" and _status_lower(node) not in ("offline", "unreachable", "down")
     ]
 
     alerts = []
@@ -301,11 +278,7 @@ def dashboard():
                 "duration_seconds": _duration_seconds(job),
                 "progress_percent": _progress_percent(job),
                 "can_retry": bool(job.get("can_retry") or job.get("retry_supported")),
-                "can_view_logs": bool(
-                    job.get("log_available")
-                    or job.get("log_url")
-                    or job.get("error_message")
-                ),
+                "can_view_logs": bool(job.get("log_available") or job.get("log_url") or job.get("error_message")),
             }
         )
 

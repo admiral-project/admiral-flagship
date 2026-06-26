@@ -62,9 +62,7 @@ def init_csrf_protection(app):
             token = data.get("csrf_token") or request.headers.get("X-CSRF-Token")
         else:
             # Form data or query string
-            token = request.form.get("csrf_token") or request.headers.get(
-                "X-CSRF-Token"
-            )
+            token = request.form.get("csrf_token") or request.headers.get("X-CSRF-Token")
 
         if not token:
             return jsonify({"error": "CSRF token missing"}), 403
@@ -107,9 +105,7 @@ def require_csrf_token(f):
             data = request.get_json(silent=True) or {}
             token = data.get("csrf_token") or request.headers.get("X-CSRF-Token")
         else:
-            token = request.form.get("csrf_token") or request.headers.get(
-                "X-CSRF-Token"
-            )
+            token = request.form.get("csrf_token") or request.headers.get("X-CSRF-Token")
 
         session_token = session.get("csrf_token")
 

@@ -261,8 +261,7 @@ BACKUPS = [
         "status": "completed",
         "size": 46137344,
         "created_at": (NOW - timedelta(days=1)).isoformat() + "Z",
-        "completed_at": (NOW - timedelta(days=1, hours=0, minutes=-5)).isoformat()
-        + "Z",
+        "completed_at": (NOW - timedelta(days=1, hours=0, minutes=-5)).isoformat() + "Z",
     },
     {
         "id": "bkp_b1",
@@ -280,8 +279,7 @@ BACKUPS = [
         "status": "completed",
         "size": 1288490189,
         "created_at": (NOW - timedelta(days=7)).isoformat() + "Z",
-        "completed_at": (NOW - timedelta(days=7, hours=0, minutes=-10)).isoformat()
-        + "Z",
+        "completed_at": (NOW - timedelta(days=7, hours=0, minutes=-10)).isoformat() + "Z",
     },
     {
         "id": "bkp_c1",
@@ -290,8 +288,7 @@ BACKUPS = [
         "status": "completed",
         "size": 933232640,
         "created_at": (NOW - timedelta(days=14)).isoformat() + "Z",
-        "completed_at": (NOW - timedelta(days=14, hours=0, minutes=-3)).isoformat()
-        + "Z",
+        "completed_at": (NOW - timedelta(days=14, hours=0, minutes=-3)).isoformat() + "Z",
     },
     {
         "id": "bkp_e1",
@@ -442,9 +439,7 @@ def mock_admin_me():
     session = _admin_sessions.get(token)
     if not session:
         return jsonify({"error": "not authenticated"}), 401
-    return jsonify(
-        {"username": session["username"], "created_at": session["created_at"]}
-    )
+    return jsonify({"username": session["username"], "created_at": session["created_at"]})
 
 
 @mock_app.route("/api/admin/auth/change-password", methods=["POST"])
@@ -483,16 +478,10 @@ def mock_admin_node_metrics(node_id):
         {
             "node_id": node_id,
             "cpu_used_percent": round(45 + hash(node_id) % 40, 1),
-            "memory_used_percent": (
-                round(node["memory_used"] / node["memory"] * 100, 1)
-                if node["memory"]
-                else 0
-            ),
+            "memory_used_percent": (round(node["memory_used"] / node["memory"] * 100, 1) if node["memory"] else 0),
             "memory_used_bytes": node["memory_used"],
             "memory_total_bytes": node["memory"],
-            "disk_used_percent": (
-                round(node["disk_used"] / node["disk"] * 100, 1) if node["disk"] else 0
-            ),
+            "disk_used_percent": (round(node["disk_used"] / node["disk"] * 100, 1) if node["disk"] else 0),
             "disk_used_bytes": node["disk_used"],
             "disk_total_bytes": node["disk"],
             "pod_count": 3 + hash(node_id) % 8,
@@ -845,9 +834,7 @@ def _wait_for_mock(host, port, timeout=10):
     start = time.time()
     while time.time() - start < timeout:
         try:
-            resp = urllib.request.urlopen(
-                f"http://{host}:{port}/health", timeout=1
-            )  # nosec - controlled dev mock
+            resp = urllib.request.urlopen(f"http://{host}:{port}/health", timeout=1)  # nosec - controlled dev mock
             if resp.status == 200:
                 return True
         except Exception:
@@ -862,9 +849,7 @@ def main():
     os.environ.setdefault("FLAGSHIP_SECRET_KEY", "dev-secret-key-change-in-production")
 
     mock_daemon = threading.Thread(
-        target=lambda: mock_app.run(
-            host=HOST, port=MOCK_PORT, debug=False, use_reloader=False
-        ),
+        target=lambda: mock_app.run(host=HOST, port=MOCK_PORT, debug=False, use_reloader=False),
         daemon=True,
     )
     mock_daemon.start()

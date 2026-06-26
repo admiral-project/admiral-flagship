@@ -24,9 +24,7 @@ def list_jobs():
         payload = normalize_page(data, "jobs", 1, 1000)
         items = payload["items"]
         if status:
-            items = [
-                job for job in items if str(job.get("status", "")).lower() == status
-            ]
+            items = [job for job in items if str(job.get("status", "")).lower() == status]
         result = paginate_items(items, page, page_size)
         result["jobs"] = result["items"]
         return jsonify(result)
@@ -50,6 +48,7 @@ def list_jobs():
 @bp.route("/<job_id>")
 def job_detail(job_id):
     from app.security import sanitize_error_message
+
     validate_job_id(job_id)
 
     try:

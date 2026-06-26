@@ -25,13 +25,9 @@ def list_nodes():
         payload = normalize_page(data, "nodes", 1, 1000)
         items = payload["items"]
         if status:
-            items = [
-                node for node in items if str(node.get("status", "")).lower() == status
-            ]
+            items = [node for node in items if str(node.get("status", "")).lower() == status]
         if node_role:
-            items = [
-                node for node in items if str(node.get("node_role", "")).lower() == node_role
-            ]
+            items = [node for node in items if str(node.get("node_role", "")).lower() == node_role]
         result = paginate_items(items, page, page_size)
         result["nodes"] = result["items"]
         return jsonify(result)
@@ -73,6 +69,7 @@ def register_node():
 @bp.route("/<node_id>")
 def node_detail(node_id):
     from app.security import sanitize_error_message
+
     validate_node_id(node_id)
 
     try:
@@ -90,6 +87,7 @@ def node_detail(node_id):
 @bp.route("/<node_id>/disable", methods=["POST"])
 def disable_node(node_id):
     from app.security import sanitize_error_message
+
     validate_node_id(node_id)
 
     try:
@@ -103,6 +101,7 @@ def disable_node(node_id):
 @bp.route("/<node_id>/enable", methods=["POST"])
 def enable_node(node_id):
     from app.security import sanitize_error_message
+
     validate_node_id(node_id)
 
     try:
@@ -116,6 +115,7 @@ def enable_node(node_id):
 @bp.route("/<node_id>", methods=["DELETE"])
 def remove_node(node_id):
     from app.security import sanitize_error_message
+
     validate_node_id(node_id)
 
     try:

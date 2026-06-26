@@ -145,9 +145,7 @@ def test_change_password_requires_active_session(client):
 
 
 def test_bff_endpoint_requires_auth(client):
-    resp = client.get(
-        "/flagship/api/nodes", headers={"X-Requested-With": "XMLHttpRequest"}
-    )
+    resp = client.get("/flagship/api/nodes", headers={"X-Requested-With": "XMLHttpRequest"})
     assert resp.status_code == 401
     assert resp.json["error"] == "unauthorized"
 
@@ -164,9 +162,7 @@ def test_bff_endpoint_temporarily_blocks_repeated_unauthenticated_access(client)
 
 
 def test_bff_endpoint_browser_navigation_redirects_to_login(client):
-    resp = client.get(
-        "/flagship/api/nodes", headers={"Accept": "text/html"}, follow_redirects=False
-    )
+    resp = client.get("/flagship/api/nodes", headers={"Accept": "text/html"}, follow_redirects=False)
     assert resp.status_code == 302
     assert resp.headers["Location"].endswith("/")
 
@@ -176,9 +172,7 @@ def test_bff_endpoint_session_expired_inactivity(client):
         sess["admin_token"] = "test-admin-token"
         sess["admin_username"] = "admin"
         sess["session_started_at"] = int(time.time()) - 31 * 60
-    resp = client.get(
-        "/flagship/api/nodes", headers={"X-Requested-With": "XMLHttpRequest"}
-    )
+    resp = client.get("/flagship/api/nodes", headers={"X-Requested-With": "XMLHttpRequest"})
     assert resp.status_code == 401
     assert resp.json["error"] == "unauthorized"
     with client.session_transaction() as sess:
@@ -200,9 +194,7 @@ def test_bff_endpoint_token_revoked_by_backend(client):
     http_error = requests.HTTPError("401 Unauthorized", response=mock_response)
 
     with patch("app.admiral_client.requests.get", side_effect=http_error):
-        resp = client.get(
-            "/flagship/api/nodes", headers={"X-Requested-With": "XMLHttpRequest"}
-    )
+        resp = client.get("/flagship/api/nodes", headers={"X-Requested-With": "XMLHttpRequest"})
 
     assert resp.status_code == 401
     assert resp.json["error"] == "unauthorized"

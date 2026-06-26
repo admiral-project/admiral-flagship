@@ -69,9 +69,7 @@ def _bump_version(yaml_text):
     current = match.group(1).strip()
     parts = current.split(".")
     if not all(part.isdigit() for part in parts):
-        raise ValueError(
-            "version must use only numeric segments to support automatic increment"
-        )
+        raise ValueError("version must use only numeric segments to support automatic increment")
 
     parts[-1] = str(int(parts[-1]) + 1)
     bumped = ".".join(parts)
@@ -106,6 +104,7 @@ def list_apps():
 @bp.route("/apps/<app_id>")
 def app_detail(app_id):
     from app.security import sanitize_error_message
+
     validate_app_id(app_id)
 
     try:
@@ -119,6 +118,7 @@ def app_detail(app_id):
 @bp.route("/apps/<app_id>/yaml")
 def app_yaml(app_id):
     from app.security import sanitize_error_message
+
     validate_app_id(app_id)
 
     try:
@@ -132,6 +132,7 @@ def app_yaml(app_id):
 @bp.route("/apps/<app_id>/provisioning")
 def app_provisioning(app_id):
     from app.security import sanitize_error_message
+
     validate_app_id(app_id)
 
     try:
@@ -177,6 +178,7 @@ def save_app():
 @bp.route("/apps/<app_id>/tiers")
 def app_tiers(app_id):
     from app.security import sanitize_error_message
+
     validate_app_id(app_id)
 
     try:
@@ -190,6 +192,7 @@ def app_tiers(app_id):
 @bp.route("/apps/<app_id>/tiers", methods=["POST"])
 def save_app_tier(app_id):
     from app.security import sanitize_error_message
+
     validate_app_id(app_id)
 
     body = request.get_json(silent=True) or {}
@@ -206,6 +209,7 @@ def save_app_tier(app_id):
 @bp.route("/apps/<app_id>/versions")
 def app_versions(app_id):
     from app.security import sanitize_error_message
+
     validate_app_id(app_id)
 
     try:
@@ -219,6 +223,7 @@ def app_versions(app_id):
 @bp.route("/apps/<app_id>/disable", methods=["POST"])
 def disable_app(app_id):
     from app.security import sanitize_error_message
+
     validate_app_id(app_id)
 
     try:
@@ -232,6 +237,7 @@ def disable_app(app_id):
 @bp.route("/apps/<app_id>/enable", methods=["POST"])
 def enable_app(app_id):
     from app.security import sanitize_error_message
+
     validate_app_id(app_id)
 
     try:

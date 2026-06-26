@@ -37,9 +37,7 @@ def _get_instance_port(instance):
         if not uid:
             return None
         # Read Quadlet .pod file directly instead of querying systemd
-        pod_file = (
-            f"/etc/containers/systemd/users/{uid}/admiral/admiral-inst_{pod_id}.pod"
-        )
+        pod_file = f"/etc/containers/systemd/users/{uid}/admiral/admiral-inst_{pod_id}.pod"
         try:
             with open(pod_file) as f:
                 for line in f:
@@ -51,9 +49,7 @@ def _get_instance_port(instance):
                             "container_port": int(container_port),
                         }
         except FileNotFoundError:
-            logger.debug(
-                "pod file not found for instance", extra={"instance_id": instance_id}
-            )
+            logger.debug("pod file not found for instance", extra={"instance_id": instance_id})
     except Exception:
         logger.debug("failed to get instance port", extra={"instance_id": instance_id})
     return None
@@ -116,6 +112,7 @@ def list_instances():
 @bp.route("/<instance_id>")
 def instance_detail(instance_id):
     from app.security import sanitize_error_message
+
     validate_instance_id(instance_id)
 
     try:
@@ -131,6 +128,7 @@ def instance_detail(instance_id):
 @bp.route("/<instance_id>/credentials")
 def credentials(instance_id):
     from app.security import sanitize_error_message
+
     validate_instance_id(instance_id)
 
     try:
@@ -144,15 +142,12 @@ def credentials(instance_id):
 @bp.route("/<instance_id>/tiers")
 def instance_tiers(instance_id):
     from app.security import sanitize_error_message
+
     validate_instance_id(instance_id)
 
     try:
         instance = api_get(f"/api/admin/instances/{instance_id}")
-        app_id = (
-            instance.get("app_id")
-            or instance.get("app")
-            or instance.get("app_definition_name")
-        )
+        app_id = instance.get("app_id") or instance.get("app") or instance.get("app_definition_name")
         if not app_id:
             return jsonify({"error": "instance has no app reference", "tiers": []}), 404
         tiers = api_get(f"/api/admin/apps/{app_id}/tiers")
@@ -170,20 +165,13 @@ def instance_tiers(instance_id):
 @bp.route("/<instance_id>/operations")
 def instance_operations(instance_id):
     from app.security import sanitize_error_message
+
     validate_instance_id(instance_id)
 
     try:
         data = api_get("/api/admin/tasks")
-        items = (
-            data
-            if isinstance(data, list)
-            else data.get("items") or data.get("data") or []
-        )
-        related = [
-            op
-            for op in items
-            if op.get("instance_id") == instance_id or op.get("instance") == instance_id
-        ]
+        items = data if isinstance(data, list) else data.get("items") or data.get("data") or []
+        related = [op for op in items if op.get("instance_id") == instance_id or op.get("instance") == instance_id]
         return jsonify({"operations": related[:20]})
     except Exception as e:
         msg = sanitize_error_message(e, "instance_operations")
@@ -193,6 +181,7 @@ def instance_operations(instance_id):
 @bp.route("/<instance_id>/action", methods=["POST"])
 def instance_action(instance_id):
     from app.security import sanitize_error_message
+
     validate_instance_id(instance_id)
 
     data = request.get_json()
@@ -209,6 +198,7 @@ def instance_action(instance_id):
 @bp.route("/<instance_id>/migrate", methods=["POST"])
 def migrate_instance(instance_id):
     from app.security import sanitize_error_message
+
     validate_instance_id(instance_id)
 
     data = request.get_json(silent=True) or {}

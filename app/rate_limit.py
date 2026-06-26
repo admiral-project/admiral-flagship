@@ -38,9 +38,7 @@ class RateLimiter:
         now = time.time()
 
         # Clean up old attempts outside the window
-        self.attempts[identifier] = [
-            t for t in self.attempts[identifier] if now - t < self.window_seconds
-        ]
+        self.attempts[identifier] = [t for t in self.attempts[identifier] if now - t < self.window_seconds]
 
         # Check if exceeded limit
         if len(self.attempts[identifier]) >= self.max_attempts:

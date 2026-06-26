@@ -36,9 +36,7 @@ def validate_resource_id(resource_id: str, context: str = "resource") -> None:
         raise ValueError(f"Invalid {context} identifier: {resource_id!r}")
 
 
-def get_required_env_var(
-    name: str, default: Optional[str] = None, prod_mode: bool = False
-) -> str:
+def get_required_env_var(name: str, default: Optional[str] = None, prod_mode: bool = False) -> str:
     """
     Get required environment variable with validation.
 
@@ -76,9 +74,7 @@ def get_required_env_var(
             return default
 
         if is_production:
-            raise ValueError(
-                f"SECURITY: Environment variable {name} is required but not set"
-            )
+            raise ValueError(f"SECURITY: Environment variable {name} is required but not set")
 
         logger.warning(f"Environment variable {name} not set", extra={"var": name})
         return ""
@@ -111,10 +107,7 @@ def sanitize_error_message(error: Exception, context: str = "") -> str:
     if any(phrase in error_str for phrase in ["404", "not found", "does not exist"]):
         return "Resource not found"
 
-    if any(
-        phrase in error_str
-        for phrase in ["401", "403", "unauthorized", "forbidden", "not permitted"]
-    ):
+    if any(phrase in error_str for phrase in ["401", "403", "unauthorized", "forbidden", "not permitted"]):
         return "Not authorized for this action"
 
     if error_type == "ValueError" or any(
@@ -165,9 +158,7 @@ def init_security_headers(app):
             "1",
             "yes",
         ):
-            response.headers["Strict-Transport-Security"] = (
-                "max-age=31536000; includeSubDomains; preload"
-            )
+            response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains; preload"
 
         # Content Security Policy - strict for admin console
         # Only allow resources from same origin and CDN for PatternFly/Vue
@@ -209,13 +200,9 @@ def validate_production_config(config):
 
     if not is_production:
         if config.get("SECRET_KEY", "").startswith("dev-"):
-            logger.warning(
-                "FLAGSHIP_SECRET_KEY is using the development default; set it explicitly for production"
-            )
+            logger.warning("FLAGSHIP_SECRET_KEY is using the development default; set it explicitly for production")
         if config.get("ADMIRAL_ADMIN_TOKEN", "").startswith("dev-"):
-            logger.warning(
-                "ADMIRAL_ADMIN_TOKEN is using the development default; set it explicitly for production"
-            )
+            logger.warning("ADMIRAL_ADMIN_TOKEN is using the development default; set it explicitly for production")
         logger.warning("Running in non-production mode - some security checks relaxed")
         return
 
@@ -230,21 +217,15 @@ def validate_production_config(config):
 
     # Check ADMIRAL_ADMIN_TOKEN not dev default
     if config.get("ADMIRAL_ADMIN_TOKEN", "").startswith("dev-"):
-        errors.append(
-            "ADMIRAL_ADMIN_TOKEN must not use development default in production"
-        )
+        errors.append("ADMIRAL_ADMIN_TOKEN must not use development default in production")
 
     # Check HTTPS enabled
     if not config.get("SESSION_COOKIE_SECURE", True):
-        errors.append(
-            "SESSION_COOKIE_SECURE must be True (HTTPS required) in production"
-        )
+        errors.append("SESSION_COOKIE_SECURE must be True (HTTPS required) in production")
 
     # Check ADMIRAL_CA_FILE set for HTTPS verification (optional but recommended)
     if not config.get("ADMIRAL_CA_FILE"):
-        logger.warning(
-            "ADMIRAL_CA_FILE not set - TLS verification will use system certs"
-        )
+        logger.warning("ADMIRAL_CA_FILE not set - TLS verification will use system certs")
 
     if errors:
         error_msg = "\n".join(f"  - {e}" for e in errors)

@@ -329,3 +329,87 @@ describe('_progressPercentFromJob', function() {
     expect(_progressPercentFromJob({ progress: 50 })).to.equal(50);
   });
 });
+
+describe('provision result helpers', function() {
+  it('generates stable sessionStorage keys', function() {
+    expect(provisionResultStorageKey('op_123')).to.equal('flagship_provision_result:op_123');
+  });
+
+  it('keeps setup notices when merging credentials', function() {
+    var merged = mergeProvisionCredentials(
+      [
+        { service: 'setup', name: 'Usuario administrador', value: 'Administrator', kind: 'notice' },
+        { service: 'setup', name: 'WORDPRESS_ADMIN_USER', value: 'usr_123', kind: 'secret' }
+      ],
+      [
+        { service: 'setup', name: 'WORDPRESS_ADMIN_USER', value: 'usr_123', kind: 'secret' },
+        { service: 'setup', name: 'WORDPRESS_ADMIN_PASSWORD', value: 'pw_123', kind: 'secret' }
+      ]
+    );
+
+    expect(merged.filter(function(item) { return item.kind === 'notice'; })).to.have.lengthOf(1);
+    expect(merged.filter(function(item) { return item.kind !== 'notice'; }).map(function(item) { return item.name; })).to.deep.equal([
+      'WORDPRESS_ADMIN_USER',
+      'WORDPRESS_ADMIN_PASSWORD'
+    ]);
+  });
+});
+
+describe('InstanceCreateView', function() {
+  var originalShowToast;
+  var originalFetch;
+
+  beforeEach(function() {
+    originalShowToast = window.showToast;
+    originalFetch = global.fetch;
+    sessionStorage.clear();
+  });
+
+  afterEach(function() {
+    window.showToast = originalShowToast;
+    setFetch(originalFetch);
+    sessionStorage.clear();
+  });
+
+  it('stores the provision snapshot and redirects to the dedicated page', async function() {
+    var pushedPath = null;
+    window.showToast = function() {};
+    setFetch(async function(url, opts) {
+      expect(url).to.equal('/flagship/api/instances/provision');
+      expect(opts.method).to.equal('POST');
+      return {
+        ok: true,
+        headers: { get: function() { return null; } },
+        json: async function() {
+          return {
+            operation_id: 'op_123',
+            hostname: 'wp123.apps.example.com',
+            credentials: [
+              { service: 'setup', name: 'WORDPRESS_ADMIN_USER', value: 'usr_123', kind: 'secret' },
+              { service: 'setup', name: 'Usuario administrador', value: 'Administrator', kind: 'notice' }
+            ]
+          };
+        }
+      };
+    });
+
+    var ctx = {
+      saving: false,
+      error: '',
+      form: { customer_id: 'aa', app_id: 'wp', tier_name: 'small', node_id: 'node_1' },
+      $router: {
+        push: function(path) {
+          pushedPath = path;
+        }
+      }
+    };
+
+    await InstanceCreateView.methods.createInstance.call(ctx);
+
+    expect(pushedPath).to.equal('/instances/provisioned/op_123');
+    var stored = parseProvisionResultSnapshot('op_123');
+    expect(stored.hostname).to.equal('wp123.apps.example.com');
+    expect(stored.credentials).to.have.lengthOf(2);
+    expect(stored.credentials.some(function(item) { return item.kind === 'notice'; })).to.be.true;
+  });
+});

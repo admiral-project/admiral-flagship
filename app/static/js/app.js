@@ -115,6 +115,88 @@ function _progressPercentFromJob(job) {
   return null;
 }
 
+var PROVISION_RESULT_PREFIX = 'flagship_provision_result:';
+
+function provisionResultCache() {
+  if (!window.__flagshipProvisionResultCache) {
+    window.__flagshipProvisionResultCache = {};
+  }
+  return window.__flagshipProvisionResultCache;
+}
+
+function provisionResultStorageKey(operationId) {
+  return PROVISION_RESULT_PREFIX + String(operationId || '');
+}
+
+function parseProvisionResultSnapshot(operationId) {
+  var key = provisionResultStorageKey(operationId);
+  var raw = null;
+  try {
+    raw = window.sessionStorage.getItem(key);
+  } catch (e) {
+    raw = null;
+  }
+  if (!raw && provisionResultCache()[key]) {
+    return provisionResultCache()[key];
+  }
+  if (!raw) return null;
+  try {
+    var parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object') return null;
+    return parsed;
+  } catch (e) {
+    try {
+      window.sessionStorage.removeItem(key);
+    } catch (ignore) {}
+    delete provisionResultCache()[key];
+    return null;
+  }
+}
+
+function storeProvisionResultSnapshot(result) {
+  if (!result || !result.operation_id) return;
+  provisionResultCache()[provisionResultStorageKey(result.operation_id)] = JSON.parse(JSON.stringify(result));
+  try {
+    window.sessionStorage.setItem(provisionResultStorageKey(result.operation_id), JSON.stringify(result));
+  } catch (e) {
+    return;
+  }
+}
+
+function normalizeProvisionCredential(credential) {
+  if (!credential || typeof credential !== 'object') return null;
+  return {
+    service: credential.service || '',
+    name: credential.name || '',
+    value: credential.value || '',
+    kind: credential.kind || 'secret',
+    generate: credential.generate || '',
+  };
+}
+
+function normalizeProvisionCredentials(credentials) {
+  if (!Array.isArray(credentials)) return [];
+  return credentials.map(normalizeProvisionCredential).filter(Boolean);
+}
+
+function mergeProvisionCredentials(primary, secondary) {
+  var merged = [];
+  var seen = {};
+
+  function addAll(items) {
+    normalizeProvisionCredentials(items).forEach(function(item) {
+      var key = [item.kind || 'secret', item.service || '', item.name || '', item.value || ''].join('|');
+      if (seen[key]) return;
+      seen[key] = true;
+      merged.push(item);
+    });
+  }
+
+  addAll(primary);
+  addAll(secondary);
+  return merged;
+}
+
 var LoginView = {
   template: '\
     <div class="login-page">\
@@ -1878,36 +1960,6 @@ var InstanceCreateView = {
           </div>\
         </div>\
       </div>\
-      <div v-if="provisionResult" class="pf-l-grid pf-m-gutter pf-u-mt-lg">\
-        <div class="pf-l-grid__item pf-m-12-col">\
-          <div class="pf-c-card pf-m-warning">\
-            <div class="pf-c-card__header"><h2 class="pf-c-title pf-m-lg"><i class="fas fa-key"></i> Deployment credentials</h2></div>\
-            <div class="pf-c-card__body">\
-              <p class="pf-c-content">Save these credentials securely. They are displayed now because the instance is initializing.</p>\
-              <p v-if="provisionResult.operation_id"><strong>Operation:</strong> {{ provisionResult.operation_id }}</p>\
-              <p v-if="provisionResult.hostname"><strong>Hostname:</strong> <a :href="\'https://\' + provisionResult.hostname" target="_blank" rel="noopener">{{ provisionResult.hostname }}</a></p>\
-              <div v-if="noticesForDisplay(provisionResult.credentials).length > 0" class="pf-u-mt-md">\
-                <div v-for="cred in noticesForDisplay(provisionResult.credentials)" :key="cred.name" class="pf-c-alert pf-m-info pf-m-inline pf-u-mb-sm" role="alert">\
-                  <p class="pf-c-alert__title">{{ cred.name }}: <code>{{ cred.value }}</code></p>\
-                </div>\
-              </div>\
-              <table v-if="credentialsForDisplay(provisionResult.credentials).length > 0" class="pf-c-table pf-u-mt-md" role="grid">\
-                <thead><tr><th>Service</th><th>Name</th><th>Value</th></tr></thead>\
-                <tbody>\
-                  <tr v-for="cred in credentialsForDisplay(provisionResult.credentials)" :key="cred.service + \'.\' + cred.name">\
-                    <td>{{ cred.service }}</td>\
-                    <td>{{ cred.name }}</td>\
-                    <td><code>{{ cred.value }}</code></td>\
-                  </tr>\
-                </tbody>\
-              </table>\
-              <div class="action-buttons pf-u-mt-md">\
-                <router-link to="/instances" class="pf-c-button pf-m-primary"><i class="fas fa-list"></i>Go to instances</router-link>\
-              </div>\
-            </div>\
-          </div>\
-        </div>\
-      </div>\
     </section>',
   data: function() {
     return {
@@ -1918,7 +1970,6 @@ var InstanceCreateView = {
       nodes: [],
       tiers: [],
       form: { customer_id: '', app_id: '', tier_name: '', node_id: '' },
-      provisionResult: null
     };
   },
   computed: {
@@ -1964,7 +2015,6 @@ var InstanceCreateView = {
     createInstance: async function() {
       this.saving = true;
       this.error = '';
-      this.provisionResult = null;
       try {
         var result = await bffFetch('/flagship/api/instances/provision', {
           method: 'POST',
@@ -1975,22 +2025,235 @@ var InstanceCreateView = {
             node_id: this.form.node_id
           })
         });
-        this.provisionResult = result;
+        storeProvisionResultSnapshot(result);
         window.showToast('success', 'Provision queued' + (result.operation_id ? ': ' + result.operation_id : ''));
+        if (result && result.operation_id) {
+          this.$router.push('/instances/provisioned/' + result.operation_id);
+        }
       } catch (e) {
         this.error = e.message;
       } finally {
         this.saving = false;
       }
     },
-    credentialsForDisplay: function(credentials) {
-      return (credentials || []).filter(function(c) { return c.kind !== 'notice'; });
-    },
-    noticesForDisplay: function(credentials) {
-      return (credentials || []).filter(function(c) { return c.kind === 'notice'; });
-    }
   },
   mounted: function() { this.loadForm(); }
+};
+
+var InstanceProvisionedView = {
+  template: '\
+    <section class="pf-c-page__main-section detail-page provision-result-page">\
+      <div class="detail-hero provision-result-hero">\
+        <div class="detail-hero__breadcrumb">\
+          <router-link to="/instances" class="back-link"><i class="fas fa-arrow-left"></i>Instances</router-link>\
+          <span class="detail-muted">/</span>\
+          <span>Provisioning result</span>\
+        </div>\
+        <div class="detail-hero__header">\
+          <div class="detail-hero__copy">\
+            <p class="dashboard-eyebrow">Provision queued</p>\
+            <h1 class="pf-c-title pf-m-2xl detail-hero__title">Instance provisioning in progress</h1>\
+            <p class="dashboard-subtitle">The instance is initializing. Credentials and setup notices are shown here while they are still available.</p>\
+            <div class="detail-inline-meta">\
+              <span class="detail-inline-meta__item"><i class="fas fa-hashtag"></i>{{ operationId }}</span>\
+              <span class="detail-inline-meta__item" v-if="job && (job.instance_id || job.instance)"><i class="fas fa-cube"></i>{{ job.instance_id || job.instance }}</span>\
+              <span class="detail-inline-meta__item" v-if="instance && (instance.customer_id || instance.customer)"><i class="fas fa-user"></i>{{ instance.customer_id || instance.customer }}</span>\
+              <span class="detail-inline-meta__item" v-if="hostname"><i class="fas fa-globe"></i>{{ hostname }}</span>\
+            </div>\
+          </div>\
+          <div class="detail-hero__actions">\
+            <router-link to="/instances/new" class="pf-c-button pf-m-secondary"><i class="fas fa-plus"></i>Create another</router-link>\
+            <router-link v-if="job && (job.instance_id || job.instance)" :to="\'/instances/\' + (job.instance_id || job.instance)" class="pf-c-button pf-m-primary"><i class="fas fa-cube"></i>Open instance</router-link>\
+            <router-link :to="\'/jobs/\' + operationId" class="pf-c-button pf-m-link"><i class="fas fa-clipboard-list"></i>Open job</router-link>\
+          </div>\
+        </div>\
+      </div>\
+      <div v-if="loading" class="loading"><i class="fas fa-spinner fa-spin pf-u-mr-sm"></i>Loading provisioning details...</div>\
+      <div v-else-if="error && !hasAnyContext" class="error-message">{{ error }}</div>\
+      <template v-else>\
+        <div v-if="jobError && !job" class="pf-c-alert pf-m-warning pf-m-inline pf-u-mb-lg" role="alert">\
+          <div class="pf-c-alert__icon"><i class="fas fa-fw fa-exclamation-triangle" aria-hidden="true"></i></div>\
+          <p class="pf-c-alert__title">{{ jobError }}</p>\
+        </div>\
+        <div class="detail-summary-grid">\
+          <div class="pf-c-card detail-summary-card">\
+            <div class="pf-c-card__header"><h2 class="detail-section-title"><i class="fas fa-info-circle"></i>Provision summary</h2><p class="detail-section-meta">Current state and placement for this initial run.</p></div>\
+            <div class="pf-c-card__body">\
+              <dl class="pf-c-description-list compact-description-list">\
+                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Operation</dt><dd class="pf-c-description-list__description">{{ operationId }}</dd></div>\
+                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Status</dt><dd class="pf-c-description-list__description"><span class="pf-c-label" :class="jobStatusClass(jobStatus)">{{ jobStatus || \'queued\' }}</span></dd></div>\
+                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Customer</dt><dd class="pf-c-description-list__description">{{ customerId || \'-\' }}</dd></div>\
+                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">App</dt><dd class="pf-c-description-list__description">{{ appName || \'-\' }}</dd></div>\
+                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Tier</dt><dd class="pf-c-description-list__description">{{ tierName || \'-\' }}</dd></div>\
+                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Node</dt><dd class="pf-c-description-list__description">{{ nodeName || \'-\' }}</dd></div>\
+                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Hostname</dt><dd class="pf-c-description-list__description">{{ hostname || \'-\' }}</dd></div>\
+              </dl>\
+            </div>\
+          </div>\
+          <div class="pf-c-card detail-section-card provision-credentials-card">\
+            <div class="pf-c-card__header"><h2 class="detail-section-title"><i class="fas fa-key"></i>Deployment credentials</h2><p class="detail-section-meta">Save these credentials securely. They are displayed now because the instance is initializing.</p></div>\
+            <div class="pf-c-card__body">\
+              <div v-if="noticesForDisplay(credentials).length > 0" class="pf-u-mb-md">\
+                <div v-for="cred in noticesForDisplay(credentials)" :key="cred.service + \'.\' + cred.name + \'.notice\'" class="pf-c-alert pf-m-info pf-m-inline pf-u-mb-sm" role="alert">\
+                  <p class="pf-c-alert__title">{{ cred.name }}: <code>{{ cred.value }}</code></p>\
+                </div>\
+              </div>\
+              <div v-if="credentialsLoading" class="loading-sm"><i class="fas fa-spinner fa-spin pf-u-mr-sm"></i>Loading credentials...</div>\
+              <div v-else-if="credentialsError" class="pf-c-alert pf-m-danger pf-m-inline" role="alert"><p class="pf-c-alert__title">{{ credentialsError }}</p></div>\
+              <div v-else-if="credentialsForDisplay(credentials).length > 0">\
+                <table class="pf-c-table" role="grid">\
+                  <thead><tr><th>Service</th><th>Name</th><th>Value</th></tr></thead>\
+                  <tbody>\
+                    <tr v-for="cred in credentialsForDisplay(credentials)" :key="cred.service + \'.\' + cred.name + \'.\' + cred.kind">\
+                      <td data-label="Service">{{ cred.service }}</td>\
+                      <td data-label="Name">{{ cred.name }}</td>\
+                      <td data-label="Value"><code>{{ cred.value }}</code></td>\
+                    </tr>\
+                  </tbody>\
+                </table>\
+              </div>\
+              <div v-else class="pf-u-color-400">No credentials exposed for this instance.</div>\
+            </div>\
+          </div>\
+        </div>\
+        <div class="pf-c-card detail-section-card provision-followup-card">\
+          <div class="pf-c-card__header"><h2 class="detail-section-title"><i class="fas fa-route"></i>Next step</h2><p class="detail-section-meta">Continue to the instance detail or return to the list.</p></div>\
+          <div class="pf-c-card__body">\
+            <p class="detail-section-note">If you refresh this page later, the setup notices may no longer be available. The job and instance links remain available.</p>\
+            <div class="action-buttons">\
+              <router-link to="/instances" class="pf-c-button pf-m-primary"><i class="fas fa-list"></i>Go to instances</router-link>\
+              <router-link to="/instances/new" class="pf-c-button pf-m-secondary"><i class="fas fa-plus"></i>Create another instance</router-link>\
+            </div>\
+          </div>\
+        </div>\
+      </template>\
+    </section>',
+  data: function() {
+    return {
+      loading: true,
+      error: '',
+      jobError: '',
+      credentialsLoading: false,
+      credentialsError: '',
+      snapshot: null,
+      job: null,
+      instance: null,
+      credentials: []
+    };
+  },
+  computed: {
+    operationId: function() {
+      return this.$route.params.operation_id || '';
+    },
+    hasAnyContext: function() {
+      return !!(this.snapshot || this.job || this.instance || (this.credentials && this.credentials.length) || this.operationId);
+    },
+    jobStatus: function() {
+      return this.job ? (this.job.status || this.job.state || this.job.operation_status || 'queued') : 'queued';
+    },
+    customerId: function() {
+      return this.instance ? (this.instance.customer_id || this.instance.customer || '') : '';
+    },
+    appName: function() {
+      return this.instance ? (this.instance.app_definition_name || this.instance.app_id || this.instance.app || '') : '';
+    },
+    tierName: function() {
+      return this.instance ? (this.instance.tier_name || this.instance.tier_id || this.instance.tier || '') : '';
+    },
+    nodeName: function() {
+      if (this.instance) return this.instance.node_id || this.instance.node || '';
+      if (this.job) return this.job.node_id || this.job.node || '';
+      return '';
+    },
+    hostname: function() {
+      if (this.instance) return this.instance.hostname || this.instance.host || (this.snapshot && this.snapshot.hostname) || '';
+      if (this.snapshot && this.snapshot.hostname) return this.snapshot.hostname;
+      return (this.job && this.job.hostname) || '';
+    }
+  },
+  methods: {
+    jobStatusClass: jobStatusClass,
+    credentialsForDisplay: function(credentials) {
+      return normalizeProvisionCredentials(credentials).filter(function(c) { return c.kind !== 'notice'; });
+    },
+    noticesForDisplay: function(credentials) {
+      return normalizeProvisionCredentials(credentials).filter(function(c) { return c.kind === 'notice'; });
+    },
+    loadProvisionSnapshot: function() {
+      var snapshot = parseProvisionResultSnapshot(this.operationId);
+      if (snapshot) {
+        this.snapshot = snapshot;
+        this.credentials = mergeProvisionCredentials(snapshot.credentials || [], []);
+        return snapshot;
+      }
+      this.snapshot = null;
+      return null;
+    },
+    loadJob: async function() {
+      if (!this.operationId) return null;
+      try {
+        var data = await bffFetch('/flagship/api/jobs/' + this.operationId);
+        this.job = data || null;
+        return this.job;
+      } catch (e) {
+        this.jobError = e.message;
+        return null;
+      }
+    },
+    loadInstance: async function(instanceId) {
+      if (!instanceId) return null;
+      try {
+        var data = await bffFetch('/flagship/api/instances/' + instanceId);
+        this.instance = data.instance || data.data || data || null;
+        return this.instance;
+      } catch (e) {
+        return null;
+      }
+    },
+    loadCredentials: async function(instanceId) {
+      if (!instanceId) return [];
+      this.credentialsLoading = true;
+      this.credentialsError = '';
+      try {
+        var data = await bffFetch('/flagship/api/instances/' + instanceId + '/credentials');
+        var extra = Array.isArray(data) ? data : (data.credentials || []);
+        this.credentials = mergeProvisionCredentials(this.credentials, extra);
+        return extra;
+      } catch (e) {
+        this.credentialsError = e.message;
+        return [];
+      } finally {
+        this.credentialsLoading = false;
+      }
+    },
+    loadProvisionPage: async function() {
+      this.loading = true;
+      this.error = '';
+      this.jobError = '';
+      this.snapshot = null;
+      this.instance = null;
+      this.job = null;
+      this.credentials = [];
+
+      var snapshot = this.loadProvisionSnapshot();
+      if (snapshot) {
+        this.credentials = mergeProvisionCredentials(snapshot.credentials || [], []);
+      }
+
+      var job = await this.loadJob();
+      var instanceId = job ? (job.instance_id || job.instance || '') : '';
+      if (instanceId) {
+        await this.loadInstance(instanceId);
+        await this.loadCredentials(instanceId);
+      }
+
+      if (!snapshot && !job && !this.instance) {
+        this.error = this.jobError || 'Provisioning details are not available.';
+      }
+      this.loading = false;
+    }
+  },
+  mounted: function() { this.loadProvisionPage(); }
 };
 
 var InstanceDetailView = {
@@ -3245,6 +3508,7 @@ var routes = [
   { path: '/catalog/apps/:id/edit', component: CatalogAppFormView },
   { path: '/instances', component: InstancesView },
   { path: '/instances/new', component: InstanceCreateView },
+  { path: '/instances/provisioned/:operation_id', component: InstanceProvisionedView },
   { path: '/instances/:id', component: InstanceDetailView },
   { path: '/instances/:id/restore', component: InstanceRestoreView },
   { path: '/backups', component: BackupsView },

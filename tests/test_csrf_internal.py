@@ -1,6 +1,6 @@
-import pytest
 from flask import session, jsonify
 from app.csrf import generate_csrf_token, require_csrf_token
+
 
 def test_generate_csrf_token(app):
     with app.test_request_context():
@@ -10,6 +10,7 @@ def test_generate_csrf_token(app):
 
         token2 = generate_csrf_token()
         assert token2 == token
+
 
 def test_require_csrf_token_decorator(app):
     @app.route("/protected", methods=["POST"])
@@ -35,6 +36,7 @@ def test_require_csrf_token_decorator(app):
     with client.session_transaction() as sess:
         assert sess["csrf_token"] != "test-token"
 
+
 def test_csrf_protect_safe_methods(app):
     # init_csrf_protection(app) is already called in create_app
     client = app.test_client()
@@ -46,6 +48,7 @@ def test_csrf_protect_safe_methods(app):
     finally:
         app.config["TESTING"] = True
 
+
 def test_csrf_protect_public_endpoints(app):
     client = app.test_client()
     app.config["TESTING"] = False
@@ -55,6 +58,7 @@ def test_csrf_protect_public_endpoints(app):
         assert resp.status_code != 403
     finally:
         app.config["TESTING"] = True
+
 
 def test_csrf_protect_form_data(app):
     @app.route("/flagship/api/form", methods=["POST"])
@@ -68,6 +72,7 @@ def test_csrf_protect_form_data(app):
             sess["admin_token"] = "valid-token"
             sess["admin_username"] = "admin"
             import time
+
             sess["session_started_at"] = int(time.time())
             sess["csrf_token"] = "form-token"
 
@@ -75,6 +80,7 @@ def test_csrf_protect_form_data(app):
         assert resp.status_code == 200
     finally:
         app.config["TESTING"] = True
+
 
 def test_csrf_protect_invalid_session(app):
     client = app.test_client()
@@ -86,6 +92,7 @@ def test_csrf_protect_invalid_session(app):
         assert resp.json["error"] == "Session invalid"
     finally:
         app.config["TESTING"] = True
+
 
 def test_csrf_protect_invalid_token(app):
     client = app.test_client()
@@ -100,6 +107,7 @@ def test_csrf_protect_invalid_token(app):
     finally:
         app.config["TESTING"] = True
 
+
 def test_csrf_protect_non_api_endpoint(app):
     @app.route("/not-api", methods=["POST"])
     def not_api():
@@ -113,6 +121,7 @@ def test_csrf_protect_non_api_endpoint(app):
     finally:
         app.config["TESTING"] = True
 
+
 def test_csrf_protect_json_body(app):
     @app.route("/flagship/api/json-post", methods=["POST"])
     def json_handler():
@@ -125,6 +134,7 @@ def test_csrf_protect_json_body(app):
             sess["admin_token"] = "valid-token"
             sess["admin_username"] = "admin"
             import time
+
             sess["session_started_at"] = int(time.time())
             sess["csrf_token"] = "json-token"
 
@@ -133,8 +143,10 @@ def test_csrf_protect_json_body(app):
     finally:
         app.config["TESTING"] = True
 
+
 def test_csrf_template_global(app):
     with app.test_request_context():
         from flask import render_template_string
+
         render_template_string("{{ csrf_token() }}")
         assert "csrf_token" in session

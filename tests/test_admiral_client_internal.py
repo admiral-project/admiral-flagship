@@ -27,7 +27,7 @@ def test_headers_admin(app):
 def test_headers_general(app):
     with app.app_context():
         headers = _headers("/api/v1/nodes")
-        assert headers == {"X-Admiral-Token": "test-token"}
+        assert headers == {"Authorization": "Bearer test-token"}
 
 
 def test_verify_skip(app):

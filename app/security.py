@@ -221,6 +221,10 @@ def validate_production_config(config):
     if not config.get("SESSION_COOKIE_SECURE", True):
         errors.append("SESSION_COOKIE_SECURE must be True (HTTPS required) in production")
 
+    # Check ADMIRAL_INSECURE_SKIP_VERIFY not enabled
+    if config.get("ADMIRAL_INSECURE_SKIP_VERIFY"):
+        errors.append("ADMIRAL_INSECURE_SKIP_VERIFY must be false in production")
+
     # Check ADMIRAL_CA_FILE set for HTTPS verification (optional but recommended)
     if not config.get("ADMIRAL_CA_FILE"):
         logger.warning("ADMIRAL_CA_FILE not set - TLS verification will use system certs")

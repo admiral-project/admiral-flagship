@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import logging
-import os
 
 import requests
 from flask import session, current_app, g
@@ -14,14 +13,16 @@ def _headers(path):
     if path.startswith("/api/admin/"):
         token = session.get("admin_token", "")
         return {"X-Admiral-Admin-Token": token}
-    return {"X-Admiral-Token": current_app.config["ADMIRAL_ADMIN_TOKEN"]}
+    return {"Authorization": f"Bearer {current_app.config['ADMIRAL_ADMIN_TOKEN']}"}
 
 
 def _verify():
-    skip = os.environ.get("ADMIRAL_INSECURE_SKIP_VERIFY", "").lower() in ("1", "true", "yes")
+    skip = current_app.config.get("ADMIRAL_INSECURE_SKIP_VERIFY", "")
+
+    skip = str(skip).lower() in ("1", "true", "yes")
     if skip:
         return False
-    ca = current_app.config["ADMIRAL_CA_FILE"]
+    ca = current_app.config.get("ADMIRAL_CA_FILE", "")
     return ca if ca else True
 
 

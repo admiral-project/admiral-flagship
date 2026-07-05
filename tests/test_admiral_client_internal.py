@@ -31,7 +31,8 @@ def test_headers_general(app):
 
 
 def test_verify_skip(app):
-    with patch.dict(os.environ, {"ADMIRAL_INSECURE_SKIP_VERIFY": "true"}):
+    app.config["ADMIRAL_INSECURE_SKIP_VERIFY"] = "true"
+    with app.app_context():
         assert _verify() is False
 
 

@@ -20,3 +20,15 @@ Reglas:
 - sin build step.
 - sin npm.
 - sin duplicar a `admiralctl`.
+
+## Pre-commit
+
+Ejecutar estos comandos antes de cada commit:
+
+```bash
+pip install -e .
+black --check --diff .
+ruff check .
+flake8 .
+pytest tests/ -v
+```

@@ -139,10 +139,17 @@ def instance_operations(instance_id):
         return jsonify({"error": msg, "operations": []}), 502
 
 
-ALLOWED_INSTANCE_ACTIONS = frozenset({
-    "pause", "resume", "restart", "inspect",
-    "deprovision", "start", "stop",
-})
+ALLOWED_INSTANCE_ACTIONS = frozenset(
+    {
+        "pause",
+        "resume",
+        "restart",
+        "inspect",
+        "deprovision",
+        "start",
+        "stop",
+    }
+)
 
 
 @bp.route("/<instance_id>/action", methods=["POST"])

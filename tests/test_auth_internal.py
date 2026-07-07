@@ -26,7 +26,7 @@ def test_login_password_change_required(client):
                 assert sess["password_change_required"] is True
 
 
-def test_login_csrf_preservation(client):
+def test_login_csrf_regenerated_on_login(client):
     with client.session_transaction() as sess:
         sess["csrf_token"] = "keep-me"
 
@@ -35,7 +35,7 @@ def test_login_csrf_preservation(client):
             login_mock.return_value = {"token": "t", "password_change_required": False}
             client.post("/flagship/api/auth/login", json={"username": "a", "password": "b"})
             with client.session_transaction() as sess:
-                assert sess["csrf_token"] == "keep-me"
+                assert sess["csrf_token"] != "keep-me"
 
 
 def test_change_password_first_login(client):

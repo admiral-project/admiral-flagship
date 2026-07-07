@@ -56,6 +56,7 @@ def login():
         session.clear()
         session.permanent = True
         from app.csrf import _generate_token
+
         session["csrf_token"] = _generate_token()
         session["admin_token"] = result["token"]
         session["admin_username"] = data["username"]

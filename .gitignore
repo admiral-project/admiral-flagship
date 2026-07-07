@@ -8,3 +8,4 @@ build/
 *.swp
 node_modules/
 .coverage
+.venv/

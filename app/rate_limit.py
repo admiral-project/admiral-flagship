@@ -6,12 +6,13 @@ Simple in-memory rate limiter for login attempts.
 Tracks attempts per IP address within a sliding window.
 """
 
+import threading
 import time
 from collections import defaultdict
 
 
 class RateLimiter:
-    """Rate limiter using sliding window algorithm."""
+    """Rate limiter using sliding window algorithm with thread safety."""
 
     def __init__(self, max_attempts=5, window_seconds=60):
         """
@@ -24,6 +25,7 @@ class RateLimiter:
         self.max_attempts = max_attempts
         self.window_seconds = window_seconds
         self.attempts = defaultdict(list)  # {identifier: [timestamp, ...]}
+        self._lock = threading.Lock()
 
     def is_allowed(self, identifier):
         """
@@ -35,21 +37,23 @@ class RateLimiter:
         Returns:
             Tuple of (allowed: bool, remaining_seconds: int)
         """
-        now = time.time()
+        with self._lock:
+            now = time.time()
 
-        # Clean up old attempts outside the window
-        self.attempts[identifier] = [t for t in self.attempts[identifier] if now - t < self.window_seconds]
+            # Clean up old attempts outside the window
+            self.attempts[identifier] = [t for t in self.attempts[identifier] if now - t < self.window_seconds]
 
-        # Check if exceeded limit
-        if len(self.attempts[identifier]) >= self.max_attempts:
-            oldest = self.attempts[identifier][0]
-            remaining = int(self.window_seconds - (now - oldest)) + 1
-            return False, remaining
+            # Check if exceeded limit
+            if len(self.attempts[identifier]) >= self.max_attempts:
+                oldest = self.attempts[identifier][0]
+                remaining = int(self.window_seconds - (now - oldest)) + 1
+                return False, remaining
 
-        # Record new attempt
-        self.attempts[identifier].append(now)
-        return True, 0
+            # Record new attempt
+            self.attempts[identifier].append(now)
+            return True, 0
 
     def reset(self, identifier):
         """Reset attempt counter for identifier."""
-        self.attempts.pop(identifier, None)
+        with self._lock:
+            self.attempts.pop(identifier, None)

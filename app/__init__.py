@@ -102,12 +102,20 @@ def create_app():
                 return unauthenticated_response("not authenticated")
 
             # Check local inactivity timeout
-            from app.auth import _session_is_expired, SESSION_STARTED_AT_KEY
+            from app.auth import _session_is_expired, _session_absolute_expired, SESSION_STARTED_AT_KEY
 
             if _session_is_expired():
                 session.clear()
                 logger.warning(
                     "admin session expired by inactivity timeout",
+                    extra={"username": username},
+                )
+                return unauthenticated_response("session expired")
+
+            if _session_absolute_expired():
+                session.clear()
+                logger.warning(
+                    "admin session expired by absolute timeout",
                     extra={"username": username},
                 )
                 return unauthenticated_response("session expired")

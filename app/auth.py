@@ -52,12 +52,11 @@ def login():
         result = login_admin(data["username"], data["password"])
         # Reset rate limit on successful login
         reset_rate_limit(ip)
-        # Preserve CSRF token across session clear
-        csrf_token = session.pop("csrf_token", None)
+        # Generate a fresh CSRF token on login to prevent session fixation.
         session.clear()
         session.permanent = True
-        if csrf_token:
-            session["csrf_token"] = csrf_token
+        from app.csrf import _generate_token
+        session["csrf_token"] = _generate_token()
         session["admin_token"] = result["token"]
         session["admin_username"] = data["username"]
         session["password_change_required"] = result.get("password_change_required", False)
@@ -102,6 +101,15 @@ def _session_is_expired():
     if not started_at:
         return True
     return (int(time.time()) - int(started_at)) >= timeout_minutes * 60
+
+
+def _session_absolute_expired():
+    """Check if session has exceeded the absolute maximum lifetime (24 hours)."""
+    started_at = session.get(SESSION_STARTED_AT_KEY)
+    abs_max_hours = int(current_app.config.get("SESSION_ABSOLUTE_TIMEOUT_HOURS", 24))
+    if not started_at:
+        return True
+    return (int(time.time()) - int(started_at)) >= abs_max_hours * 3600
 
 
 def _validate_session_or_expire(username):

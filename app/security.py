@@ -162,10 +162,10 @@ def init_security_headers(app):
 
         # Content Security Policy - strict for admin console
         # Only allow resources from same origin and CDN for PatternFly/Vue
-        # 'unsafe-eval' required by Vue 3 template compiler for inline string templates
+        # The production Vue build (vue.global.prod.js) does not need 'unsafe-eval'.
         csp = (
             "default-src 'self'; "
-            "script-src 'self' 'unsafe-eval' https://unpkg.com https://cdnjs.cloudflare.com; "
+            "script-src 'self' https://unpkg.com https://cdnjs.cloudflare.com; "
             "style-src 'self' https://cdnjs.cloudflare.com https://unpkg.com; "
             "img-src 'self' data:; "
             "font-src 'self' https://cdnjs.cloudflare.com https://unpkg.com; "

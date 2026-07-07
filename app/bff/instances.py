@@ -139,6 +139,12 @@ def instance_operations(instance_id):
         return jsonify({"error": msg, "operations": []}), 502
 
 
+ALLOWED_INSTANCE_ACTIONS = frozenset({
+    "pause", "resume", "restart", "inspect",
+    "deprovision", "start", "stop",
+})
+
+
 @bp.route("/<instance_id>/action", methods=["POST"])
 def instance_action(instance_id):
     from app.security import sanitize_error_message
@@ -148,8 +154,13 @@ def instance_action(instance_id):
     data = request.get_json()
     if not data or not data.get("action"):
         return jsonify({"error": "action is required"}), 400
+
+    action = data["action"]
+    if action not in ALLOWED_INSTANCE_ACTIONS:
+        return jsonify({"error": f"action {action!r} is not allowed"}), 400
+
     try:
-        result = api_post(f"/api/admin/instances/{instance_id}/{data['action']}", data)
+        result = api_post(f"/api/admin/instances/{instance_id}/{action}", data)
         return jsonify(result)
     except Exception as e:
         msg = sanitize_error_message(e, "instance_action")

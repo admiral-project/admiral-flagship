@@ -100,11 +100,17 @@ def backup_detail(backup_id):
 
 @bp.route("/trigger", methods=["POST"])
 def trigger_backup():
-    from app.security import sanitize_error_message
+    from app.security import sanitize_error_message, validate_resource_id
 
     data = request.get_json()
     if not data or not data.get("instance_id"):
         return jsonify({"error": "instance_id required"}), 400
+
+    try:
+        validate_resource_id(data["instance_id"], "instance")
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+
     kind = data.get("kind", "database")
     if kind not in ("database", "volumes"):
         return jsonify({"error": "kind must be 'database' or 'volumes'"}), 400

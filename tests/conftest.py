@@ -1,9 +1,13 @@
 # SPDX-FileCopyrightText: William Moreno Reyes CP | MBA
 # SPDX-License-Identifier: Apache-2.0
 
+import os
+
 import pytest
 import time
 from app import create_app
+
+os.environ.setdefault("FLAGSHIP_SECRET_KEY", "test-flagship-secret-key-for-tests-only")
 
 
 @pytest.fixture

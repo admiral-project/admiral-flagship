@@ -36,17 +36,21 @@ def validate_resource_id(resource_id: str, context: str = "resource") -> None:
         raise ValueError(f"Invalid {context} identifier: {resource_id!r}")
 
 
-def get_required_env_var(name: str, default: Optional[str] = None, prod_mode: bool = False) -> str:
+def get_required_env_var(
+    name: str, default: Optional[str] = None, prod_mode: bool = False, required: bool = False
+) -> str:
     """
     Get required environment variable with validation.
 
-    In production mode, raises ValueError if env var not set.
+    Raises ValueError if a required variable is not set, or when a production
+    variable is missing and ``prod_mode`` is enabled.
     In development, logs warning and uses default if provided.
 
     Args:
         name: Environment variable name
         default: Default value (dev only)
         prod_mode: If True, fail on missing var in production
+        required: If True, fail regardless of the ENV value
 
     Returns:
         Environment variable value
@@ -59,7 +63,7 @@ def get_required_env_var(name: str, default: Optional[str] = None, prod_mode: bo
     if not value:
         is_production = os.environ.get("ENV", "").lower() == "production"
 
-        if is_production and prod_mode:
+        if required or (is_production and prod_mode):
             raise ValueError(
                 f"SECURITY: Required environment variable {name} not set in production. "
                 f"Set {name} before starting the application."

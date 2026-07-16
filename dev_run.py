@@ -846,7 +846,6 @@ def _wait_for_mock(host, port, timeout=10):
 def main():
     os.environ["ADMIRAL_API_URL"] = f"http://{HOST}:{MOCK_PORT}"
     os.environ.setdefault("ADMIRAL_ADMIN_TOKEN", SHARED_TOKEN)
-    os.environ.setdefault("FLAGSHIP_SECRET_KEY", "dev-secret-key-change-in-production")
 
     mock_daemon = threading.Thread(
         target=lambda: mock_app.run(host=HOST, port=MOCK_PORT, debug=False, use_reloader=False),

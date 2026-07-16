@@ -43,6 +43,12 @@ def test_get_required_env_var_prod():
             get_required_env_var("PROD_VAR", prod_mode=True)
 
 
+def test_get_required_env_var_required_in_development():
+    with patch.dict(os.environ, {}, clear=True):
+        with pytest.raises(ValueError, match="Required environment variable REQUIRED_VAR"):
+            get_required_env_var("REQUIRED_VAR", required=True)
+
+
 def test_sanitize_error_message_patterns():
     assert sanitize_error_message(Exception("404 Not Found")) == "Resource not found"
     assert sanitize_error_message(Exception("unauthorized access")) == "Not authorized for this action"

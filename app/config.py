@@ -18,8 +18,7 @@ class Config:
     # In production, these MUST be set or app will fail to start
     SECRET_KEY = get_required_env_var(
         "FLAGSHIP_SECRET_KEY",
-        default="dev-secret-key-64-chars-minimum-required-for-production-use-here",
-        prod_mode=True,
+        required=True,
     )
 
     ADMIRAL_ADMIN_TOKEN = get_required_env_var(

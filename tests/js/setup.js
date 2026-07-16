@@ -23,8 +23,6 @@ global.localStorage = win.localStorage;
 global.location = win.location;
 global.URL = win.URL;
 global.URLSearchParams = win.URLSearchParams;
-global.setTimeout = win.setTimeout;
-global.clearTimeout = win.clearTimeout;
 
 // Load Vue 3
 const vueSrc = fs.readFileSync(require.resolve('vue/dist/vue.global.prod.js'), 'utf8');

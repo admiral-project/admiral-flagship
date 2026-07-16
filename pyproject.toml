@@ -8,7 +8,8 @@ version = "0.0.1beta16"
 description = "Admiral administrative web console"
 requires-python = ">=3.11"
 dependencies = [
-    "flask>=3.0",
+    "flask>=3.1.3",
+    "werkzeug>=3.0.6",
     "gunicorn>=23.0",
     "requests>=2.31",
 ]

@@ -446,6 +446,37 @@ class TestBFFNodeRegister:
             )
             assert resp.status_code == 502
 
+    def test_register_node_rejects_invalid_network_data_and_drops_extra_fields(self, client):
+        with patch("app.bff.nodes.api_post") as post:
+            response = client.post(
+                "/flagship/api/nodes/register",
+                json={
+                    "node_id": "n1",
+                    "hostname": "worker 1",
+                    "ip": "not-an-ip",
+                    "token": "secret",
+                },
+            )
+        assert response.status_code == 400
+        post.assert_not_called()
+
+    def test_register_node_forwards_only_validated_fields(self, client):
+        with patch("app.bff.nodes.api_post", return_value={"success": True}) as post:
+            response = client.post(
+                "/flagship/api/nodes/register",
+                json={
+                    "node_id": "n1",
+                    "hostname": "worker-1",
+                    "ip": "10.0.0.1",
+                    "token": "secret",
+                },
+            )
+        assert response.status_code == 200
+        post.assert_called_once_with(
+            "/api/v1/nodes",
+            {"node_id": "n1", "hostname": "worker-1", "ip": "10.0.0.1"},
+        )
+
 
 class TestBFFInstanceTiersAndOps:
     def test_instance_tiers(self, client):

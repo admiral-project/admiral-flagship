@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import logging
+import ipaddress
+import re
 
 from flask import Blueprint, jsonify, request
 from app.admiral_client import api_get, api_post, api_delete
@@ -10,6 +12,7 @@ from app.security import validate_resource_id
 
 bp = Blueprint("bff_nodes", __name__, url_prefix="/flagship/api/nodes")
 logger = logging.getLogger("admiral-flagship")
+_HOSTNAME_RE = re.compile(r"^(?=.{1,253}$)(?!-)(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.)*[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?$")
 
 
 def validate_node_id(node_id):
@@ -63,7 +66,15 @@ def register_node():
         return jsonify({"error": "node_id, hostname, and ip are required"}), 400
     try:
         validate_node_id(node_id)
-        data = api_post("/api/v1/nodes", body)
+        ipaddress.ip_address(ip)
+        if not _HOSTNAME_RE.fullmatch(hostname):
+            raise ValueError("invalid hostname")
+        payload = {
+            "node_id": node_id,
+            "hostname": hostname,
+            "ip": ip,
+        }
+        data = api_post("/api/v1/nodes", payload)
         return jsonify(data)
     except ValueError as e:
         return jsonify({"error": str(e)}), 400

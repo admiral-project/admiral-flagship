@@ -20,6 +20,21 @@ def test_auth_me_authenticated(client):
     assert resp.json["username"] == "admin"
 
 
+def test_active_session_expires_at_absolute_deadline(client, app):
+    app.config["SESSION_TIMEOUT_MINUTES"] = 30
+    app.config["SESSION_ABSOLUTE_TIMEOUT_HOURS"] = 1
+    with client.session_transaction() as sess:
+        sess["admin_token"] = "test-admin-token"
+        sess["admin_username"] = "admin"
+        sess["session_login_at"] = 1000
+        sess["session_activity_at"] = 3500
+    with patch("app.auth.time.time", return_value=4601), patch(
+        "app.admiral_client.api_get", return_value={"username": "admin"}
+    ):
+        response = client.get("/flagship/api/auth/me")
+    assert response.status_code == 401
+
+
 def test_auth_me_retries_then_succeeds(client):
     with client.session_transaction() as sess:
         sess["admin_token"] = "test-admin-token"

@@ -102,7 +102,7 @@ def create_app():
                 return unauthenticated_response("not authenticated")
 
             # Check local inactivity timeout
-            from app.auth import _session_is_expired, _session_absolute_expired, SESSION_STARTED_AT_KEY
+            from app.auth import _session_is_expired, _session_absolute_expired, SESSION_ACTIVITY_AT_KEY
 
             if _session_is_expired():
                 session.clear()
@@ -121,7 +121,7 @@ def create_app():
                 return unauthenticated_response("session expired")
 
             # Reset the sliding inactivity window
-            session[SESSION_STARTED_AT_KEY] = int(time.time())
+            session[SESSION_ACTIVITY_AT_KEY] = int(time.time())
             unauthorized_limiter.reset(limiter_key)
 
     @app.errorhandler(ValueError)

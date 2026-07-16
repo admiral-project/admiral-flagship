@@ -13,6 +13,8 @@ bp = Blueprint("auth", __name__, url_prefix="/flagship/api/auth")
 AUTH_ME_MAX_ATTEMPTS = 2
 AUTH_ME_RETRY_DELAY_SECONDS = 0.2
 SESSION_STARTED_AT_KEY = "session_started_at"
+SESSION_ACTIVITY_AT_KEY = "session_activity_at"
+SESSION_LOGIN_AT_KEY = "session_login_at"
 
 
 def _extract_error(err):
@@ -62,6 +64,8 @@ def login():
         session["admin_username"] = data["username"]
         session["password_change_required"] = result.get("password_change_required", False)
         session[SESSION_STARTED_AT_KEY] = int(time.time())
+        session[SESSION_LOGIN_AT_KEY] = session[SESSION_STARTED_AT_KEY]
+        session[SESSION_ACTIVITY_AT_KEY] = session[SESSION_STARTED_AT_KEY]
         if session["password_change_required"]:
             return jsonify({"password_change_required": True, "username": data["username"]})
         logger.info("admin login ok", extra={"username": data["username"]})
@@ -97,7 +101,7 @@ def logout():
 
 
 def _session_is_expired():
-    started_at = session.get(SESSION_STARTED_AT_KEY)
+    started_at = session.get(SESSION_ACTIVITY_AT_KEY, session.get(SESSION_STARTED_AT_KEY))
     timeout_minutes = int(current_app.config.get("SESSION_TIMEOUT_MINUTES", 30))
     if not started_at:
         return True
@@ -106,7 +110,7 @@ def _session_is_expired():
 
 def _session_absolute_expired():
     """Check if session has exceeded the absolute maximum lifetime (24 hours)."""
-    started_at = session.get(SESSION_STARTED_AT_KEY)
+    started_at = session.get(SESSION_LOGIN_AT_KEY, session.get(SESSION_STARTED_AT_KEY))
     abs_max_hours = int(current_app.config.get("SESSION_ABSOLUTE_TIMEOUT_HOURS", 24))
     if not started_at:
         return True
@@ -149,7 +153,7 @@ def me():
         if _session_is_expired():
             session.clear()
             return _generic_auth_failure()
-        session[SESSION_STARTED_AT_KEY] = int(time.time())
+        session[SESSION_ACTIVITY_AT_KEY] = int(time.time())
         return jsonify(
             {
                 "username": username,
@@ -163,7 +167,7 @@ def me():
     expired_response = _validate_session_or_expire(username)
     if expired_response is not None:
         return expired_response
-    session[SESSION_STARTED_AT_KEY] = int(time.time())
+    session[SESSION_ACTIVITY_AT_KEY] = int(time.time())
     return jsonify(
         {
             "username": username,

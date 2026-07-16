@@ -61,7 +61,15 @@ window.showToast = function(type, message) {
   }
   var toast = document.createElement('div');
   toast.className = 'toast toast-' + (type || 'info');
-  toast.innerHTML = '<span>' + (message || '') + '</span><button class="toast-close" onclick="this.parentElement.remove()">&times;</button>';
+  var messageElement = document.createElement('span');
+  messageElement.textContent = message || '';
+  var closeButton = document.createElement('button');
+  closeButton.className = 'toast-close';
+  closeButton.type = 'button';
+  closeButton.textContent = '×';
+  closeButton.addEventListener('click', function() { toast.remove(); });
+  toast.appendChild(messageElement);
+  toast.appendChild(closeButton);
   container.appendChild(toast);
   setTimeout(function() { if (toast.parentElement) toast.remove(); }, 5000);
 };

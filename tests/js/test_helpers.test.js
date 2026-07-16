@@ -14,6 +14,20 @@ function setFetch(fn) {
   global.window.fetch = fn;
 }
 
+describe('showToast', function() {
+  afterEach(function() {
+    var container = document.querySelector('.toast-container');
+    if (container) container.remove();
+  });
+
+  it('renders messages as text instead of HTML', function() {
+    showToast('error', '<img src=x onerror=alert(1)>');
+    var toast = document.querySelector('.toast');
+    expect(toast.querySelector('img')).to.equal(null);
+    expect(toast.querySelector('span').textContent).to.equal('<img src=x onerror=alert(1)>');
+  });
+});
+
 describe('bffFetch', function() {
   var originalFetch;
 

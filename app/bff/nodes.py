@@ -1,12 +1,15 @@
 # SPDX-FileCopyrightText: William Moreno Reyes CP | MBA
 # SPDX-License-Identifier: Apache-2.0
 
+import logging
+
 from flask import Blueprint, jsonify, request
 from app.admiral_client import api_get, api_post, api_delete
 from app.bff.pagination import normalize_page, parse_paging_args, paginate_items
 from app.security import validate_resource_id
 
 bp = Blueprint("bff_nodes", __name__, url_prefix="/flagship/api/nodes")
+logger = logging.getLogger("admiral-flagship")
 
 
 def validate_node_id(node_id):
@@ -59,8 +62,11 @@ def register_node():
     if not node_id or not hostname or not ip:
         return jsonify({"error": "node_id, hostname, and ip are required"}), 400
     try:
+        validate_node_id(node_id)
         data = api_post("/api/v1/nodes", body)
         return jsonify(data)
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
     except Exception as e:
         msg = sanitize_error_message(e, "register_node")
         return jsonify({"error": msg}), 502
@@ -76,7 +82,11 @@ def node_detail(node_id):
         node = api_get(f"/api/admin/nodes/{node_id}")
         try:
             metrics = api_get(f"/api/admin/nodes/{node_id}/metrics")
-        except Exception:
+        except Exception as exc:
+            logger.warning(
+                "Unable to retrieve node metrics",
+                extra={"node_id": node_id, "context": "node_detail.metrics", "error": str(exc)},
+            )
             metrics = None
         return jsonify({"node": node, "metrics": metrics})
     except Exception as e:

@@ -23,11 +23,14 @@ def list_backups():
     try:
         params = {"page": page, "page_size": page_size}
         if instance_id:
+            validate_resource_id(instance_id, "instance")
             params["instance_id"] = instance_id
 
         path = f"/api/admin/backups?{urlencode(params)}"
         data = api_get(path)
         return jsonify(normalize_page(data, "backups", page, page_size))
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
     except Exception as e:
         msg = sanitize_error_message(e, "list_backups")
         return (
@@ -159,11 +162,15 @@ def restore_backup():
     if not data or not data.get("backup_id") or not data.get("target_app_id"):
         return jsonify({"error": "backup_id and target_app_id required"}), 400
     try:
+        validate_backup_id(data["backup_id"])
+        validate_resource_id(data["target_app_id"], "target app")
         result = api_post(
             "/api/admin/backups/restore",
             {"backup_id": data["backup_id"], "target_app_id": data["target_app_id"]},
         )
         return jsonify(result)
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
     except Exception as e:
         msg = sanitize_error_message(e, "restore_backup")
         return jsonify({"error": msg}), 502

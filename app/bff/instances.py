@@ -40,6 +40,11 @@ def list_instances():
     customer = request.args.get("customer_id", "").strip()
     app = request.args.get("app_definition_name", "").strip()
     try:
+        if customer:
+            validate_resource_id(customer, "customer")
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    try:
         params = {"page": page, "page_size": page_size}
         if status:
             params["status"] = status
@@ -185,6 +190,7 @@ def migrate_instance(instance_id):
     if not node_id:
         return jsonify({"error": "node_id required"}), 400
     try:
+        validate_resource_id(node_id, "node")
         result = api_post(
             f"/api/admin/instances/{instance_id}/migrate",
             {
@@ -192,6 +198,8 @@ def migrate_instance(instance_id):
             },
         )
         return jsonify(result)
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
     except Exception as e:
         msg = sanitize_error_message(e, "migrate_instance")
         return jsonify({"error": msg}), 502
@@ -207,18 +215,23 @@ def provision_instance():
     if missing:
         return jsonify({"error": ", ".join(missing) + " required"}), 400
     try:
+        validate_resource_id(data["customer_id"], "customer")
         body = {
             "app_definition_name": data["app_definition_name"],
             "tier_name": data["tier_name"],
             "customer_id": data["customer_id"],
         }
         if data.get("logical_instance_id"):
+            validate_resource_id(data["logical_instance_id"], "logical instance")
             body["logical_instance_id"] = data["logical_instance_id"]
         node_id = (data.get("node_id") or data.get("target_node_id") or "").strip()
         if node_id:
+            validate_resource_id(node_id, "node")
             body["node_id"] = node_id
         result = api_post("/api/v1/customer-apps", body)
         return jsonify(result)
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
     except Exception as e:
         msg = sanitize_error_message(e, "provision_instance")
         return jsonify({"error": msg}), 502

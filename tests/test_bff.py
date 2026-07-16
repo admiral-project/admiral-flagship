@@ -242,6 +242,13 @@ class TestBFFInstances:
             assert resp.status_code == 200
             assert resp.json["operation_id"] == "op1"
 
+    def test_provision_rejects_invalid_customer_id(self, client):
+        resp = client.post(
+            "/flagship/api/instances/provision",
+            json={"app_definition_name": "whoami", "tier_name": "starter", "customer_id": "../cust"},
+        )
+        assert resp.status_code == 400
+
 
 class TestBFFBackups:
     def test_list_backups(self, client):
@@ -270,6 +277,10 @@ class TestBFFBackups:
             resp = client.get("/flagship/api/backups?instance_id=inst1")
             assert resp.status_code == 200
 
+    def test_list_backups_rejects_invalid_instance_id(self, client):
+        resp = client.get("/flagship/api/backups?instance_id=../inst1")
+        assert resp.status_code == 400
+
     def test_trigger_backup_missing_id(self, client):
         resp = client.post("/flagship/api/backups/trigger", json={})
         assert resp.status_code == 400
@@ -292,6 +303,13 @@ class TestBFFBackups:
                 json={"backup_id": "b1", "target_app_id": "i2"},
             )
             assert resp.status_code == 200
+
+    def test_restore_rejects_invalid_target_app_id(self, client):
+        resp = client.post(
+            "/flagship/api/backups/restore",
+            json={"backup_id": "b1", "target_app_id": "../app"},
+        )
+        assert resp.status_code == 400
 
 
 class TestBFFJobs:

@@ -23,6 +23,15 @@ def test_node_detail_no_metrics(client):
         assert resp.json["metrics"] is None
 
 
+def test_node_detail_logs_metrics_failure(client, caplog):
+    with patch("app.bff.nodes.api_get") as mock_get:
+        mock_get.side_effect = [{"id": "n1"}, Exception("metrics failed")]
+        with caplog.at_level("WARNING", logger="admiral-flagship"):
+            resp = client.get("/flagship/api/nodes/n1")
+        assert resp.status_code == 200
+        assert "Unable to retrieve node metrics" in caplog.text
+
+
 def test_node_detail_failure(client):
     with patch("app.bff.nodes.api_get", side_effect=Exception("api failed")):
         resp = client.get("/flagship/api/nodes/n1")

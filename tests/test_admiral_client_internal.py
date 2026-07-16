@@ -1,4 +1,5 @@
 import os
+import importlib
 import pytest
 import requests
 from flask import g, session
@@ -15,6 +16,16 @@ from app.admiral_client import (
     logout_admin,
     reset_rate_limit,
 )
+
+
+def test_config_loads_insecure_verify_switch(monkeypatch):
+    import app.config as config_module
+
+    monkeypatch.setenv("ADMIRAL_INSECURE_SKIP_VERIFY", "1")
+    importlib.reload(config_module)
+    assert config_module.Config.ADMIRAL_INSECURE_SKIP_VERIFY is True
+    monkeypatch.setenv("ADMIRAL_INSECURE_SKIP_VERIFY", "0")
+    importlib.reload(config_module)
 
 
 def test_headers_admin(app):

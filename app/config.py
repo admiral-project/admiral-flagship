@@ -27,6 +27,7 @@ class Config:
 
     ADMIRAL_API_URL = os.environ.get("ADMIRAL_API_URL", "https://127.0.0.1:8080")
     ADMIRAL_CA_FILE = os.environ.get("ADMIRAL_CA_FILE", "")
+    ADMIRAL_INSECURE_SKIP_VERIFY = os.environ.get("ADMIRAL_INSECURE_SKIP_VERIFY", "0") == "1"
 
     # Session security settings
     SESSION_COOKIE_NAME = "flagship_session"

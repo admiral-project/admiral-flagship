@@ -28,8 +28,9 @@ def test_active_session_expires_at_absolute_deadline(client, app):
         sess["admin_username"] = "admin"
         sess["session_login_at"] = 1000
         sess["session_activity_at"] = 3500
-    with patch("app.auth.time.time", return_value=4601), patch(
-        "app.admiral_client.api_get", return_value={"username": "admin"}
+    with (
+        patch("app.auth.time.time", return_value=4601),
+        patch("app.admiral_client.api_get", return_value={"username": "admin"}),
     ):
         response = client.get("/flagship/api/auth/me")
     assert response.status_code == 401

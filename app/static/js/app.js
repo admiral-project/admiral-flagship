@@ -1,5 +1,6 @@
 // SPDX-FileCopyrightText: William Moreno Reyes CP | MBA
 // SPDX-License-Identifier: Apache-2.0
+/* eslint-disable no-useless-escape */
 
 var __ = Object.assign;
 
@@ -138,7 +139,7 @@ function provisionResultStorageKey(operationId) {
 
 function parseProvisionResultSnapshot(operationId) {
   var key = provisionResultStorageKey(operationId);
-  var raw = null;
+  var raw;
   try {
     raw = window.sessionStorage.getItem(key);
   } catch (e) {

@@ -164,15 +164,15 @@ def init_security_headers(app):
         ):
             response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains; preload"
 
-        # Content Security Policy - strict for admin console
-        # Only allow resources from same origin and CDN for PatternFly/Vue
-        # The production Vue build (vue.global.prod.js) does not need 'unsafe-eval'.
+        # Content Security Policy - strict for admin console. All browser assets
+        # are packaged under /static/vendor so runtime execution has no CDN
+        # supply-chain dependency.
         csp = (
             "default-src 'self'; "
-            "script-src 'self' https://unpkg.com https://cdnjs.cloudflare.com; "
-            "style-src 'self' https://cdnjs.cloudflare.com https://unpkg.com; "
+            "script-src 'self'; "
+            "style-src 'self'; "
             "img-src 'self' data:; "
-            "font-src 'self' https://cdnjs.cloudflare.com https://unpkg.com; "
+            "font-src 'self'; "
             "connect-src 'self'; "  # API calls only to same origin
             "frame-ancestors 'none'; "  # Cannot be embedded in iframes
             "base-uri 'self'; "

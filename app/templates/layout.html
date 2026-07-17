@@ -8,8 +8,8 @@
 <meta name="csrf-token" content="{{ csrf_token() }}">
 <link rel="icon" href="/static/img/favicon.ico">
 <title>Admiral - Admin Console</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-<link rel="stylesheet" href="https://unpkg.com/@patternfly/patternfly@6.5.2/patternfly.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='vendor/fontawesome/all.min.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='vendor/patternfly/patternfly.css') }}">
 <link rel="stylesheet" href="/static/css/app.css">
 </head>
 <body>
@@ -95,8 +95,8 @@
 
 <div class="toast-container" id="toast-container"></div>
 
-<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
-<script src="https://unpkg.com/vue-router@4"></script>
+<script src="{{ url_for('static', filename='vendor/vue/vue.global.prod.js') }}"></script>
+<script src="{{ url_for('static', filename='vendor/vue-router/vue-router.global.prod.js') }}"></script>
 <script src="/static/js/app.js"></script>
 </body>
 </html>

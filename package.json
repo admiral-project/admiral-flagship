@@ -6,7 +6,8 @@
   "description": "Admiral admin console - JS tests",
   "scripts": {
     "test": "mocha 'tests/js/**/*.test.js' --timeout 10000",
-    "test:watch": "mocha 'tests/js/**/*.test.js' --watch --timeout 10000"
+    "test:watch": "mocha 'tests/js/**/*.test.js' --watch --timeout 10000",
+    "coverage": "mkdir -p tests/js/instrumented && npx nyc instrument app/static/js/app.js > tests/js/instrumented/app.js && npx nyc --reporter=text --reporter=html mocha 'tests/js/**/*.test.js' --timeout 10000 && rm -rf tests/js/instrumented"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

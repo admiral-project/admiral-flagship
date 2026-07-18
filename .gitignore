@@ -9,3 +9,5 @@ build/
 node_modules/
 .coverage
 .venv/
+.nyc_output/
+coverage/

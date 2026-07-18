@@ -52,3 +52,38 @@ def test_index_exposes_csrf_meta_token(client):
     resp = client.get("/")
     assert resp.status_code == 200
     assert b'<meta name="csrf-token" content="' in resp.data
+
+
+def test_ready_success(client):
+    from unittest.mock import patch
+
+    with patch("app.routes.api_get", return_value={"status": "ok"}) as mock_get:
+        resp = client.get("/flagship/api/ready")
+        assert resp.status_code == 200
+        assert resp.json["status"] == "ok"
+        assert resp.json["admirald"] == "ok"
+        assert "timestamp" in resp.json
+        mock_get.assert_called_once_with("/api/v1/status")
+
+
+def test_ready_failure(client):
+    from unittest.mock import patch
+
+    with patch("app.routes.api_get", side_effect=Exception("api connection error")) as mock_get:
+        resp = client.get("/flagship/api/ready")
+        assert resp.status_code == 200
+        assert resp.json["status"] == "error"
+        assert resp.json["admirald"] == "error"
+        assert "Service temporarily unavailable" in resp.json["error"]
+        assert "timestamp" in resp.json
+        mock_get.assert_called_once_with("/api/v1/status")
+
+
+def test_ip_allowed_invalid_remote_addr(client):
+    # Pass an invalid/malformed remote address to trigger ValueError
+    resp = client.get(
+        "/flagship/api/health",
+        environ_overrides={"REMOTE_ADDR": "not-a-valid-ip"},
+    )
+    assert resp.status_code == 403
+    assert resp.json["status"] == "forbidden"

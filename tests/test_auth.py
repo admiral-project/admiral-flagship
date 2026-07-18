@@ -23,16 +23,18 @@ def test_auth_me_authenticated(client):
 def test_active_session_expires_at_absolute_deadline(client, app):
     app.config["SESSION_TIMEOUT_MINUTES"] = 30
     app.config["SESSION_ABSOLUTE_TIMEOUT_HOURS"] = 1
-    with client.session_transaction() as sess:
-        sess["admin_token"] = "test-admin-token"
-        sess["admin_username"] = "admin"
-        sess["session_login_at"] = 1000
-        sess["session_activity_at"] = 3500
+    app.config["SESSION_COOKIE_SECURE"] = False
+    with patch("time.time", return_value=3500):
+        with client.session_transaction() as sess:
+            sess["admin_token"] = "test-admin-token"
+            sess["admin_username"] = "admin"
+            sess["session_login_at"] = 1000
+            sess["session_activity_at"] = 3500
     with (
-        patch("app.auth.time.time", return_value=4601),
+        patch("time.time", return_value=4601),
         patch("app.admiral_client.api_get", return_value={"username": "admin"}),
     ):
-        response = client.get("/flagship/api/auth/me")
+        response = client.get("/flagship/api/nodes", headers={"X-Requested-With": "XMLHttpRequest"})
     assert response.status_code == 401
 
 
@@ -193,6 +195,54 @@ def test_bff_endpoint_session_expired_inactivity(client):
     assert resp.json["error"] == "unauthorized"
     with client.session_transaction() as sess:
         assert "admin_token" not in sess
+
+
+def test_bff_endpoint_temporarily_blocks_repeated_unauthenticated_access_html(client):
+    # Perform 10 failed API calls to consume rate limit
+    headers = {"X-Requested-With": "XMLHttpRequest"}
+    for _ in range(10):
+        resp = client.get("/flagship/api/nodes", headers=headers)
+        assert resp.status_code == 401
+
+    # Eleventh call is with Accept: text/html and is blocked (rate limit triggered)
+    resp = client.get("/flagship/api/nodes", headers={"Accept": "text/html"}, follow_redirects=False)
+    assert resp.status_code == 302
+    assert resp.headers["Location"].endswith("/")
+
+
+def test_active_session_expires_at_absolute_deadline_html(client, app):
+    app.config["SESSION_TIMEOUT_MINUTES"] = 30
+    app.config["SESSION_ABSOLUTE_TIMEOUT_HOURS"] = 1
+    app.config["SESSION_COOKIE_SECURE"] = False
+    with patch("time.time", return_value=3500):
+        with client.session_transaction() as sess:
+            sess["admin_token"] = "test-admin-token"
+            sess["admin_username"] = "admin"
+            sess["session_login_at"] = 1000
+            sess["session_activity_at"] = 3500
+    with patch("time.time", return_value=4601):
+        response = client.get(
+            "/flagship/api/nodes",
+            headers={"Accept": "text/html"},
+            follow_redirects=False,
+        )
+    assert response.status_code == 302
+    assert response.headers["Location"].endswith("/")
+
+
+def test_value_error_redirects_for_html(client, app):
+    app.config["SESSION_COOKIE_SECURE"] = False
+    with client.session_transaction() as sess:
+        sess["admin_token"] = "test-admin-token"
+        sess["admin_username"] = "admin"
+        sess["session_started_at"] = int(time.time())
+    resp = client.get(
+        "/flagship/api/backups/invalid-id-!!!",
+        headers={"Accept": "text/html"},
+        follow_redirects=False,
+    )
+    assert resp.status_code == 302
+    assert resp.headers["Location"].endswith("/")
 
 
 def test_bff_endpoint_token_revoked_by_backend(client):

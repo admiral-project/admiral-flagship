@@ -28,14 +28,37 @@ global.URLSearchParams = win.URLSearchParams;
 const vueSrc = fs.readFileSync(require.resolve('vue/dist/vue.global.prod.js'), 'utf8');
 win.eval(vueSrc);
 
+// Intercept Vue.createApp to capture root config for testing
+let capturedAppConfig = null;
+const originalCreateApp = win.Vue.createApp;
+win.Vue.createApp = function(config) {
+  capturedAppConfig = config;
+  return originalCreateApp.apply(this, arguments);
+};
+
 // Load Vue Router
 const vueRouterSrc = fs.readFileSync(require.resolve('vue-router/dist/vue-router.global.prod.js'), 'utf8');
 win.eval(vueRouterSrc);
 
-// Load app.js
-const appJsPath = path.resolve(__dirname, '../../app/static/js/app.js');
-const appJs = fs.readFileSync(appJsPath, 'utf8');
+// Load app.js (support instrumented file for code coverage)
+const instrumentedPath = path.resolve(__dirname, 'instrumented/app.js');
+const normalPath = path.resolve(__dirname, '../../app/static/js/app.js');
+const appJsPath = fs.existsSync(instrumentedPath) ? instrumentedPath : normalPath;
+let appJs = fs.readFileSync(appJsPath, 'utf8');
+
+// Mock window.location.href and window.location.reload for JSDOM testing
+appJs = appJs.replace(/window\.location\.href\s*=\s*/g, 'window.__location_href = ');
+appJs = appJs.replace(/window\.location\.reload\(\)/g, 'window.__location_reload()');
+
+win.__location_href = '';
+win.__location_reload = function() { win.__location_reloaded = true; };
+
 win.eval(appJs);
+
+// Link JSDOM window coverage to global Node coverage if running under nyc
+if (win.__coverage__) {
+  global.__coverage__ = win.__coverage__;
+}
 
 // Expose app.js globals to Node global scope for Mocha tests
 var exposed = [
@@ -56,9 +79,11 @@ var exposed = [
   'jobStatusClass',
   'backupStatusClass',
   'healthStatusClass',
+  'provisionResultCache',
   'provisionResultStorageKey',
   'parseProvisionResultSnapshot',
   'storeProvisionResultSnapshot',
+  'normalizeProvisionCredential',
   'normalizeProvisionCredentials',
   'mergeProvisionCredentials',
   'LoginView',
@@ -81,6 +106,8 @@ var exposed = [
   'ChangePasswordView',
   'ChangePasswordStandaloneView',
   'bffFetch',
+  '__location_href',
+  '__location_reload',
   'Vue',
   'VueRouter',
   'routes',
@@ -93,3 +120,5 @@ exposed.forEach(function(name) {
     global[name] = win[name];
   }
 });
+
+global.rootAppConfig = capturedAppConfig;

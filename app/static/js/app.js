@@ -207,46 +207,46 @@ function mergeProvisionCredentials(primary, secondary) {
 }
 
 var LoginView = {
-  template: '\
-    <div class="login-page">\
-      <div class="login-card">\
-        <div class="login-card-header">\
-          <img src="/static/img/admiral-flagship.png" alt="Admiral" class="login-logo">\
-          <h1>Admiral</h1>\
-          <p class="login-subtitle">Platform Admin Console</p>\
-        </div>\
-        <div class="login-card-body">\
-          <div v-if="flashMessage" class="pf-c-alert pf-m-info pf-m-inline pf-u-mb-md" role="alert">\
-            <div class="pf-c-alert__icon"><i class="fas fa-fw fa-info-circle" aria-hidden="true"></i></div>\
-            <p class="pf-c-alert__title">{{ flashMessage }}</p>\
-          </div>\
-          <div v-if="error" class="pf-c-alert pf-m-danger pf-m-inline pf-u-mb-md" role="alert">\
-            <div class="pf-c-alert__icon"><i class="fas fa-fw fa-exclamation-circle" aria-hidden="true"></i></div>\
-            <p class="pf-c-alert__title">{{ error }}</p>\
-          </div>\
-          <form class="pf-c-form" @submit.prevent="login">\
-            <div class="pf-c-form__group">\
-              <label class="pf-c-form__label" for="login-username">\
-                <span class="pf-c-form__label-text">Username</span>\
-              </label>\
-              <input id="login-username" class="pf-c-form-control" type="text" v-model="username" required autocomplete="username" autofocus placeholder="Enter your username">\
-            </div>\
-            <div class="pf-c-form__group">\
-              <label class="pf-c-form__label" for="login-password">\
-                <span class="pf-c-form__label-text">Password</span>\
-              </label>\
-              <input id="login-password" class="pf-c-form-control" type="password" v-model="password" required autocomplete="current-password" placeholder="Enter your password">\
-            </div>\
-            <div class="pf-c-form__group pf-m-action">\
-              <button class="pf-c-button pf-m-primary pf-m-block" type="submit" :disabled="loading">\
-                <span v-if="loading"><i class="fas fa-spinner fa-spin pf-u-mr-sm"></i>Signing in...</span>\
-                <span v-else><i class="fas fa-sign-in-alt pf-u-mr-sm"></i>Sign In</span>\
-              </button>\
-            </div>\
-          </form>\
-        </div>\
-      </div>\
-    </div>',
+  template: `
+    <div class="login-page">
+      <div class="login-card">
+        <div class="login-card-header">
+          <img src="/static/img/admiral-flagship.png" alt="Admiral" class="login-logo">
+          <h1>Admiral</h1>
+          <p class="login-subtitle">Platform Admin Console</p>
+        </div>
+        <div class="login-card-body">
+          <div v-if="flashMessage" class="pf-c-alert pf-m-info pf-m-inline pf-u-mb-md" role="alert">
+            <div class="pf-c-alert__icon"><i class="fas fa-fw fa-info-circle" aria-hidden="true"></i></div>
+            <p class="pf-c-alert__title">{{ flashMessage }}</p>
+          </div>
+          <div v-if="error" class="pf-c-alert pf-m-danger pf-m-inline pf-u-mb-md" role="alert">
+            <div class="pf-c-alert__icon"><i class="fas fa-fw fa-exclamation-circle" aria-hidden="true"></i></div>
+            <p class="pf-c-alert__title">{{ error }}</p>
+          </div>
+          <form class="pf-c-form" @submit.prevent="login">
+            <div class="pf-c-form__group">
+              <label class="pf-c-form__label" for="login-username">
+                <span class="pf-c-form__label-text">Username</span>
+              </label>
+              <input id="login-username" class="pf-c-form-control" type="text" v-model="username" required autocomplete="username" autofocus placeholder="Enter your username">
+            </div>
+            <div class="pf-c-form__group">
+              <label class="pf-c-form__label" for="login-password">
+                <span class="pf-c-form__label-text">Password</span>
+              </label>
+              <input id="login-password" class="pf-c-form-control" type="password" v-model="password" required autocomplete="current-password" placeholder="Enter your password">
+            </div>
+            <div class="pf-c-form__group pf-m-action">
+              <button class="pf-c-button pf-m-primary pf-m-block" type="submit" :disabled="loading">
+                <span v-if="loading"><i class="fas fa-spinner fa-spin pf-u-mr-sm"></i>Signing in...</span>
+                <span v-else><i class="fas fa-sign-in-alt pf-u-mr-sm"></i>Sign In</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>`,
   data: function() {
     var flash = sessionStorage.getItem('session_expired') === '1' ? 'Your session has expired. Please log in again.' : '';
     if (flash) sessionStorage.removeItem('session_expired');
@@ -358,251 +358,251 @@ function healthStatusClass(health) {
 }
 
 var DashboardView = {
-  template: '\
-    <section class="pf-c-page__main-section">\
-      <div class="dashboard-hero pf-u-mb-lg">\
-        <div>\
-          <p class="dashboard-eyebrow">Platform Overview</p>\
-          <h1 class="pf-c-title pf-m-2xl">Dashboard</h1>\
-          <p class="dashboard-subtitle">Live operational summary for nodes, instances, jobs, and backups.</p>\
-        </div>\
-        <div class="dashboard-hero-actions">\
-          <div class="dashboard-last-updated">Updated {{ lastUpdatedLabel }}</div>\
-          <button class="pf-c-button pf-m-secondary" @click="refresh" :disabled="refreshing">\
-            <i class="fas" :class="refreshing ? \'fa-spinner fa-spin\' : \'fa-sync-alt\'"></i>{{ refreshing ? "Refreshing..." : "Refresh" }}\
-          </button>\
-        </div>\
-      </div>\
-      <div v-if="loading" class="loading"><i class="fas fa-spinner fa-spin pf-u-mr-sm"></i>Loading dashboard...</div>\
-      <div v-else-if="error" class="error-message">{{ error }}</div>\
-      <div v-else>\
-        <div v-if="visibleAlerts.length" class="dashboard-alerts pf-u-mb-lg">\
-          <div v-for="alert in visibleAlerts" :key="alertKey(alert)" class="dashboard-alert-link">\
-            <router-link :to="alert.target || \'/dashboard\'" class="dashboard-alert-link__body">\
-              <article class="pf-c-alert dashboard-alert" :class="\'pf-m-\' + alert.severity" role="alert">\
-                <div class="pf-c-alert__icon"><i class="fas fa-fw fa-exclamation-circle" aria-hidden="true"></i></div>\
-                <div class="dashboard-alert-copy">\
-                  <p class="dashboard-alert-title">{{ alert.title }}</p>\
-                  <p class="pf-c-alert__title">{{ alert.message }}</p>\
-                </div>\
-                <span class="dashboard-alert-action">Open</span>\
-              </article>\
-            </router-link>\
-            <button class="dashboard-alert-close" type="button" @click.stop="dismissAlert(alert)" aria-label="Dismiss alert" title="Dismiss alert">X</button>\
-          </div>\
-        </div>\
-        <div class="dashboard-stats-grid pf-u-mb-lg">\
-          <div class="dashboard-stat-item">\
-            <router-link :to="dashboardLink(\'/instances\')" class="stat-card-link">\
-              <div class="pf-c-card pf-m-hoverable stat-card stat-card-blue">\
-                <div class="stat-card-icon"><i class="fas fa-cube"></i></div>\
-                <div class="stat-card-value">{{ summary.total_instances }}</div>\
-                <div class="stat-card-label">Total Instances</div>\
-                <div class="stat-card-meta">{{ summary.error_instances }} in error</div>\
-              </div>\
-            </router-link>\
-          </div>\
-          <div class="dashboard-stat-item">\
-            <router-link :to="dashboardLink(\'/instances\', { status: \'running\' })" class="stat-card-link">\
-              <div class="pf-c-card pf-m-hoverable stat-card stat-card-green">\
-                <div class="stat-card-icon"><i class="fas fa-play"></i></div>\
-                <div class="stat-card-value">{{ summary.running_instances }}</div>\
-                <div class="stat-card-label">Running</div>\
-                <div class="stat-card-meta">Healthy workload pool</div>\
-              </div>\
-            </router-link>\
-          </div>\
-          <div class="dashboard-stat-item">\
-            <router-link :to="dashboardLink(\'/instances\', { status: \'stopped\' })" class="stat-card-link">\
-              <div class="pf-c-card pf-m-hoverable stat-card stat-card-slate">\
-                <div class="stat-card-icon"><i class="fas fa-stop-circle"></i></div>\
-                <div class="stat-card-value">{{ summary.stopped_instances }}</div>\
-                <div class="stat-card-label">Stopped</div>\
-                <div class="stat-card-meta">{{ summary.paused_instances }} paused</div>\
-              </div>\
-            </router-link>\
-          </div>\
-          <div class="dashboard-stat-item">\
-            <router-link :to="dashboardLink(\'/nodes\')" class="stat-card-link">\
-              <div class="pf-c-card pf-m-hoverable stat-card stat-card-slate">\
-                <div class="stat-card-icon"><i class="fas fa-server"></i></div>\
-                <div class="stat-card-value">{{ summary.active_nodes }}</div>\
-                <div class="stat-card-label">Active Nodes</div>\
-                <div class="stat-card-meta">{{ summary.offline_nodes }} offline</div>\
-              </div>\
-            </router-link>\
-          </div>\
-        </div>\
-        <div class="dashboard-capacity-grid pf-u-mb-lg" v-if="hasCapacity">\
-          <div class="pf-c-card dashboard-capacity-card">\
-            <div class="dashboard-capacity-header">\
-              <div class="stat-card-icon stat-card-icon-inline"><i class="fas fa-memory"></i></div>\
-              <div>\
-                <div class="dashboard-panel-title">RAM Committed</div>\
-                <div class="dashboard-panel-meta">{{ formatBytes(capacity.committed_ram_bytes) }} / {{ formatBytes(capacity.total_ram_bytes) }}</div>\
-              </div>\
-            </div>\
-            <div class="dashboard-progress-track"><div class="dashboard-progress-fill dashboard-progress-fill-blue" :style="{ width: capacityPercent(capacity.committed_ram_bytes, capacity.total_ram_bytes) + \'%\' }"></div></div>\
-          </div>\
-          <div class="pf-c-card dashboard-capacity-card">\
-            <div class="dashboard-capacity-header">\
-              <div class="stat-card-icon stat-card-icon-inline"><i class="fas fa-database"></i></div>\
-              <div>\
-                <div class="dashboard-panel-title">Disk Committed</div>\
-                <div class="dashboard-panel-meta">{{ formatBytes(capacity.committed_disk_bytes) }} / {{ formatBytes(capacity.total_disk_bytes) }}</div>\
-              </div>\
-            </div>\
-            <div class="dashboard-progress-track"><div class="dashboard-progress-fill dashboard-progress-fill-slate" :style="{ width: capacityPercent(capacity.committed_disk_bytes, capacity.total_disk_bytes) + \'%\' }"></div></div>\
-          </div>\
-        </div>\
-        <div class="pf-c-card pf-u-mb-lg">\
-          <div class="pf-c-card__header dashboard-toolbar">\
-            <div>\
-              <h2 class="pf-c-title pf-m-lg"><i class="fas fa-cube"></i> Instances Overview</h2>\
-              <p class="dashboard-panel-meta">Focused view with quick filters across state, app, node and customer.</p>\
-            </div>\
-            <router-link :to="dashboardLink(\'/instances\', activeInstanceFilters)" class="pf-c-button pf-m-link">Open filtered list</router-link>\
-          </div>\
-          <div class="pf-c-card__body">\
-            <div class="filter-bar dashboard-filter-bar">\
-              <label for="dashboard-status-filter">Status</label>\
-              <select id="dashboard-status-filter" class="pf-c-form-control" v-model="instanceFilters.status">\
-                <option value="">All</option>\
-                <option value="running">Running</option>\
-                <option value="paused">Paused</option>\
-                <option value="error">Error</option>\
-                <option value="stopped">Stopped</option>\
-              </select>\
-              <label for="dashboard-app-filter">App</label>\
-              <select id="dashboard-app-filter" class="pf-c-form-control" v-model="instanceFilters.app_definition_name">\
-                <option value="">All</option>\
-                <option v-for="app in appOptions" :key="app" :value="app">{{ app }}</option>\
-              </select>\
-              <label for="dashboard-node-filter">Node</label>\
-              <select id="dashboard-node-filter" class="pf-c-form-control" v-model="instanceFilters.node_id">\
-                <option value="">All</option>\
-                <option v-for="node in nodeOptions" :key="node.id" :value="node.id">{{ node.label }}</option>\
-              </select>\
-              <label for="dashboard-customer-filter">Customer</label>\
-              <select id="dashboard-customer-filter" class="pf-c-form-control" v-model="instanceFilters.customer_id">\
-                <option value="">All</option>\
-                <option v-for="customer in customerOptions" :key="customer" :value="customer">{{ customer }}</option>\
-              </select>\
-              <button class="pf-c-button pf-m-secondary pf-m-small" @click="clearInstanceFilters" :disabled="!hasInstanceFilters">Reset</button>\
-            </div>\
-          </div>\
-          <div class="pf-c-card__body pf-m-0">\
-            <table class="pf-c-table" role="grid">\
-              <thead>\
-                <tr><th>ID</th><th>Customer</th><th>App</th><th>Node</th><th>Tier</th><th>Status</th><th>Created</th><th>Updated</th></tr>\
-              </thead>\
-              <tbody>\
-                <tr v-for="inst in filteredInstances" :key="inst.id || inst.instance_id" class="dashboard-row-link" @click="goToInstance(inst)">\
-                  <td data-label="ID"><router-link :to="\'/instances/\' + (inst.id || inst.instance_id)" class="table-primary-link" :title="inst.id || inst.instance_id" @click.stop>{{ shortId(inst.id || inst.instance_id) }}</router-link></td>\
-                  <td data-label="Customer">{{ inst.customer_id || inst.customer || "-" }}</td>\
-                  <td data-label="App">{{ inst.app_definition_name || inst.app_id || inst.app || "-" }}</td>\
-                  <td data-label="Node">{{ nodeLabel(inst.node_id || inst.node) }}</td>\
-                  <td data-label="Tier">{{ inst.tier_name || inst.tier_id || inst.tier || "-" }}</td>\
-                  <td data-label="Status"><span class="pf-c-label" :class="instanceStatusClass(inst.status)">{{ inst.status || "unknown" }}</span></td>\
-                  <td data-label="Created">{{ formatTimestamp(inst.created_at || inst.created) }}</td>\
-                  <td data-label="Updated">{{ formatRelativeTime(inst.updated_at || inst.updated) || "-" }}</td>\
-                </tr>\
-                <tr v-if="filteredInstances.length === 0">\
-                  <td colspan="8" class="pf-u-text-align-center pf-u-color-400" style="padding: 2rem;">No instances match the current filters</td>\
-                </tr>\
-              </tbody>\
-            </table>\
-          </div>\
-        </div>\
-        <div class="dashboard-grid">\
-          <div class="dashboard-grid-main">\
-            <div class="pf-c-card">\
-              <div class="pf-c-card__header dashboard-toolbar">\
-                <h2 class="pf-c-title pf-m-lg"><i class="fas fa-chart-line"></i> Operational Highlights</h2>\
-                <router-link :to="dashboardLink(\'/instances\', { status: \'error\' })" class="pf-c-button pf-m-link">Open errors</router-link>\
-              </div>\
-              <div class="pf-c-card__body dashboard-highlights">\
-                <article class="dashboard-highlight-card dashboard-highlight-card-danger">\
-                  <div class="dashboard-highlight-value">{{ summary.error_instances }}</div>\
-                  <div class="dashboard-highlight-label">Instances in Error</div>\
-                </article>\
-                <article class="dashboard-highlight-card dashboard-highlight-card-slate">\
-                  <div class="dashboard-highlight-value">{{ summary.stopped_instances }}</div>\
-                  <div class="dashboard-highlight-label">Stopped Instances</div>\
-                </article>\
-                <article class="dashboard-highlight-card dashboard-highlight-card-blue">\
-                  <div class="dashboard-highlight-value">{{ summary.failed_jobs }}</div>\
-                  <div class="dashboard-highlight-label">Failed Jobs</div>\
-                </article>\
-                <article class="dashboard-highlight-card dashboard-highlight-card-slate">\
-                  <div class="dashboard-highlight-value">{{ summary.failed_backups }}</div>\
-                  <div class="dashboard-highlight-label">Failed Backups</div>\
-                </article>\
-              </div>\
-            </div>\
-          </div>\
-          <div class="dashboard-grid-side">\
-            <div class="pf-c-card">\
-              <div class="pf-c-card__header dashboard-toolbar">\
-                <h2 class="pf-c-title pf-m-lg"><i class="fas fa-tasks"></i> Recent Jobs</h2>\
-                <router-link :to="dashboardLink(\'/jobs\')" class="pf-c-button pf-m-link">All jobs</router-link>\
-              </div>\
-              <div class="pf-c-card__body pf-m-0">\
-                <table class="pf-c-table" role="grid">\
-                  <thead>\
-                    <tr><th>ID</th><th>Type</th><th>Status</th><th>Started</th><th>Duration</th><th>Actions</th></tr>\
-                  </thead>\
-                  <tbody>\
-                    <tr v-for="job in recentJobs" :key="job.id || job.operation_id" class="dashboard-row-link" @click="goToJob(job)">\
-                      <td data-label="ID"><router-link :to="job.detail_path" class="table-primary-link" :title="job.id || job.operation_id" @click.stop>{{ shortId(job.id || job.operation_id) }}</router-link></td>\
-                      <td data-label="Type">{{ job.type || job.action || "-" }}</td>\
-                      <td data-label="Status">\
-                        <span class="pf-c-label" :class="jobStatusClass(job.status)">{{ job.status || "unknown" }}</span>\
-                        <div v-if="job.progress_percent !== null && job.progress_percent !== undefined" class="dashboard-job-progress">\
-                          <div class="dashboard-progress-track dashboard-progress-track-small"><div class="dashboard-progress-fill dashboard-progress-fill-blue" :style="{ width: job.progress_percent + \'%\' }"></div></div>\
-                          <span>{{ job.progress_percent }}%</span>\
-                        </div>\
-                      </td>\
-                      <td data-label="Started">{{ formatRelativeTime(job.created_at || job.timestamp) || "-" }}</td>\
-                      <td data-label="Duration">{{ formatDuration(job.duration_seconds) }}</td>\
-                      <td data-label="Actions">\
-                        <router-link :to="job.detail_path" class="pf-c-button pf-m-link" @click.stop>Inspect</router-link>\
-                      </td>\
-                    </tr>\
-                    <tr v-if="recentJobs.length === 0">\
-                      <td colspan="6" class="pf-u-text-align-center pf-u-color-400" style="padding: 2rem;">No recent jobs</td>\
-                    </tr>\
-                  </tbody>\
-                </table>\
-              </div>\
-            </div>\
-          </div>\
-        </div>\
-        <div v-if="recentFailedBackups.length" class="pf-c-card pf-u-mt-lg">\
-          <div class="pf-c-card__header dashboard-toolbar">\
-            <h2 class="pf-c-title pf-m-lg"><i class="fas fa-exclamation-triangle"></i> Recent Failed Backups</h2>\
-            <router-link to="/backups" class="pf-c-button pf-m-link">All backups</router-link>\
-          </div>\
-          <div class="pf-c-card__body pf-m-0">\
-            <table class="pf-c-table" role="grid">\
-              <thead>\
-                <tr><th>ID</th><th>Instance</th><th>Type</th><th>Status</th><th>Created</th><th>Diagnosis</th></tr>\
-              </thead>\
-              <tbody>\
-                <tr v-for="bk in recentFailedBackups" :key="bk.id || bk.backup_id" class="dashboard-row-link" @click="goToBackup(bk)">\
-                  <td data-label="ID"><router-link :to="bk.detail_path" class="table-primary-link" :title="bk.id || bk.backup_id" @click.stop>{{ shortId(bk.id || bk.backup_id) }}</router-link></td>\
-                  <td data-label="Instance">{{ bk.instance_id || bk.instance || "-" }}</td>\
-                  <td data-label="Type">{{ bk.type || bk.backup_type || "-" }}</td>\
-                  <td data-label="Status"><span class="pf-c-label" :class="backupStatusClass(bk.status)">{{ bk.status || "unknown" }}</span></td>\
-                  <td data-label="Created">{{ formatRelativeTime(bk.created_at || bk.created) || "-" }}</td>\
-                  <td data-label="Diagnosis">{{ bk.error_message || bk.error || bk.message || "Unknown" }}</td>\
-                </tr>\
-              </tbody>\
-            </table>\
-          </div>\
-        </div>\
-      </div>\
-    </section>',
+  template: `
+    <section class="pf-c-page__main-section">
+      <div class="dashboard-hero pf-u-mb-lg">
+        <div>
+          <p class="dashboard-eyebrow">Platform Overview</p>
+          <h1 class="pf-c-title pf-m-2xl">Dashboard</h1>
+          <p class="dashboard-subtitle">Live operational summary for nodes, instances, jobs, and backups.</p>
+        </div>
+        <div class="dashboard-hero-actions">
+          <div class="dashboard-last-updated">Updated {{ lastUpdatedLabel }}</div>
+          <button class="pf-c-button pf-m-secondary" @click="refresh" :disabled="refreshing">
+            <i class="fas" :class="refreshing ? \'fa-spinner fa-spin\' : \'fa-sync-alt\'"></i>{{ refreshing ? "Refreshing..." : "Refresh" }}
+          </button>
+        </div>
+      </div>
+      <div v-if="loading" class="loading"><i class="fas fa-spinner fa-spin pf-u-mr-sm"></i>Loading dashboard...</div>
+      <div v-else-if="error" class="error-message">{{ error }}</div>
+      <div v-else>
+        <div v-if="visibleAlerts.length" class="dashboard-alerts pf-u-mb-lg">
+          <div v-for="alert in visibleAlerts" :key="alertKey(alert)" class="dashboard-alert-link">
+            <router-link :to="alert.target || \'/dashboard\'" class="dashboard-alert-link__body">
+              <article class="pf-c-alert dashboard-alert" :class="\'pf-m-\' + alert.severity" role="alert">
+                <div class="pf-c-alert__icon"><i class="fas fa-fw fa-exclamation-circle" aria-hidden="true"></i></div>
+                <div class="dashboard-alert-copy">
+                  <p class="dashboard-alert-title">{{ alert.title }}</p>
+                  <p class="pf-c-alert__title">{{ alert.message }}</p>
+                </div>
+                <span class="dashboard-alert-action">Open</span>
+              </article>
+            </router-link>
+            <button class="dashboard-alert-close" type="button" @click.stop="dismissAlert(alert)" aria-label="Dismiss alert" title="Dismiss alert">X</button>
+          </div>
+        </div>
+        <div class="dashboard-stats-grid pf-u-mb-lg">
+          <div class="dashboard-stat-item">
+            <router-link :to="dashboardLink(\'/instances\')" class="stat-card-link">
+              <div class="pf-c-card pf-m-hoverable stat-card stat-card-blue">
+                <div class="stat-card-icon"><i class="fas fa-cube"></i></div>
+                <div class="stat-card-value">{{ summary.total_instances }}</div>
+                <div class="stat-card-label">Total Instances</div>
+                <div class="stat-card-meta">{{ summary.error_instances }} in error</div>
+              </div>
+            </router-link>
+          </div>
+          <div class="dashboard-stat-item">
+            <router-link :to="dashboardLink(\'/instances\', { status: \'running\' })" class="stat-card-link">
+              <div class="pf-c-card pf-m-hoverable stat-card stat-card-green">
+                <div class="stat-card-icon"><i class="fas fa-play"></i></div>
+                <div class="stat-card-value">{{ summary.running_instances }}</div>
+                <div class="stat-card-label">Running</div>
+                <div class="stat-card-meta">Healthy workload pool</div>
+              </div>
+            </router-link>
+          </div>
+          <div class="dashboard-stat-item">
+            <router-link :to="dashboardLink(\'/instances\', { status: \'stopped\' })" class="stat-card-link">
+              <div class="pf-c-card pf-m-hoverable stat-card stat-card-slate">
+                <div class="stat-card-icon"><i class="fas fa-stop-circle"></i></div>
+                <div class="stat-card-value">{{ summary.stopped_instances }}</div>
+                <div class="stat-card-label">Stopped</div>
+                <div class="stat-card-meta">{{ summary.paused_instances }} paused</div>
+              </div>
+            </router-link>
+          </div>
+          <div class="dashboard-stat-item">
+            <router-link :to="dashboardLink(\'/nodes\')" class="stat-card-link">
+              <div class="pf-c-card pf-m-hoverable stat-card stat-card-slate">
+                <div class="stat-card-icon"><i class="fas fa-server"></i></div>
+                <div class="stat-card-value">{{ summary.active_nodes }}</div>
+                <div class="stat-card-label">Active Nodes</div>
+                <div class="stat-card-meta">{{ summary.offline_nodes }} offline</div>
+              </div>
+            </router-link>
+          </div>
+        </div>
+        <div class="dashboard-capacity-grid pf-u-mb-lg" v-if="hasCapacity">
+          <div class="pf-c-card dashboard-capacity-card">
+            <div class="dashboard-capacity-header">
+              <div class="stat-card-icon stat-card-icon-inline"><i class="fas fa-memory"></i></div>
+              <div>
+                <div class="dashboard-panel-title">RAM Committed</div>
+                <div class="dashboard-panel-meta">{{ formatBytes(capacity.committed_ram_bytes) }} / {{ formatBytes(capacity.total_ram_bytes) }}</div>
+              </div>
+            </div>
+            <div class="dashboard-progress-track"><div class="dashboard-progress-fill dashboard-progress-fill-blue" :style="{ width: capacityPercent(capacity.committed_ram_bytes, capacity.total_ram_bytes) + \'%\' }"></div></div>
+          </div>
+          <div class="pf-c-card dashboard-capacity-card">
+            <div class="dashboard-capacity-header">
+              <div class="stat-card-icon stat-card-icon-inline"><i class="fas fa-database"></i></div>
+              <div>
+                <div class="dashboard-panel-title">Disk Committed</div>
+                <div class="dashboard-panel-meta">{{ formatBytes(capacity.committed_disk_bytes) }} / {{ formatBytes(capacity.total_disk_bytes) }}</div>
+              </div>
+            </div>
+            <div class="dashboard-progress-track"><div class="dashboard-progress-fill dashboard-progress-fill-slate" :style="{ width: capacityPercent(capacity.committed_disk_bytes, capacity.total_disk_bytes) + \'%\' }"></div></div>
+          </div>
+        </div>
+        <div class="pf-c-card pf-u-mb-lg">
+          <div class="pf-c-card__header dashboard-toolbar">
+            <div>
+              <h2 class="pf-c-title pf-m-lg"><i class="fas fa-cube"></i> Instances Overview</h2>
+              <p class="dashboard-panel-meta">Focused view with quick filters across state, app, node and customer.</p>
+            </div>
+            <router-link :to="dashboardLink(\'/instances\', activeInstanceFilters)" class="pf-c-button pf-m-link">Open filtered list</router-link>
+          </div>
+          <div class="pf-c-card__body">
+            <div class="filter-bar dashboard-filter-bar">
+              <label for="dashboard-status-filter">Status</label>
+              <select id="dashboard-status-filter" class="pf-c-form-control" v-model="instanceFilters.status">
+                <option value="">All</option>
+                <option value="running">Running</option>
+                <option value="paused">Paused</option>
+                <option value="error">Error</option>
+                <option value="stopped">Stopped</option>
+              </select>
+              <label for="dashboard-app-filter">App</label>
+              <select id="dashboard-app-filter" class="pf-c-form-control" v-model="instanceFilters.app_definition_name">
+                <option value="">All</option>
+                <option v-for="app in appOptions" :key="app" :value="app">{{ app }}</option>
+              </select>
+              <label for="dashboard-node-filter">Node</label>
+              <select id="dashboard-node-filter" class="pf-c-form-control" v-model="instanceFilters.node_id">
+                <option value="">All</option>
+                <option v-for="node in nodeOptions" :key="node.id" :value="node.id">{{ node.label }}</option>
+              </select>
+              <label for="dashboard-customer-filter">Customer</label>
+              <select id="dashboard-customer-filter" class="pf-c-form-control" v-model="instanceFilters.customer_id">
+                <option value="">All</option>
+                <option v-for="customer in customerOptions" :key="customer" :value="customer">{{ customer }}</option>
+              </select>
+              <button class="pf-c-button pf-m-secondary pf-m-small" @click="clearInstanceFilters" :disabled="!hasInstanceFilters">Reset</button>
+            </div>
+          </div>
+          <div class="pf-c-card__body pf-m-0">
+            <table class="pf-c-table" role="grid">
+              <thead>
+                <tr><th>ID</th><th>Customer</th><th>App</th><th>Node</th><th>Tier</th><th>Status</th><th>Created</th><th>Updated</th></tr>
+              </thead>
+              <tbody>
+                <tr v-for="inst in filteredInstances" :key="inst.id || inst.instance_id" class="dashboard-row-link" @click="goToInstance(inst)">
+                  <td data-label="ID"><router-link :to="\'/instances/\' + (inst.id || inst.instance_id)" class="table-primary-link" :title="inst.id || inst.instance_id" @click.stop>{{ shortId(inst.id || inst.instance_id) }}</router-link></td>
+                  <td data-label="Customer">{{ inst.customer_id || inst.customer || "-" }}</td>
+                  <td data-label="App">{{ inst.app_definition_name || inst.app_id || inst.app || "-" }}</td>
+                  <td data-label="Node">{{ nodeLabel(inst.node_id || inst.node) }}</td>
+                  <td data-label="Tier">{{ inst.tier_name || inst.tier_id || inst.tier || "-" }}</td>
+                  <td data-label="Status"><span class="pf-c-label" :class="instanceStatusClass(inst.status)">{{ inst.status || "unknown" }}</span></td>
+                  <td data-label="Created">{{ formatTimestamp(inst.created_at || inst.created) }}</td>
+                  <td data-label="Updated">{{ formatRelativeTime(inst.updated_at || inst.updated) || "-" }}</td>
+                </tr>
+                <tr v-if="filteredInstances.length === 0">
+                  <td colspan="8" class="pf-u-text-align-center pf-u-color-400" style="padding: 2rem;">No instances match the current filters</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="dashboard-grid">
+          <div class="dashboard-grid-main">
+            <div class="pf-c-card">
+              <div class="pf-c-card__header dashboard-toolbar">
+                <h2 class="pf-c-title pf-m-lg"><i class="fas fa-chart-line"></i> Operational Highlights</h2>
+                <router-link :to="dashboardLink(\'/instances\', { status: \'error\' })" class="pf-c-button pf-m-link">Open errors</router-link>
+              </div>
+              <div class="pf-c-card__body dashboard-highlights">
+                <article class="dashboard-highlight-card dashboard-highlight-card-danger">
+                  <div class="dashboard-highlight-value">{{ summary.error_instances }}</div>
+                  <div class="dashboard-highlight-label">Instances in Error</div>
+                </article>
+                <article class="dashboard-highlight-card dashboard-highlight-card-slate">
+                  <div class="dashboard-highlight-value">{{ summary.stopped_instances }}</div>
+                  <div class="dashboard-highlight-label">Stopped Instances</div>
+                </article>
+                <article class="dashboard-highlight-card dashboard-highlight-card-blue">
+                  <div class="dashboard-highlight-value">{{ summary.failed_jobs }}</div>
+                  <div class="dashboard-highlight-label">Failed Jobs</div>
+                </article>
+                <article class="dashboard-highlight-card dashboard-highlight-card-slate">
+                  <div class="dashboard-highlight-value">{{ summary.failed_backups }}</div>
+                  <div class="dashboard-highlight-label">Failed Backups</div>
+                </article>
+              </div>
+            </div>
+          </div>
+          <div class="dashboard-grid-side">
+            <div class="pf-c-card">
+              <div class="pf-c-card__header dashboard-toolbar">
+                <h2 class="pf-c-title pf-m-lg"><i class="fas fa-tasks"></i> Recent Jobs</h2>
+                <router-link :to="dashboardLink(\'/jobs\')" class="pf-c-button pf-m-link">All jobs</router-link>
+              </div>
+              <div class="pf-c-card__body pf-m-0">
+                <table class="pf-c-table" role="grid">
+                  <thead>
+                    <tr><th>ID</th><th>Type</th><th>Status</th><th>Started</th><th>Duration</th><th>Actions</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="job in recentJobs" :key="job.id || job.operation_id" class="dashboard-row-link" @click="goToJob(job)">
+                      <td data-label="ID"><router-link :to="job.detail_path" class="table-primary-link" :title="job.id || job.operation_id" @click.stop>{{ shortId(job.id || job.operation_id) }}</router-link></td>
+                      <td data-label="Type">{{ job.type || job.action || "-" }}</td>
+                      <td data-label="Status">
+                        <span class="pf-c-label" :class="jobStatusClass(job.status)">{{ job.status || "unknown" }}</span>
+                        <div v-if="job.progress_percent !== null && job.progress_percent !== undefined" class="dashboard-job-progress">
+                          <div class="dashboard-progress-track dashboard-progress-track-small"><div class="dashboard-progress-fill dashboard-progress-fill-blue" :style="{ width: job.progress_percent + \'%\' }"></div></div>
+                          <span>{{ job.progress_percent }}%</span>
+                        </div>
+                      </td>
+                      <td data-label="Started">{{ formatRelativeTime(job.created_at || job.timestamp) || "-" }}</td>
+                      <td data-label="Duration">{{ formatDuration(job.duration_seconds) }}</td>
+                      <td data-label="Actions">
+                        <router-link :to="job.detail_path" class="pf-c-button pf-m-link" @click.stop>Inspect</router-link>
+                      </td>
+                    </tr>
+                    <tr v-if="recentJobs.length === 0">
+                      <td colspan="6" class="pf-u-text-align-center pf-u-color-400" style="padding: 2rem;">No recent jobs</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div v-if="recentFailedBackups.length" class="pf-c-card pf-u-mt-lg">
+          <div class="pf-c-card__header dashboard-toolbar">
+            <h2 class="pf-c-title pf-m-lg"><i class="fas fa-exclamation-triangle"></i> Recent Failed Backups</h2>
+            <router-link to="/backups" class="pf-c-button pf-m-link">All backups</router-link>
+          </div>
+          <div class="pf-c-card__body pf-m-0">
+            <table class="pf-c-table" role="grid">
+              <thead>
+                <tr><th>ID</th><th>Instance</th><th>Type</th><th>Status</th><th>Created</th><th>Diagnosis</th></tr>
+              </thead>
+              <tbody>
+                <tr v-for="bk in recentFailedBackups" :key="bk.id || bk.backup_id" class="dashboard-row-link" @click="goToBackup(bk)">
+                  <td data-label="ID"><router-link :to="bk.detail_path" class="table-primary-link" :title="bk.id || bk.backup_id" @click.stop>{{ shortId(bk.id || bk.backup_id) }}</router-link></td>
+                  <td data-label="Instance">{{ bk.instance_id || bk.instance || "-" }}</td>
+                  <td data-label="Type">{{ bk.type || bk.backup_type || "-" }}</td>
+                  <td data-label="Status"><span class="pf-c-label" :class="backupStatusClass(bk.status)">{{ bk.status || "unknown" }}</span></td>
+                  <td data-label="Created">{{ formatRelativeTime(bk.created_at || bk.created) || "-" }}</td>
+                  <td data-label="Diagnosis">{{ bk.error_message || bk.error || bk.message || "Unknown" }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>`,
   data: function() {
     return {
       loading: true,
@@ -789,100 +789,100 @@ var DashboardView = {
 };
 
 var NodesView = {
-  template: '\
-    <section class="pf-c-page__main-section">\
-      <div class="pf-c-content pf-u-mb-lg">\
-        <div class="list-header-actions">\
-          <h1 class="pf-c-title pf-m-2xl"><i class="fas fa-server"></i> Nodes</h1>\
-          <button class="pf-c-button pf-m-primary" @click="showRegisterForm = true" v-if="!showRegisterForm"><i class="fas fa-plus"></i>Register Node</button>\
-        </div>\
-        <div v-if="showRegisterForm" class="pf-c-card pf-u-mb-lg">\
-          <div class="pf-c-card__body">\
-            <h3 class="pf-c-title pf-m-md pf-u-mb-md">Register New Node</h3>\
-            <form class="pf-c-form pf-m-limit-width" @submit.prevent="registerNode">\
-              <div class="pf-c-form__group">\
-                <label class="pf-c-form__label" for="reg-node-id"><span class="pf-c-form__label-text">Node ID</span></label>\
-                <input id="reg-node-id" class="pf-c-form-control" type="text" v-model="regForm.node_id" required placeholder="e.g. node_001">\
-              </div>\
-              <div class="pf-c-form__group">\
-                <label class="pf-c-form__label" for="reg-hostname"><span class="pf-c-form__label-text">Hostname</span></label>\
-                <input id="reg-hostname" class="pf-c-form-control" type="text" v-model="regForm.hostname" required placeholder="e.g. worker-1">\
-              </div>\
-              <div class="pf-c-form__group">\
-                <label class="pf-c-form__label" for="reg-ip"><span class="pf-c-form__label-text">IP Address</span></label>\
-                <input id="reg-ip" class="pf-c-form-control" type="text" v-model="regForm.ip" required placeholder="e.g. 10.0.0.10">\
-              </div>\
-              <div class="pf-c-form__group pf-m-action">\
-                <button class="pf-c-button pf-m-primary" type="submit" :disabled="regLoading"><i class="fas fa-save pf-u-mr-sm"></i>Register</button>\
-                <button class="pf-c-button pf-m-secondary" type="button" @click="cancelRegister">Cancel</button>\
-              </div>\
-              <div v-if="regError" class="pf-c-alert pf-m-danger pf-m-inline pf-u-mt-md" role="alert">\
-                <div class="pf-c-alert__icon"><i class="fas fa-fw fa-exclamation-circle"></i></div>\
-                <p class="pf-c-alert__title">{{ regError }}</p>\
-              </div>\
-              <div v-if="regSuccess" class="pf-c-alert pf-m-success pf-m-inline pf-u-mt-md" role="alert">\
-                <div class="pf-c-alert__icon"><i class="fas fa-fw fa-check-circle"></i></div>\
-                <p class="pf-c-alert__title">Node registered successfully</p>\
-              </div>\
-            </form>\
-          </div>\
-        </div>\
-      </div>\
-      <div class="pf-c-card pf-u-mb-lg">\
-        <div class="filter-bar">\
-          <label for="node-filter-status">Status:</label>\
-          <select id="node-filter-status" class="pf-c-form-control" v-model="statusFilter">\
-            <option value="">All</option>\
-            <option value="online">Online</option>\
-            <option value="offline">Offline</option>\
-            <option value="down">Down</option>\
-            <option value="unreachable">Unreachable</option>\
-            <option value="pending">Pending</option>\
-          </select>\
-          <button class="pf-c-button pf-m-secondary" @click="applyFilter"><i class="fas fa-search"></i>Filter</button>\
-          <button class="pf-c-button pf-m-link" @click="clearFilters" v-if="statusFilter"><i class="fas fa-times"></i>Clear</button>\
-        </div>\
-      </div>\
-      <div v-if="loading" class="loading"><i class="fas fa-spinner fa-spin pf-u-mr-sm"></i>Loading nodes...</div>\
-      <div v-else-if="error" class="error-message">{{ error }}</div>\
-      <div v-else class="pf-c-card">\
-        <div class="pf-c-card__body pf-m-0">\
-          <table class="pf-c-table" role="grid">\
-            <thead>\
-              <tr>\
-                <th>ID</th>\
-                <th>Hostname</th>\
-                <th>Status</th>\
-                <th>Fleet Agent</th>\
-                <th>Health</th>\
-                <th>Last Heartbeat</th>\
-              </tr>\
-            </thead>\
-            <tbody>\
-              <tr v-for="node in nodes" :key="node.id || node.node_id">\
-                <td data-label="ID"><router-link :to="\'/nodes/\' + (node.id || node.node_id)" class="pf-c-button pf-m-link pf-m-inline" :title="node.id || node.node_id" style="font-size:0.8125rem;">{{ node.id || node.node_id || "-" }}</router-link></td>\
-                <td data-label="Hostname">{{ node.hostname || node.host || "-" }}</td>\
-                <td data-label="Status"><span class="pf-c-label" :class="statusLabelClass(node.status)">{{ node.status || "unknown" }}</span></td>\
-                <td data-label="Fleet Agent"><span class="pf-c-label" :class="fleetLabelClass(node)">{{ node.fleet_version ? "v" + node.fleet_version : "Not installed" }}</span></td>\
-                <td data-label="Health"><span class="pf-c-label" :class="healthLabelClass(node.health_status)">{{ node.health_status || "-" }}</span></td>\
-                <td data-label="Last Heartbeat">{{ node.last_heartbeat || node.heartbeat_at || node.last_seen || "-" }}</td>\
-              </tr>\
-              <tr v-if="nodes.length === 0">\
-                <td colspan="6" class="pf-u-text-align-center pf-u-color-400" style="padding: 2rem;">No nodes registered</td>\
-              </tr>\
-            </tbody>\
-          </table>\
-        </div>\
-        <div class="pf-c-card__footer list-pagination">\
-          <span class="list-pagination-summary">Showing {{ pageStart }}-{{ pageEnd }} of {{ total }}</span>\
-          <div class="list-pagination-actions">\
-            <button class="pf-c-button pf-m-secondary pf-m-small" @click="changePage(page - 1)" :disabled="page <= 1">Previous</button>\
-            <span class="list-pagination-page">Page {{ page }}</span>\
-            <button class="pf-c-button pf-m-secondary pf-m-small" @click="changePage(page + 1)" :disabled="pageEnd >= total">Next</button>\
-          </div>\
-        </div>\
-      </div>\
-    </section>',
+  template: `
+    <section class="pf-c-page__main-section">
+      <div class="pf-c-content pf-u-mb-lg">
+        <div class="list-header-actions">
+          <h1 class="pf-c-title pf-m-2xl"><i class="fas fa-server"></i> Nodes</h1>
+          <button class="pf-c-button pf-m-primary" @click="showRegisterForm = true" v-if="!showRegisterForm"><i class="fas fa-plus"></i>Register Node</button>
+        </div>
+        <div v-if="showRegisterForm" class="pf-c-card pf-u-mb-lg">
+          <div class="pf-c-card__body">
+            <h3 class="pf-c-title pf-m-md pf-u-mb-md">Register New Node</h3>
+            <form class="pf-c-form pf-m-limit-width" @submit.prevent="registerNode">
+              <div class="pf-c-form__group">
+                <label class="pf-c-form__label" for="reg-node-id"><span class="pf-c-form__label-text">Node ID</span></label>
+                <input id="reg-node-id" class="pf-c-form-control" type="text" v-model="regForm.node_id" required placeholder="e.g. node_001">
+              </div>
+              <div class="pf-c-form__group">
+                <label class="pf-c-form__label" for="reg-hostname"><span class="pf-c-form__label-text">Hostname</span></label>
+                <input id="reg-hostname" class="pf-c-form-control" type="text" v-model="regForm.hostname" required placeholder="e.g. worker-1">
+              </div>
+              <div class="pf-c-form__group">
+                <label class="pf-c-form__label" for="reg-ip"><span class="pf-c-form__label-text">IP Address</span></label>
+                <input id="reg-ip" class="pf-c-form-control" type="text" v-model="regForm.ip" required placeholder="e.g. 10.0.0.10">
+              </div>
+              <div class="pf-c-form__group pf-m-action">
+                <button class="pf-c-button pf-m-primary" type="submit" :disabled="regLoading"><i class="fas fa-save pf-u-mr-sm"></i>Register</button>
+                <button class="pf-c-button pf-m-secondary" type="button" @click="cancelRegister">Cancel</button>
+              </div>
+              <div v-if="regError" class="pf-c-alert pf-m-danger pf-m-inline pf-u-mt-md" role="alert">
+                <div class="pf-c-alert__icon"><i class="fas fa-fw fa-exclamation-circle"></i></div>
+                <p class="pf-c-alert__title">{{ regError }}</p>
+              </div>
+              <div v-if="regSuccess" class="pf-c-alert pf-m-success pf-m-inline pf-u-mt-md" role="alert">
+                <div class="pf-c-alert__icon"><i class="fas fa-fw fa-check-circle"></i></div>
+                <p class="pf-c-alert__title">Node registered successfully</p>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+      <div class="pf-c-card pf-u-mb-lg">
+        <div class="filter-bar">
+          <label for="node-filter-status">Status:</label>
+          <select id="node-filter-status" class="pf-c-form-control" v-model="statusFilter">
+            <option value="">All</option>
+            <option value="online">Online</option>
+            <option value="offline">Offline</option>
+            <option value="down">Down</option>
+            <option value="unreachable">Unreachable</option>
+            <option value="pending">Pending</option>
+          </select>
+          <button class="pf-c-button pf-m-secondary" @click="applyFilter"><i class="fas fa-search"></i>Filter</button>
+          <button class="pf-c-button pf-m-link" @click="clearFilters" v-if="statusFilter"><i class="fas fa-times"></i>Clear</button>
+        </div>
+      </div>
+      <div v-if="loading" class="loading"><i class="fas fa-spinner fa-spin pf-u-mr-sm"></i>Loading nodes...</div>
+      <div v-else-if="error" class="error-message">{{ error }}</div>
+      <div v-else class="pf-c-card">
+        <div class="pf-c-card__body pf-m-0">
+          <table class="pf-c-table" role="grid">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Hostname</th>
+                <th>Status</th>
+                <th>Fleet Agent</th>
+                <th>Health</th>
+                <th>Last Heartbeat</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="node in nodes" :key="node.id || node.node_id">
+                <td data-label="ID"><router-link :to="\'/nodes/\' + (node.id || node.node_id)" class="pf-c-button pf-m-link pf-m-inline" :title="node.id || node.node_id" style="font-size:0.8125rem;">{{ node.id || node.node_id || "-" }}</router-link></td>
+                <td data-label="Hostname">{{ node.hostname || node.host || "-" }}</td>
+                <td data-label="Status"><span class="pf-c-label" :class="statusLabelClass(node.status)">{{ node.status || "unknown" }}</span></td>
+                <td data-label="Fleet Agent"><span class="pf-c-label" :class="fleetLabelClass(node)">{{ node.fleet_version ? "v" + node.fleet_version : "Not installed" }}</span></td>
+                <td data-label="Health"><span class="pf-c-label" :class="healthLabelClass(node.health_status)">{{ node.health_status || "-" }}</span></td>
+                <td data-label="Last Heartbeat">{{ node.last_heartbeat || node.heartbeat_at || node.last_seen || "-" }}</td>
+              </tr>
+              <tr v-if="nodes.length === 0">
+                <td colspan="6" class="pf-u-text-align-center pf-u-color-400" style="padding: 2rem;">No nodes registered</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="pf-c-card__footer list-pagination">
+          <span class="list-pagination-summary">Showing {{ pageStart }}-{{ pageEnd }} of {{ total }}</span>
+          <div class="list-pagination-actions">
+            <button class="pf-c-button pf-m-secondary pf-m-small" @click="changePage(page - 1)" :disabled="page <= 1">Previous</button>
+            <span class="list-pagination-page">Page {{ page }}</span>
+            <button class="pf-c-button pf-m-secondary pf-m-small" @click="changePage(page + 1)" :disabled="pageEnd >= total">Next</button>
+          </div>
+        </div>
+      </div>
+    </section>`,
   data: function() {
     return {
       loading: true, error: null, nodes: [], page: 1, pageSize: 10, total: 0, statusFilter: '',
@@ -966,210 +966,210 @@ var NodesView = {
 };
 
 var NodeDetailView = {
-  template: `\
-    <section class="pf-c-page__main-section detail-page">\
-      <div class="detail-hero">\
-        <div class="detail-hero__breadcrumb">\
-          <router-link to="/nodes" class="back-link"><i class="fas fa-arrow-left"></i>Nodes</router-link>\
-          <span class="detail-muted">/</span>\
-          <span>{{ node ? (node.hostname || node.id || "Node Detail") : "Node Detail" }}</span>\
-        </div>\
-        <div class="detail-hero__header">\
-          <div class="detail-hero__copy">\
-            <h1 class="pf-c-title pf-m-2xl detail-hero__title">{{ node ? (node.hostname || node.id || "Node Detail") : "Node Detail" }}</h1>\
-            <div class="detail-inline-meta">\
-              <span class="detail-inline-meta__item"><i class="fas fa-hashtag"></i>{{ node.id || "-" }}</span>\
-              <span class="detail-inline-meta__item"><i class="fas fa-network-wired"></i>{{ node.ip || "-" }}</span>\
-              <span class="detail-inline-meta__item"><i class="fas fa-linux"></i>{{ node.os || "-" }}</span>\
-              <span class="detail-inline-meta__item"><i class="fas fa-server"></i>{{ node.podman_version || "-" }}</span>\
-            </div>\
-            <div class="detail-badge-row">\
-              <span class="pf-c-label" :class="statusLabelClass(node.status)">{{ node.status || "unknown" }}</span>\
-              <span class="pf-c-label" :class="node.fleet_version ? 'pf-m-green' : 'pf-m-orange'">{{ node.fleet_version ? ('Fleet v' + node.fleet_version) : 'Fleet not installed' }}</span>\
-              <span class="pf-c-label" :class="node.available_for_provisioning ? 'pf-m-green' : 'pf-m-grey'">{{ node.available_for_provisioning ? 'Provisioning enabled' : 'Provisioning disabled' }}</span>\
-              <span class="pf-c-label" :class="node.manual_disabled ? 'pf-m-orange' : 'pf-m-blue'">{{ node.manual_disabled ? 'Maintenance mode' : 'Normal mode' }}</span>\
-            </div>\
-          </div>\
-          <div class="detail-hero__actions">\
-            <button class="pf-c-button pf-m-secondary" @click="reloadNode" :disabled="loadingAction"><i class="fas fa-sync-alt"></i>Refresh status</button>\
-            <button class="pf-c-button pf-m-secondary" @click="toggleMaintenance" :disabled="loadingAction">{{ node.manual_disabled ? 'Exit maintenance' : 'Enter maintenance' }}</button>\
-            <button class="pf-c-button pf-m-danger pf-m-secondary" @click="openRemoveModal" :disabled="loadingAction"><i class="fas fa-trash pf-u-mr-xs"></i>Remove node</button>\
-          </div>\
-        </div>\
-      </div>\
-      <div v-if="loading" class="loading"><i class="fas fa-spinner fa-spin pf-u-mr-sm"></i>Loading node...</div>\
-      <div v-else-if="error" class="error-message">{{ error }}</div>\
-      <div v-else-if="!node" class="pf-u-text-align-center pf-u-color-400 pf-u-py-xl">Node not found</div>\
-      <template v-else>\
-        <div v-if="nodeIssue" class="detail-callout" :class="'detail-callout--' + nodeIssue.severity">\
-          <div class="detail-callout__icon"><i class="fas fa-exclamation-triangle" aria-hidden="true"></i></div>\
-          <div class="detail-callout__body">\
-            <p class="detail-callout__title">{{ nodeIssue.title }}</p>\
-            <p class="detail-callout__text">{{ nodeIssue.text }}</p>\
-            <div class="detail-callout__actions">\
-              <button v-if="nodeIssue.canRefresh" class="pf-c-button pf-m-secondary pf-m-small" type="button" @click="reloadNode">Refresh status</button>\
-              <button v-if="nodeIssue.canToggleMaintenance" class="pf-c-button pf-m-secondary pf-m-small" type="button" @click="toggleMaintenance">{{ node.manual_disabled ? 'Exit maintenance' : 'Enter maintenance' }}</button>\
-            </div>\
-          </div>\
-        </div>\
-        <div v-else class="detail-callout detail-callout--success">\
-          <div class="detail-callout__icon"><i class="fas fa-check" aria-hidden="true"></i></div>\
-          <div class="detail-callout__body">\
-            <p class="detail-callout__title">Node ready for provisioning</p>\
-            <p class="detail-callout__text">The node is online, reporting metrics, and available for new work.</p>\
-          </div>\
-        </div>\
-        <div class="detail-summary-grid">\
-          <div class="pf-c-card detail-summary-card">\
-            <div class="pf-c-card__header">\
-              <h2 class="detail-section-title"><i class="fas fa-memory"></i>Capacity</h2>\
-              <p class="detail-section-meta">Reserved and committed resources on this node.</p>\
-            </div>\
-            <div class="pf-c-card__body">\
-              <div class="detail-summary-list">\
-                <div class="detail-summary-row">\
-                  <div class="detail-summary-label">RAM</div>\
-                  <div class="detail-summary-value">\
-                    <div class="detail-progress-row">\
-                      <div class="detail-progress-label"><span>{{ capacityDisplay(node.ram_used_bytes, node.ram_total_bytes) }}</span><span>{{ capacityPercent(node.ram_used_bytes, node.ram_total_bytes) }}%</span></div>\
-                      <div class="dashboard-progress-track dashboard-progress-track-small"><div class="dashboard-progress-fill" :class="ramUsageBarClass" :style="{ width: capacityPercent(node.ram_used_bytes, node.ram_total_bytes) + '%' }"></div></div>\
-                      <div class="detail-progress-note">Committed {{ capacityDisplay(node.committed_ram_bytes, node.ram_commit_limit_bytes) }}</div>\
-                    </div>\
-                  </div>\
-                </div>\
-                <div class="detail-summary-row">\
-                  <div class="detail-summary-label">Disk</div>\
-                  <div class="detail-summary-value">\
-                    <div class="detail-progress-row">\
-                      <div class="detail-progress-label"><span>{{ capacityDisplay(node.disk_used_bytes, node.disk_total_bytes) }}</span><span>{{ capacityPercent(node.disk_used_bytes, node.disk_total_bytes) }}%</span></div>\
-                      <div class="dashboard-progress-track dashboard-progress-track-small"><div class="dashboard-progress-fill" :class="diskUsageBarClass" :style="{ width: capacityPercent(node.disk_used_bytes, node.disk_total_bytes) + '%' }"></div></div>\
-                      <div class="detail-progress-note">Committed {{ capacityDisplay(node.committed_disk_bytes, node.disk_commit_limit_bytes) }}</div>\
-                    </div>\
-                  </div>\
-                </div>\
-                <div class="detail-summary-row">\
-                  <div class="detail-summary-label">Pods</div>\
-                  <div class="detail-summary-value">\
-                    {{ node.pods_active || 0 }} active · {{ node.pods_paused || 0 }} paused · {{ node.pods_failed || 0 }} failed\
-                    <p class="detail-panel-note">The current node API exposes counts, not a per-pod list.</p>\
-                  </div>\
-                </div>\
-              </div>\
-            </div>\
-          </div>\
-          <div class="pf-c-card detail-summary-card">\
-            <div class="pf-c-card__header">\
-              <h2 class="detail-section-title"><i class="fas fa-server"></i>Node status</h2>\
-              <p class="detail-section-meta">Operational summary and the latest timestamps.</p>\
-            </div>\
-            <div class="pf-c-card__body">\
-              <div class="detail-summary-list">\
-                <div class="detail-summary-row">\
-                  <div class="detail-summary-label">Fleet agent</div>\
-                  <div class="detail-summary-value"><span class="pf-c-label" :class="node.fleet_version ? 'pf-m-green' : 'pf-m-orange'">{{ node.fleet_version ? ('v' + node.fleet_version) : 'Not installed' }}</span></div>\
-                </div>\
-                <div class="detail-summary-row">\
-                  <div class="detail-summary-label">Health</div>\
-                  <div class="detail-summary-value"><span class="pf-c-label" :class="healthLabelClass(node.health_status)">{{ node.health_status || 'unknown' }}</span></div>\
-                </div>\
-                <div class="detail-summary-row">\
-                  <div class="detail-summary-label">Maintenance</div>\
-                  <div class="detail-summary-value"><span class="pf-c-label" :class="node.manual_disabled ? 'pf-m-orange' : 'pf-m-green'">{{ node.manual_disabled ? 'Enabled' : 'Disabled' }}</span></div>\
-                </div>\
-                <div class="detail-summary-row">\
-                  <div class="detail-summary-label">Provisioning</div>\
-                  <div class="detail-summary-value"><span class="pf-c-label" :class="node.available_for_provisioning ? 'pf-m-green' : 'pf-m-grey'">{{ node.available_for_provisioning ? 'Enabled' : 'Disabled' }}</span></div>\
-                </div>\
-                <div class="detail-summary-row">\
-                  <div class="detail-summary-label">Last heartbeat</div>\
-                  <div class="detail-summary-value">{{ heartbeatLabel }}</div>\
-                </div>\
-                <div class="detail-summary-row">\
-                  <div class="detail-summary-label">Metrics updated</div>\
-                  <div class="detail-summary-value">{{ metricsLabel }}</div>\
-                </div>\
-              </div>\
-              <p v-if="node.health_reason_codes && node.health_status !== 'healthy'" class="detail-panel-note">Health reasons: {{ node.health_reason_codes }}</p>\
-              <p v-if="node.unavailable_reason_codes" class="detail-panel-note">Unavailable reasons: {{ node.unavailable_reason_codes }}</p>\
-            </div>\
-          </div>\
-        </div>\
-        <div class="detail-section-card pf-c-card">\
-          <div class="pf-c-card__header detail-table-meta">\
-            <div>\
-              <h2 class="detail-section-title"><i class="fas fa-boxes"></i>Pods</h2>\
-              <p class="detail-section-meta">Pod counters available from the node record.</p>\
-            </div>\
-            <div class="detail-chip-row">\
-              <span class="pf-c-label pf-m-green"><i class="fas fa-play pf-u-mr-xs"></i>{{ node.pods_active || 0 }} Active</span>\
-              <span class="pf-c-label pf-m-orange"><i class="fas fa-pause pf-u-mr-xs"></i>{{ node.pods_paused || 0 }} Paused</span>\
-              <span class="pf-c-label pf-m-red"><i class="fas fa-times pf-u-mr-xs"></i>{{ node.pods_failed || 0 }} Failed</span>\
-            </div>\
-          </div>\
-          <div class="pf-c-card__body">\
-            <div class="empty-state" v-if="(node.pods_active || 0) + (node.pods_paused || 0) + (node.pods_failed || 0) === 0">\
-              <p>No pods are currently deployed on this node.</p>\
-              <p class="detail-panel-note">Pods will appear here after an application instance is provisioned.</p>\
-            </div>\
-            <div v-else class="detail-panel-note">The API currently exposes aggregate pod counts. A per-pod table can be added when the backend provides pod records.</div>\
-          </div>\
-        </div>\
-        <div class="detail-section-card pf-c-card">\
-          <div class="pf-c-card__header detail-table-meta">\
-            <div>\
-              <h2 class="detail-section-title"><i class="fas fa-chart-line"></i>Activity & metrics</h2>\
-              <p class="detail-section-meta">Latest telemetry and heartbeat timestamps.</p>\
-            </div>\
-          </div>\
-          <div class="pf-c-card__body">\
-            <div class="detail-summary-list">\
-              <div class="detail-summary-row">\
-                <div class="detail-summary-label">Collected at</div>\
-                <div class="detail-summary-value">{{ metrics && metrics.collected_at ? formatTimestamp(metrics.collected_at) : 'Not reported' }}</div>\
-              </div>\
-              <div class="detail-summary-row">\
-                <div class="detail-summary-label">Heartbeat age</div>\
-                <div class="detail-summary-value">{{ heartbeatAgeLabel }}</div>\
-              </div>\
-            </div>\
-          </div>\
-        </div>\
-      </template>\
-      <div v-if="showRemoveModal" class="admiral-modal-backdrop" @click.self="closeRemoveModal">\
-        <div class="admiral-modal" role="dialog" aria-modal="true" aria-labelledby="remove-node-modal-title">\
-          <div class="admiral-modal__header">\
-            <h2 id="remove-node-modal-title" class="pf-c-title pf-m-xl"><i class="fas fa-trash-alt"></i> Confirm Node Removal</h2>\
-            <button class="pf-c-button pf-m-plain" type="button" aria-label="Close remove dialog" @click="closeRemoveModal">\
-              <i class="fas fa-times" aria-hidden="true"></i>\
-            </button>\
-          </div>\
-          <div class="admiral-modal__body">\
-            <div class="pf-c-alert pf-m-danger pf-m-inline pf-u-mb-md" role="alert">\
-              <div class="pf-c-alert__icon"><i class="fas fa-fw fa-exclamation-circle" aria-hidden="true"></i></div>\
-              <p class="pf-c-alert__title">This removes the node, its routes, backups, and customer apps from the platform. If the node has active instances the operation will be refused unless forced.</p>\
-            </div>\
-            <dl class="pf-c-description-list compact-description-list">\
-              <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Node</dt><dd class="pf-c-description-list__description">{{ node.hostname || node.id }}</dd></div>\
-              <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Status</dt><dd class="pf-c-description-list__description">{{ node.status || 'unknown' }}</dd></div>\
-              <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Instances</dt><dd class="pf-c-description-list__description">{{ (node.pods_active || 0) + (node.pods_paused || 0) + (node.pods_failed || 0) }} pods</dd></div>\
-            </dl>\
-            <div class="danger-zone-list-wrapper">\
-              <label class="pf-c-form__label" for="remove-confirm-input"><span class="pf-c-form__label-text">Type the node ID to confirm</span></label>\
-              <input id="remove-confirm-input" class="pf-c-form-control" type="text" v-model="removeConfirmInput" :placeholder="removeConfirmPlaceholder">\
-            </div>\
-            <div v-if="removeError" class="pf-c-alert pf-m-danger pf-m-inline pf-u-mt-md" role="alert">\
-              <div class="pf-c-alert__icon"><i class="fas fa-fw fa-exclamation-circle" aria-hidden="true"></i></div>\
-              <p class="pf-c-alert__title">{{ removeError }}</p>\
-            </div>\
-          </div>\
-          <div class="admiral-modal__footer">\
-            <button class="pf-c-button pf-m-link" type="button" @click="closeRemoveModal">Cancel</button>\
-            <button class="pf-c-button pf-m-danger" type="button" @click="confirmRemove" :disabled="loadingAction || !removeReady">\
-              <i class="fas fa-trash"></i>{{ loadingAction ? 'Removing...' : 'Confirm removal' }}\
-            </button>\
-          </div>\
-        </div>\
-      </div>\
+  template: `
+    <section class="pf-c-page__main-section detail-page">
+      <div class="detail-hero">
+        <div class="detail-hero__breadcrumb">
+          <router-link to="/nodes" class="back-link"><i class="fas fa-arrow-left"></i>Nodes</router-link>
+          <span class="detail-muted">/</span>
+          <span>{{ node ? (node.hostname || node.id || "Node Detail") : "Node Detail" }}</span>
+        </div>
+        <div class="detail-hero__header">
+          <div class="detail-hero__copy">
+            <h1 class="pf-c-title pf-m-2xl detail-hero__title">{{ node ? (node.hostname || node.id || "Node Detail") : "Node Detail" }}</h1>
+            <div class="detail-inline-meta">
+              <span class="detail-inline-meta__item"><i class="fas fa-hashtag"></i>{{ node.id || "-" }}</span>
+              <span class="detail-inline-meta__item"><i class="fas fa-network-wired"></i>{{ node.ip || "-" }}</span>
+              <span class="detail-inline-meta__item"><i class="fas fa-linux"></i>{{ node.os || "-" }}</span>
+              <span class="detail-inline-meta__item"><i class="fas fa-server"></i>{{ node.podman_version || "-" }}</span>
+            </div>
+            <div class="detail-badge-row">
+              <span class="pf-c-label" :class="statusLabelClass(node.status)">{{ node.status || "unknown" }}</span>
+              <span class="pf-c-label" :class="node.fleet_version ? 'pf-m-green' : 'pf-m-orange'">{{ node.fleet_version ? ('Fleet v' + node.fleet_version) : 'Fleet not installed' }}</span>
+              <span class="pf-c-label" :class="node.available_for_provisioning ? 'pf-m-green' : 'pf-m-grey'">{{ node.available_for_provisioning ? 'Provisioning enabled' : 'Provisioning disabled' }}</span>
+              <span class="pf-c-label" :class="node.manual_disabled ? 'pf-m-orange' : 'pf-m-blue'">{{ node.manual_disabled ? 'Maintenance mode' : 'Normal mode' }}</span>
+            </div>
+          </div>
+          <div class="detail-hero__actions">
+            <button class="pf-c-button pf-m-secondary" @click="reloadNode" :disabled="loadingAction"><i class="fas fa-sync-alt"></i>Refresh status</button>
+            <button class="pf-c-button pf-m-secondary" @click="toggleMaintenance" :disabled="loadingAction">{{ node.manual_disabled ? 'Exit maintenance' : 'Enter maintenance' }}</button>
+            <button class="pf-c-button pf-m-danger pf-m-secondary" @click="openRemoveModal" :disabled="loadingAction"><i class="fas fa-trash pf-u-mr-xs"></i>Remove node</button>
+          </div>
+        </div>
+      </div>
+      <div v-if="loading" class="loading"><i class="fas fa-spinner fa-spin pf-u-mr-sm"></i>Loading node...</div>
+      <div v-else-if="error" class="error-message">{{ error }}</div>
+      <div v-else-if="!node" class="pf-u-text-align-center pf-u-color-400 pf-u-py-xl">Node not found</div>
+      <template v-else>
+        <div v-if="nodeIssue" class="detail-callout" :class="'detail-callout--' + nodeIssue.severity">
+          <div class="detail-callout__icon"><i class="fas fa-exclamation-triangle" aria-hidden="true"></i></div>
+          <div class="detail-callout__body">
+            <p class="detail-callout__title">{{ nodeIssue.title }}</p>
+            <p class="detail-callout__text">{{ nodeIssue.text }}</p>
+            <div class="detail-callout__actions">
+              <button v-if="nodeIssue.canRefresh" class="pf-c-button pf-m-secondary pf-m-small" type="button" @click="reloadNode">Refresh status</button>
+              <button v-if="nodeIssue.canToggleMaintenance" class="pf-c-button pf-m-secondary pf-m-small" type="button" @click="toggleMaintenance">{{ node.manual_disabled ? 'Exit maintenance' : 'Enter maintenance' }}</button>
+            </div>
+          </div>
+        </div>
+        <div v-else class="detail-callout detail-callout--success">
+          <div class="detail-callout__icon"><i class="fas fa-check" aria-hidden="true"></i></div>
+          <div class="detail-callout__body">
+            <p class="detail-callout__title">Node ready for provisioning</p>
+            <p class="detail-callout__text">The node is online, reporting metrics, and available for new work.</p>
+          </div>
+        </div>
+        <div class="detail-summary-grid">
+          <div class="pf-c-card detail-summary-card">
+            <div class="pf-c-card__header">
+              <h2 class="detail-section-title"><i class="fas fa-memory"></i>Capacity</h2>
+              <p class="detail-section-meta">Reserved and committed resources on this node.</p>
+            </div>
+            <div class="pf-c-card__body">
+              <div class="detail-summary-list">
+                <div class="detail-summary-row">
+                  <div class="detail-summary-label">RAM</div>
+                  <div class="detail-summary-value">
+                    <div class="detail-progress-row">
+                      <div class="detail-progress-label"><span>{{ capacityDisplay(node.ram_used_bytes, node.ram_total_bytes) }}</span><span>{{ capacityPercent(node.ram_used_bytes, node.ram_total_bytes) }}%</span></div>
+                      <div class="dashboard-progress-track dashboard-progress-track-small"><div class="dashboard-progress-fill" :class="ramUsageBarClass" :style="{ width: capacityPercent(node.ram_used_bytes, node.ram_total_bytes) + '%' }"></div></div>
+                      <div class="detail-progress-note">Committed {{ capacityDisplay(node.committed_ram_bytes, node.ram_commit_limit_bytes) }}</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="detail-summary-row">
+                  <div class="detail-summary-label">Disk</div>
+                  <div class="detail-summary-value">
+                    <div class="detail-progress-row">
+                      <div class="detail-progress-label"><span>{{ capacityDisplay(node.disk_used_bytes, node.disk_total_bytes) }}</span><span>{{ capacityPercent(node.disk_used_bytes, node.disk_total_bytes) }}%</span></div>
+                      <div class="dashboard-progress-track dashboard-progress-track-small"><div class="dashboard-progress-fill" :class="diskUsageBarClass" :style="{ width: capacityPercent(node.disk_used_bytes, node.disk_total_bytes) + '%' }"></div></div>
+                      <div class="detail-progress-note">Committed {{ capacityDisplay(node.committed_disk_bytes, node.disk_commit_limit_bytes) }}</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="detail-summary-row">
+                  <div class="detail-summary-label">Pods</div>
+                  <div class="detail-summary-value">
+                    {{ node.pods_active || 0 }} active · {{ node.pods_paused || 0 }} paused · {{ node.pods_failed || 0 }} failed
+                    <p class="detail-panel-note">The current node API exposes counts, not a per-pod list.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="pf-c-card detail-summary-card">
+            <div class="pf-c-card__header">
+              <h2 class="detail-section-title"><i class="fas fa-server"></i>Node status</h2>
+              <p class="detail-section-meta">Operational summary and the latest timestamps.</p>
+            </div>
+            <div class="pf-c-card__body">
+              <div class="detail-summary-list">
+                <div class="detail-summary-row">
+                  <div class="detail-summary-label">Fleet agent</div>
+                  <div class="detail-summary-value"><span class="pf-c-label" :class="node.fleet_version ? 'pf-m-green' : 'pf-m-orange'">{{ node.fleet_version ? ('v' + node.fleet_version) : 'Not installed' }}</span></div>
+                </div>
+                <div class="detail-summary-row">
+                  <div class="detail-summary-label">Health</div>
+                  <div class="detail-summary-value"><span class="pf-c-label" :class="healthLabelClass(node.health_status)">{{ node.health_status || 'unknown' }}</span></div>
+                </div>
+                <div class="detail-summary-row">
+                  <div class="detail-summary-label">Maintenance</div>
+                  <div class="detail-summary-value"><span class="pf-c-label" :class="node.manual_disabled ? 'pf-m-orange' : 'pf-m-green'">{{ node.manual_disabled ? 'Enabled' : 'Disabled' }}</span></div>
+                </div>
+                <div class="detail-summary-row">
+                  <div class="detail-summary-label">Provisioning</div>
+                  <div class="detail-summary-value"><span class="pf-c-label" :class="node.available_for_provisioning ? 'pf-m-green' : 'pf-m-grey'">{{ node.available_for_provisioning ? 'Enabled' : 'Disabled' }}</span></div>
+                </div>
+                <div class="detail-summary-row">
+                  <div class="detail-summary-label">Last heartbeat</div>
+                  <div class="detail-summary-value">{{ heartbeatLabel }}</div>
+                </div>
+                <div class="detail-summary-row">
+                  <div class="detail-summary-label">Metrics updated</div>
+                  <div class="detail-summary-value">{{ metricsLabel }}</div>
+                </div>
+              </div>
+              <p v-if="node.health_reason_codes && node.health_status !== 'healthy'" class="detail-panel-note">Health reasons: {{ node.health_reason_codes }}</p>
+              <p v-if="node.unavailable_reason_codes" class="detail-panel-note">Unavailable reasons: {{ node.unavailable_reason_codes }}</p>
+            </div>
+          </div>
+        </div>
+        <div class="detail-section-card pf-c-card">
+          <div class="pf-c-card__header detail-table-meta">
+            <div>
+              <h2 class="detail-section-title"><i class="fas fa-boxes"></i>Pods</h2>
+              <p class="detail-section-meta">Pod counters available from the node record.</p>
+            </div>
+            <div class="detail-chip-row">
+              <span class="pf-c-label pf-m-green"><i class="fas fa-play pf-u-mr-xs"></i>{{ node.pods_active || 0 }} Active</span>
+              <span class="pf-c-label pf-m-orange"><i class="fas fa-pause pf-u-mr-xs"></i>{{ node.pods_paused || 0 }} Paused</span>
+              <span class="pf-c-label pf-m-red"><i class="fas fa-times pf-u-mr-xs"></i>{{ node.pods_failed || 0 }} Failed</span>
+            </div>
+          </div>
+          <div class="pf-c-card__body">
+            <div class="empty-state" v-if="(node.pods_active || 0) + (node.pods_paused || 0) + (node.pods_failed || 0) === 0">
+              <p>No pods are currently deployed on this node.</p>
+              <p class="detail-panel-note">Pods will appear here after an application instance is provisioned.</p>
+            </div>
+            <div v-else class="detail-panel-note">The API currently exposes aggregate pod counts. A per-pod table can be added when the backend provides pod records.</div>
+          </div>
+        </div>
+        <div class="detail-section-card pf-c-card">
+          <div class="pf-c-card__header detail-table-meta">
+            <div>
+              <h2 class="detail-section-title"><i class="fas fa-chart-line"></i>Activity & metrics</h2>
+              <p class="detail-section-meta">Latest telemetry and heartbeat timestamps.</p>
+            </div>
+          </div>
+          <div class="pf-c-card__body">
+            <div class="detail-summary-list">
+              <div class="detail-summary-row">
+                <div class="detail-summary-label">Collected at</div>
+                <div class="detail-summary-value">{{ metrics && metrics.collected_at ? formatTimestamp(metrics.collected_at) : 'Not reported' }}</div>
+              </div>
+              <div class="detail-summary-row">
+                <div class="detail-summary-label">Heartbeat age</div>
+                <div class="detail-summary-value">{{ heartbeatAgeLabel }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </template>
+      <div v-if="showRemoveModal" class="admiral-modal-backdrop" @click.self="closeRemoveModal">
+        <div class="admiral-modal" role="dialog" aria-modal="true" aria-labelledby="remove-node-modal-title">
+          <div class="admiral-modal__header">
+            <h2 id="remove-node-modal-title" class="pf-c-title pf-m-xl"><i class="fas fa-trash-alt"></i> Confirm Node Removal</h2>
+            <button class="pf-c-button pf-m-plain" type="button" aria-label="Close remove dialog" @click="closeRemoveModal">
+              <i class="fas fa-times" aria-hidden="true"></i>
+            </button>
+          </div>
+          <div class="admiral-modal__body">
+            <div class="pf-c-alert pf-m-danger pf-m-inline pf-u-mb-md" role="alert">
+              <div class="pf-c-alert__icon"><i class="fas fa-fw fa-exclamation-circle" aria-hidden="true"></i></div>
+              <p class="pf-c-alert__title">This removes the node, its routes, backups, and customer apps from the platform. If the node has active instances the operation will be refused unless forced.</p>
+            </div>
+            <dl class="pf-c-description-list compact-description-list">
+              <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Node</dt><dd class="pf-c-description-list__description">{{ node.hostname || node.id }}</dd></div>
+              <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Status</dt><dd class="pf-c-description-list__description">{{ node.status || 'unknown' }}</dd></div>
+              <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Instances</dt><dd class="pf-c-description-list__description">{{ (node.pods_active || 0) + (node.pods_paused || 0) + (node.pods_failed || 0) }} pods</dd></div>
+            </dl>
+            <div class="danger-zone-list-wrapper">
+              <label class="pf-c-form__label" for="remove-confirm-input"><span class="pf-c-form__label-text">Type the node ID to confirm</span></label>
+              <input id="remove-confirm-input" class="pf-c-form-control" type="text" v-model="removeConfirmInput" :placeholder="removeConfirmPlaceholder">
+            </div>
+            <div v-if="removeError" class="pf-c-alert pf-m-danger pf-m-inline pf-u-mt-md" role="alert">
+              <div class="pf-c-alert__icon"><i class="fas fa-fw fa-exclamation-circle" aria-hidden="true"></i></div>
+              <p class="pf-c-alert__title">{{ removeError }}</p>
+            </div>
+          </div>
+          <div class="admiral-modal__footer">
+            <button class="pf-c-button pf-m-link" type="button" @click="closeRemoveModal">Cancel</button>
+            <button class="pf-c-button pf-m-danger" type="button" @click="confirmRemove" :disabled="loadingAction || !removeReady">
+              <i class="fas fa-trash"></i>{{ loadingAction ? 'Removing...' : 'Confirm removal' }}
+            </button>
+          </div>
+        </div>
+      </div>
     </section>`,
   data: function() { return { loading: true, error: null, node: null, metrics: null, loadingAction: false, showRemoveModal: false, removeConfirmInput: '', removeError: '' }; },
   computed: {
@@ -1330,50 +1330,50 @@ var NodeDetailView = {
 
 var CatalogAppsView = {
 
-  template: '\
-    <section class="pf-c-page__main-section">\
-      <div class="pf-c-content pf-u-mb-lg">\
-        <div class="list-header-actions">\
-          <h1 class="pf-c-title pf-m-2xl"><i class="fas fa-cubes"></i> App Catalog</h1>\
-          <router-link to="/catalog/apps/new" class="pf-c-button pf-m-primary"><i class="fas fa-plus"></i>Create App</router-link>\
-        </div>\
-      </div>\
-      <div v-if="loading" class="loading"><i class="fas fa-spinner fa-spin pf-u-mr-sm"></i>Loading catalog...</div>\
-      <div v-else-if="error" class="error-message">{{ error }}</div>\
-      <div v-else class="pf-c-card">\
-        <div class="pf-c-card__body pf-m-0">\
-          <table class="pf-c-table" role="grid">\
-            <thead>\
-              <tr>\
-                <th>ID</th>\
-                <th>Name</th>\
-                <th>Status</th>\
-                <th>Description</th>\
-              </tr>\
-            </thead>\
-            <tbody>\
-              <tr v-for="app in apps" :key="app.id || app.app_id || app.name">\
-                <td data-label="ID"><router-link :to="\'/catalog/apps/\' + appRouteId(app)" class="pf-c-button pf-m-link pf-m-inline" style="font-size:0.8125rem;">{{ app.id || app.app_id || app.name || "-" }}</router-link></td>\
-                <td data-label="Name"><strong>{{ app.name || app.label || "-" }}</strong></td>\
-                <td data-label="Status"><span class="pf-c-label" :class="(app.status || \'\').toLowerCase() === \'active\' ? \'pf-m-green\' : \'pf-m-red\'">{{ (app.status || \'unknown\') === \'active\' ? \'Available\' : \'Unavailable\' }}</span></td>\
-                <td data-label="Description">{{ app.description || "-" }}</td>\
-              </tr>\
-              <tr v-if="apps.length === 0">\
-                <td colspan="4" class="pf-u-text-align-center pf-u-color-400" style="padding: 2rem;">No apps in catalog</td>\
-              </tr>\
-            </tbody>\
-          </table>\
-        </div>\
-        <div class="pf-c-card__footer list-pagination">\
-          <span class="list-pagination-summary">Showing {{ pageStart }}-{{ pageEnd }} of {{ total }}</span>\
-          <div class="list-pagination-actions">\
-            <button class="pf-c-button pf-m-secondary pf-m-small" @click="changePage(page - 1)" :disabled="page <= 1">Previous</button>\
-            <span class="list-pagination-page">Page {{ page }}</span>\
-            <button class="pf-c-button pf-m-secondary pf-m-small" @click="changePage(page + 1)" :disabled="pageEnd >= total">Next</button>\
-          </div>\
-        </div>\
-      </div>\
-    </section>',
+  template: `
+    <section class="pf-c-page__main-section">
+      <div class="pf-c-content pf-u-mb-lg">
+        <div class="list-header-actions">
+          <h1 class="pf-c-title pf-m-2xl"><i class="fas fa-cubes"></i> App Catalog</h1>
+          <router-link to="/catalog/apps/new" class="pf-c-button pf-m-primary"><i class="fas fa-plus"></i>Create App</router-link>
+        </div>
+      </div>
+      <div v-if="loading" class="loading"><i class="fas fa-spinner fa-spin pf-u-mr-sm"></i>Loading catalog...</div>
+      <div v-else-if="error" class="error-message">{{ error }}</div>
+      <div v-else class="pf-c-card">
+        <div class="pf-c-card__body pf-m-0">
+          <table class="pf-c-table" role="grid">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Status</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="app in apps" :key="app.id || app.app_id || app.name">
+                <td data-label="ID"><router-link :to="\'/catalog/apps/\' + appRouteId(app)" class="pf-c-button pf-m-link pf-m-inline" style="font-size:0.8125rem;">{{ app.id || app.app_id || app.name || "-" }}</router-link></td>
+                <td data-label="Name"><strong>{{ app.name || app.label || "-" }}</strong></td>
+                <td data-label="Status"><span class="pf-c-label" :class="(app.status || \'\').toLowerCase() === \'active\' ? \'pf-m-green\' : \'pf-m-red\'">{{ (app.status || \'unknown\') === \'active\' ? \'Available\' : \'Unavailable\' }}</span></td>
+                <td data-label="Description">{{ app.description || "-" }}</td>
+              </tr>
+              <tr v-if="apps.length === 0">
+                <td colspan="4" class="pf-u-text-align-center pf-u-color-400" style="padding: 2rem;">No apps in catalog</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="pf-c-card__footer list-pagination">
+          <span class="list-pagination-summary">Showing {{ pageStart }}-{{ pageEnd }} of {{ total }}</span>
+          <div class="list-pagination-actions">
+            <button class="pf-c-button pf-m-secondary pf-m-small" @click="changePage(page - 1)" :disabled="page <= 1">Previous</button>
+            <span class="list-pagination-page">Page {{ page }}</span>
+            <button class="pf-c-button pf-m-secondary pf-m-small" @click="changePage(page + 1)" :disabled="pageEnd >= total">Next</button>
+          </div>
+        </div>
+      </div>
+    </section>`,
   data: function() { return { loading: true, error: null, apps: [], page: 1, pageSize: 10, total: 0 }; },
   computed: {
     pageStart: function() { return this.total === 0 ? 0 : ((this.page - 1) * this.pageSize) + 1; },
@@ -1409,97 +1409,97 @@ var CatalogAppsView = {
 };
 
 var CatalogAppDetailView = {
-  template: `\
-    <section class="pf-c-page__main-section detail-page">\
-      <div class="detail-hero">\
-        <div class="detail-hero__breadcrumb">\
-          <router-link to="/catalog/apps" class="back-link"><i class="fas fa-arrow-left"></i>Apps</router-link>\
-          <span class="detail-muted">/</span>\
-          <span>{{ app ? (app.name || app.id || 'App Detail') : 'App Detail' }}</span>\
-        </div>\
-        <div class="detail-hero__header">\
-          <div class="detail-hero__copy">\
-            <h1 class="pf-c-title pf-m-2xl detail-hero__title">{{ app ? (app.name || app.id || 'App Detail') : 'App Detail' }}</h1>\
-            <div class="detail-inline-meta">\
-              <span class="detail-inline-meta__item"><i class="fas fa-hashtag"></i>{{ app.id || app.name || '-' }}</span>\
-              <span class="detail-inline-meta__item"><i class="fas fa-code-branch"></i>{{ app.version || parsedVersion || 'latest' }}</span>\
-              <span class="detail-inline-meta__item"><i class="fas fa-layer-group"></i>{{ versions.length ? versions.length + ' published versions' : 'Single active definition' }}</span>\
-            </div>\
-            <div class="detail-badge-row">\
-              <span class="pf-c-label" :class="statusLabelClass(app.status)">{{ app.status || 'unknown' }}</span>\
-              <span class="pf-c-label pf-m-blue">{{ app.created_at || 'No creation timestamp' }}</span>\
-            </div>\
-          </div>\
-          <div class="detail-hero__actions">\
-            <router-link :to="\'/catalog/apps/\' + appId + \'/edit\'" class="pf-c-button pf-m-secondary"><i class="fas fa-pen"></i>Edit</router-link>\
-            <button class="pf-c-button pf-m-danger" @click="disableApp" :disabled="busy || !canDisable" v-if="canDisable"><i class="fas fa-ban"></i>Disable</button>\
-            <button class="pf-c-button pf-m-secondary" @click="enableApp" :disabled="busy || !canEnable" v-if="canEnable"><i class="fas fa-check-circle"></i>Enable</button>\
-          </div>\
-        </div>\
-      </div>\
-      <div v-if="loading" class="loading"><i class="fas fa-spinner fa-spin pf-u-mr-sm"></i>Loading app...</div>\
-      <div v-else-if="error" class="error-message">{{ error }}</div>\
-      <div v-else-if="!app" class="pf-u-text-align-center pf-u-color-400 pf-u-py-xl">App not found</div>\
-      <template v-else>\
-        <div class="detail-summary-grid">\
-          <div class="detail-stack">\
-            <div class="pf-c-card detail-summary-card">\
-              <div class="pf-c-card__header">\
-                <h2 class="detail-section-title"><i class="fas fa-info-circle"></i>App overview</h2>\
-                <p class="detail-section-meta">Definition metadata and the current release surface.</p>\
-              </div>\
-              <div class="pf-c-card__body">\
-                <dl class="pf-c-description-list compact-description-list">\
-                  <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">ID</dt><dd class="pf-c-description-list__description">{{ app.id || app.name || '-' }}</dd></div>\
-                  <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Name</dt><dd class="pf-c-description-list__description">{{ app.name || app.label || '-' }}</dd></div>\
-                  <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Description</dt><dd class="pf-c-description-list__description">{{ app.description || '-' }}</dd></div>\
-                  <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Version</dt><dd class="pf-c-description-list__description">{{ app.version || parsedVersion || '-' }}</dd></div>\
-                  <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Versions</dt><dd class="pf-c-description-list__description">{{ versions.length ? versions.join(', ') : 'latest' }}</dd></div>\
-                  <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Created</dt><dd class="pf-c-description-list__description">{{ app.created_at || '-' }}</dd></div>\
-                </dl>\
-                <div v-if="actionError" class="pf-c-alert pf-m-danger pf-m-inline pf-u-mt-md" role="alert"><p class="pf-c-alert__title">{{ actionError }}</p></div>\
-                <div v-if="actionSuccess" class="pf-c-alert pf-m-success pf-m-inline pf-u-mt-md" role="alert"><p class="pf-c-alert__title">{{ actionSuccess }}</p></div>\
-              </div>\
-            </div>\
-            <div class="pf-c-card detail-section-card">\
-              <div class="pf-c-card__header">\
-                <h2 class="detail-section-title"><i class="fas fa-layer-group"></i>Tiers</h2>\
-                <p class="detail-section-meta">Published size tiers and pricing.</p>\
-              </div>\
-              <div class="pf-c-card__body">\
-                <div v-if="tiersLoading" class="loading-sm"><i class="fas fa-spinner fa-spin"></i> Loading tiers...</div>\
-                <div v-else-if="tiers.length === 0" class="pf-u-text-align-center pf-u-color-400" style="padding: 1rem;">No tiers defined</div>\
-                <div v-else class="pf-l-grid pf-m-gutter">\
-                  <div v-for="tier in tiers" :key="tier.name" class="pf-l-grid__item pf-m-12-col pf-m-6-col-on-md pf-m-4-col-on-lg">\
-                    <div class="pf-c-card pf-m-flat tier-card">\
-                      <div class="pf-c-card__header">\
-                        <h3 class="pf-c-title pf-m-md">{{ tier.name }}</h3>\
-                      </div>\
-                      <div class="pf-c-card__body">\
-                        <div class="tier-stat"><span class="tier-stat-label">CPU</span><span class="tier-stat-value">{{ tier.cpu || '-' }} core</span></div>\
-                        <div class="tier-stat"><span class="tier-stat-label">RAM</span><span class="tier-stat-value">{{ tryFormatBytes(tier.memory) }}</span></div>\
-                        <div class="tier-stat"><span class="tier-stat-label">Storage</span><span class="tier-stat-value">{{ tryFormatBytes(tier.storage) }}</span></div>\
-                      </div>\
-                      <div class="pf-c-card__footer">\
-                        <strong>\${{ tier.price_monthly ?? '-' }}</strong><span class="pf-u-color-400">/mo</span>\
-                      </div>\
-                    </div>\
-                  </div>\
-                </div>\
-              </div>\
-            </div>\
-          </div>\
-          <div class="pf-c-card detail-summary-card">\
-            <div class="pf-c-card__header">\
-              <h2 class="detail-section-title"><i class="fas fa-file-code"></i>Definition YAML</h2>\
-              <p class="detail-section-meta">The current source of truth for the app definition.</p>\
-            </div>\
-            <div class="pf-c-card__body">\
-              <pre class="detail-code-block">{{ yamlText || 'No YAML available' }}</pre>\
-            </div>\
-          </div>\
-        </div>\
-      </template>\
+  template: `
+    <section class="pf-c-page__main-section detail-page">
+      <div class="detail-hero">
+        <div class="detail-hero__breadcrumb">
+          <router-link to="/catalog/apps" class="back-link"><i class="fas fa-arrow-left"></i>Apps</router-link>
+          <span class="detail-muted">/</span>
+          <span>{{ app ? (app.name || app.id || 'App Detail') : 'App Detail' }}</span>
+        </div>
+        <div class="detail-hero__header">
+          <div class="detail-hero__copy">
+            <h1 class="pf-c-title pf-m-2xl detail-hero__title">{{ app ? (app.name || app.id || 'App Detail') : 'App Detail' }}</h1>
+            <div class="detail-inline-meta">
+              <span class="detail-inline-meta__item"><i class="fas fa-hashtag"></i>{{ app.id || app.name || '-' }}</span>
+              <span class="detail-inline-meta__item"><i class="fas fa-code-branch"></i>{{ app.version || parsedVersion || 'latest' }}</span>
+              <span class="detail-inline-meta__item"><i class="fas fa-layer-group"></i>{{ versions.length ? versions.length + ' published versions' : 'Single active definition' }}</span>
+            </div>
+            <div class="detail-badge-row">
+              <span class="pf-c-label" :class="statusLabelClass(app.status)">{{ app.status || 'unknown' }}</span>
+              <span class="pf-c-label pf-m-blue">{{ app.created_at || 'No creation timestamp' }}</span>
+            </div>
+          </div>
+          <div class="detail-hero__actions">
+            <router-link :to="\'/catalog/apps/\' + appId + \'/edit\'" class="pf-c-button pf-m-secondary"><i class="fas fa-pen"></i>Edit</router-link>
+            <button class="pf-c-button pf-m-danger" @click="disableApp" :disabled="busy || !canDisable" v-if="canDisable"><i class="fas fa-ban"></i>Disable</button>
+            <button class="pf-c-button pf-m-secondary" @click="enableApp" :disabled="busy || !canEnable" v-if="canEnable"><i class="fas fa-check-circle"></i>Enable</button>
+          </div>
+        </div>
+      </div>
+      <div v-if="loading" class="loading"><i class="fas fa-spinner fa-spin pf-u-mr-sm"></i>Loading app...</div>
+      <div v-else-if="error" class="error-message">{{ error }}</div>
+      <div v-else-if="!app" class="pf-u-text-align-center pf-u-color-400 pf-u-py-xl">App not found</div>
+      <template v-else>
+        <div class="detail-summary-grid">
+          <div class="detail-stack">
+            <div class="pf-c-card detail-summary-card">
+              <div class="pf-c-card__header">
+                <h2 class="detail-section-title"><i class="fas fa-info-circle"></i>App overview</h2>
+                <p class="detail-section-meta">Definition metadata and the current release surface.</p>
+              </div>
+              <div class="pf-c-card__body">
+                <dl class="pf-c-description-list compact-description-list">
+                  <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">ID</dt><dd class="pf-c-description-list__description">{{ app.id || app.name || '-' }}</dd></div>
+                  <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Name</dt><dd class="pf-c-description-list__description">{{ app.name || app.label || '-' }}</dd></div>
+                  <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Description</dt><dd class="pf-c-description-list__description">{{ app.description || '-' }}</dd></div>
+                  <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Version</dt><dd class="pf-c-description-list__description">{{ app.version || parsedVersion || '-' }}</dd></div>
+                  <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Versions</dt><dd class="pf-c-description-list__description">{{ versions.length ? versions.join(', ') : 'latest' }}</dd></div>
+                  <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Created</dt><dd class="pf-c-description-list__description">{{ app.created_at || '-' }}</dd></div>
+                </dl>
+                <div v-if="actionError" class="pf-c-alert pf-m-danger pf-m-inline pf-u-mt-md" role="alert"><p class="pf-c-alert__title">{{ actionError }}</p></div>
+                <div v-if="actionSuccess" class="pf-c-alert pf-m-success pf-m-inline pf-u-mt-md" role="alert"><p class="pf-c-alert__title">{{ actionSuccess }}</p></div>
+              </div>
+            </div>
+            <div class="pf-c-card detail-section-card">
+              <div class="pf-c-card__header">
+                <h2 class="detail-section-title"><i class="fas fa-layer-group"></i>Tiers</h2>
+                <p class="detail-section-meta">Published size tiers and pricing.</p>
+              </div>
+              <div class="pf-c-card__body">
+                <div v-if="tiersLoading" class="loading-sm"><i class="fas fa-spinner fa-spin"></i> Loading tiers...</div>
+                <div v-else-if="tiers.length === 0" class="pf-u-text-align-center pf-u-color-400" style="padding: 1rem;">No tiers defined</div>
+                <div v-else class="pf-l-grid pf-m-gutter">
+                  <div v-for="tier in tiers" :key="tier.name" class="pf-l-grid__item pf-m-12-col pf-m-6-col-on-md pf-m-4-col-on-lg">
+                    <div class="pf-c-card pf-m-flat tier-card">
+                      <div class="pf-c-card__header">
+                        <h3 class="pf-c-title pf-m-md">{{ tier.name }}</h3>
+                      </div>
+                      <div class="pf-c-card__body">
+                        <div class="tier-stat"><span class="tier-stat-label">CPU</span><span class="tier-stat-value">{{ tier.cpu || '-' }} core</span></div>
+                        <div class="tier-stat"><span class="tier-stat-label">RAM</span><span class="tier-stat-value">{{ tryFormatBytes(tier.memory) }}</span></div>
+                        <div class="tier-stat"><span class="tier-stat-label">Storage</span><span class="tier-stat-value">{{ tryFormatBytes(tier.storage) }}</span></div>
+                      </div>
+                      <div class="pf-c-card__footer">
+                        <strong>\${{ tier.price_monthly ?? '-' }}</strong><span class="pf-u-color-400">/mo</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="pf-c-card detail-summary-card">
+            <div class="pf-c-card__header">
+              <h2 class="detail-section-title"><i class="fas fa-file-code"></i>Definition YAML</h2>
+              <p class="detail-section-meta">The current source of truth for the app definition.</p>
+            </div>
+            <div class="pf-c-card__body">
+              <pre class="detail-code-block">{{ yamlText || 'No YAML available' }}</pre>
+            </div>
+          </div>
+        </div>
+      </template>
     </section>`,
   data: function() {
     return {
@@ -1603,39 +1603,39 @@ var CatalogAppDetailView = {
 var CatalogAppFormView = {
 
 
-  template: '\
-    <section class="pf-c-page__main-section">\
-      <div class="pf-c-content pf-u-mb-lg">\
-        <router-link to="/catalog/apps" class="back-link"><i class="fas fa-arrow-left"></i>Back to Apps</router-link>\
-        <h1 class="pf-c-title pf-m-2xl"><i class="fas fa-edit"></i> {{ isEdit ? "Edit App Definition" : "Create App Definition" }}</h1>\
-      </div>\
-      <div v-if="loading" class="loading"><i class="fas fa-spinner fa-spin pf-u-mr-sm"></i>Loading form...</div>\
-      <div v-else class="pf-c-card">\
-        <div class="pf-c-card__body">\
-          <div v-if="error" class="pf-c-alert pf-m-danger pf-m-inline pf-u-mb-md" role="alert"><p class="pf-c-alert__title">{{ error }}</p></div>\
-          <div v-if="success" class="pf-c-alert pf-m-success pf-m-inline pf-u-mb-md" role="alert"><p class="pf-c-alert__title">{{ success }}</p></div>\
-          <div class="pf-c-content pf-u-mb-md">\
-            <p v-if="isEdit">Saving an edit increments the current <code>version</code> automatically.</p>\
-          </div>\
-          <div class="pf-c-form__group">\
-            <label class="pf-c-form__label" for="app-name"><span class="pf-c-form__label-text">App name</span></label>\
-            <input id="app-name" class="pf-c-form-control" type="text" v-model="appName" placeholder="my-app-name" :disabled="isEdit" @input="onNameInput">\
-          </div>\
-          <div class="pf-c-form__group" v-if="isEdit">\
-            <label class="pf-c-form__label" for="app-version"><span class="pf-c-form__label-text">Version</span></label>\
-            <input id="app-version" class="pf-c-form-control" type="text" v-model="appVersion" placeholder="1.0.0" @input="onVersionInput">\
-          </div>\
-          <div class="pf-c-form__group">\
-            <label class="pf-c-form__label" for="app-yaml"><span class="pf-c-form__label-text">Application YAML</span></label>\
-            <textarea id="app-yaml" class="pf-c-form-control yaml-editor" v-model="yamlText" spellcheck="false"></textarea>\
-          </div>\
-          <div class="action-buttons pf-u-mt-md">\
-            <button class="pf-c-button pf-m-primary" @click="saveApp" :disabled="saving"><i class="fas fa-save"></i>{{ saving ? "Saving..." : "Save" }}</button>\
-            <router-link v-if="isEdit" :to="\'/catalog/apps/\' + appId" class="pf-c-button pf-m-link">Cancel</router-link>\
-          </div>\
-        </div>\
-      </div>\
-    </section>',
+  template: `
+    <section class="pf-c-page__main-section">
+      <div class="pf-c-content pf-u-mb-lg">
+        <router-link to="/catalog/apps" class="back-link"><i class="fas fa-arrow-left"></i>Back to Apps</router-link>
+        <h1 class="pf-c-title pf-m-2xl"><i class="fas fa-edit"></i> {{ isEdit ? "Edit App Definition" : "Create App Definition" }}</h1>
+      </div>
+      <div v-if="loading" class="loading"><i class="fas fa-spinner fa-spin pf-u-mr-sm"></i>Loading form...</div>
+      <div v-else class="pf-c-card">
+        <div class="pf-c-card__body">
+          <div v-if="error" class="pf-c-alert pf-m-danger pf-m-inline pf-u-mb-md" role="alert"><p class="pf-c-alert__title">{{ error }}</p></div>
+          <div v-if="success" class="pf-c-alert pf-m-success pf-m-inline pf-u-mb-md" role="alert"><p class="pf-c-alert__title">{{ success }}</p></div>
+          <div class="pf-c-content pf-u-mb-md">
+            <p v-if="isEdit">Saving an edit increments the current <code>version</code> automatically.</p>
+          </div>
+          <div class="pf-c-form__group">
+            <label class="pf-c-form__label" for="app-name"><span class="pf-c-form__label-text">App name</span></label>
+            <input id="app-name" class="pf-c-form-control" type="text" v-model="appName" placeholder="my-app-name" :disabled="isEdit" @input="onNameInput">
+          </div>
+          <div class="pf-c-form__group" v-if="isEdit">
+            <label class="pf-c-form__label" for="app-version"><span class="pf-c-form__label-text">Version</span></label>
+            <input id="app-version" class="pf-c-form-control" type="text" v-model="appVersion" placeholder="1.0.0" @input="onVersionInput">
+          </div>
+          <div class="pf-c-form__group">
+            <label class="pf-c-form__label" for="app-yaml"><span class="pf-c-form__label-text">Application YAML</span></label>
+            <textarea id="app-yaml" class="pf-c-form-control yaml-editor" v-model="yamlText" spellcheck="false"></textarea>
+          </div>
+          <div class="action-buttons pf-u-mt-md">
+            <button class="pf-c-button pf-m-primary" @click="saveApp" :disabled="saving"><i class="fas fa-save"></i>{{ saving ? "Saving..." : "Save" }}</button>
+            <router-link v-if="isEdit" :to="\'/catalog/apps/\' + appId" class="pf-c-button pf-m-link">Cancel</router-link>
+          </div>
+        </div>
+      </div>
+    </section>`,
   data: function() {
     return { loading: false, saving: false, error: '', success: '', yamlText: '', appName: '', appVersion: '' };
   },
@@ -1745,91 +1745,91 @@ var CatalogAppFormView = {
 };
 
 var InstancesView = {
-  template: '\
-    <section class="pf-c-page__main-section">\
-      <div class="pf-c-content pf-u-mb-lg">\
-        <div class="list-header-actions">\
-          <h1 class="pf-c-title pf-m-2xl"><i class="fas fa-cube"></i> Instances</h1>\
-          <router-link to="/instances/new" class="pf-c-button pf-m-primary"><i class="fas fa-plus"></i>New Instance</router-link>\
-        </div>\
-      </div>\
-      <div class="pf-c-card pf-u-mb-lg">\
-        <div class="filter-bar">\
-          <label for="inst-filter-status">Status:</label>\
-          <select id="inst-filter-status" class="pf-c-form-control" v-model="statusFilter">\
-            <option value="">All</option>\
-            <option value="running">Running</option>\
-            <option value="paused">Paused</option>\
-            <option value="provisioning">Provisioning</option>\
-            <option value="initializing">Initializing</option>\
-            <option value="error">Error</option>\
-            <option value="stopped">Stopped</option>\
-            <option value="deprovisioned">Deprovisioned</option>\
-            <option value="failed">Failed</option>\
-            <option value="setup_failed">Setup Failed</option>\
-          </select>\
-          <label for="inst-filter-customer">Customer:</label>\
-          <input id="inst-filter-customer" class="pf-c-form-control" type="text" v-model="customerFilter" placeholder="customer ID">\
-          <label for="inst-filter-app">App:</label>\
-          <input id="inst-filter-app" class="pf-c-form-control" type="text" v-model="appFilter" placeholder="app name">\
-          <button class="pf-c-button pf-m-secondary" @click="applyFilter"><i class="fas fa-search pf-u-mr-sm"></i>Filter</button>\
-          <button class="pf-c-button pf-m-link" @click="clearFilters" v-if="hasActiveFilters"><i class="fas fa-times pf-u-mr-sm"></i>Clear</button>\
-        </div>\
-      </div>\
-      <div v-if="loading" class="loading"><i class="fas fa-spinner fa-spin pf-u-mr-sm"></i>Loading instances...</div>\
-      <div v-else-if="error" class="error-message">{{ error }}</div>\
-      <div v-else class="pf-c-card">\
-        <div class="pf-c-card__body pf-m-0">\
-          <table class="pf-c-table" role="grid">\
-            <thead>\
-              <tr>\
-                <th>ID</th>\
-                <th>Customer</th>\
-                <th>App</th>\
-                <th>Node</th>\
-                <th>Status</th>\
-                <th>Health</th>\
-                <th>Actions</th>\
-              </tr>\
-            </thead>\
-            <tbody>\
-              <tr v-for="inst in instances" :key="inst.id || inst.instance_id">\
-                <td data-label="ID">\
-                  <router-link :to="\'/instances/\' + (inst.id || inst.instance_id)" class="pf-c-button pf-m-link pf-m-inline" style="font-size:0.8125rem;" :title="inst.id || inst.instance_id">{{ (inst.id || inst.instance_id || "").substring(0, 12) }}...</router-link>\
-                </td>\
-                <td data-label="Customer">{{ inst.customer_id || inst.customer || "-" }}</td>\
-                <td data-label="App">{{ inst.app_id || inst.app || "-" }}</td>\
-                <td data-label="Node">{{ inst.node_id || inst.node || "-" }}</td>\
-                <td data-label="Status"><span class="pf-c-label" :class="statusLabelClass(inst.status)">{{ inst.status || "unknown" }}</span></td>\
-                <td data-label="Health"><span class="pf-c-label" :class="healthLabelClass(inst.health)">{{ inst.health || "unknown" }}</span></td>\
-                <td data-label="Actions">\
-                  <div class="action-buttons">\
-                    <button v-if="inst.status !== \'running\'" class="pf-c-button pf-m-small pf-m-primary" @click="action(inst, \'resume\')" :disabled="actionLoading[inst.id || inst.instance_id]">\
-                      <i class="fas fa-play"></i>Resume\
-                    </button>\
-                    <button v-if="inst.status === \'running\'" class="pf-c-button pf-m-small pf-m-secondary" @click="action(inst, \'pause\')" :disabled="actionLoading[inst.id || inst.instance_id]">\
-                      <i class="fas fa-pause"></i>Pause\
-                    </button>\
-                    <router-link :to="\'/instances/\' + (inst.id || inst.instance_id)" class="pf-c-button pf-m-small pf-m-link"><i class="fas fa-ellipsis-h"></i>More</router-link>\
-                  </div>\
-                </td>\
-              </tr>\
-              <tr v-if="instances.length === 0">\
-                <td colspan="7" class="pf-u-text-align-center pf-u-color-400" style="padding: 2rem;">No instances found</td>\
-              </tr>\
-            </tbody>\
-          </table>\
-        </div>\
-        <div class="pf-c-card__footer list-pagination">\
-          <span class="list-pagination-summary">Showing {{ pageStart }}-{{ pageEnd }} of {{ total }}</span>\
-          <div class="list-pagination-actions">\
-            <button class="pf-c-button pf-m-secondary pf-m-small" @click="changePage(page - 1)" :disabled="page <= 1">Previous</button>\
-            <span class="list-pagination-page">Page {{ page }}</span>\
-            <button class="pf-c-button pf-m-secondary pf-m-small" @click="changePage(page + 1)" :disabled="pageEnd >= total">Next</button>\
-          </div>\
-        </div>\
-      </div>\
-    </section>',
+  template: `
+    <section class="pf-c-page__main-section">
+      <div class="pf-c-content pf-u-mb-lg">
+        <div class="list-header-actions">
+          <h1 class="pf-c-title pf-m-2xl"><i class="fas fa-cube"></i> Instances</h1>
+          <router-link to="/instances/new" class="pf-c-button pf-m-primary"><i class="fas fa-plus"></i>New Instance</router-link>
+        </div>
+      </div>
+      <div class="pf-c-card pf-u-mb-lg">
+        <div class="filter-bar">
+          <label for="inst-filter-status">Status:</label>
+          <select id="inst-filter-status" class="pf-c-form-control" v-model="statusFilter">
+            <option value="">All</option>
+            <option value="running">Running</option>
+            <option value="paused">Paused</option>
+            <option value="provisioning">Provisioning</option>
+            <option value="initializing">Initializing</option>
+            <option value="error">Error</option>
+            <option value="stopped">Stopped</option>
+            <option value="deprovisioned">Deprovisioned</option>
+            <option value="failed">Failed</option>
+            <option value="setup_failed">Setup Failed</option>
+          </select>
+          <label for="inst-filter-customer">Customer:</label>
+          <input id="inst-filter-customer" class="pf-c-form-control" type="text" v-model="customerFilter" placeholder="customer ID">
+          <label for="inst-filter-app">App:</label>
+          <input id="inst-filter-app" class="pf-c-form-control" type="text" v-model="appFilter" placeholder="app name">
+          <button class="pf-c-button pf-m-secondary" @click="applyFilter"><i class="fas fa-search pf-u-mr-sm"></i>Filter</button>
+          <button class="pf-c-button pf-m-link" @click="clearFilters" v-if="hasActiveFilters"><i class="fas fa-times pf-u-mr-sm"></i>Clear</button>
+        </div>
+      </div>
+      <div v-if="loading" class="loading"><i class="fas fa-spinner fa-spin pf-u-mr-sm"></i>Loading instances...</div>
+      <div v-else-if="error" class="error-message">{{ error }}</div>
+      <div v-else class="pf-c-card">
+        <div class="pf-c-card__body pf-m-0">
+          <table class="pf-c-table" role="grid">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Customer</th>
+                <th>App</th>
+                <th>Node</th>
+                <th>Status</th>
+                <th>Health</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="inst in instances" :key="inst.id || inst.instance_id">
+                <td data-label="ID">
+                  <router-link :to="\'/instances/\' + (inst.id || inst.instance_id)" class="pf-c-button pf-m-link pf-m-inline" style="font-size:0.8125rem;" :title="inst.id || inst.instance_id">{{ (inst.id || inst.instance_id || "").substring(0, 12) }}...</router-link>
+                </td>
+                <td data-label="Customer">{{ inst.customer_id || inst.customer || "-" }}</td>
+                <td data-label="App">{{ inst.app_id || inst.app || "-" }}</td>
+                <td data-label="Node">{{ inst.node_id || inst.node || "-" }}</td>
+                <td data-label="Status"><span class="pf-c-label" :class="statusLabelClass(inst.status)">{{ inst.status || "unknown" }}</span></td>
+                <td data-label="Health"><span class="pf-c-label" :class="healthLabelClass(inst.health)">{{ inst.health || "unknown" }}</span></td>
+                <td data-label="Actions">
+                  <div class="action-buttons">
+                    <button v-if="inst.status !== \'running\'" class="pf-c-button pf-m-small pf-m-primary" @click="action(inst, \'resume\')" :disabled="actionLoading[inst.id || inst.instance_id]">
+                      <i class="fas fa-play"></i>Resume
+                    </button>
+                    <button v-if="inst.status === \'running\'" class="pf-c-button pf-m-small pf-m-secondary" @click="action(inst, \'pause\')" :disabled="actionLoading[inst.id || inst.instance_id]">
+                      <i class="fas fa-pause"></i>Pause
+                    </button>
+                    <router-link :to="\'/instances/\' + (inst.id || inst.instance_id)" class="pf-c-button pf-m-small pf-m-link"><i class="fas fa-ellipsis-h"></i>More</router-link>
+                  </div>
+                </td>
+              </tr>
+              <tr v-if="instances.length === 0">
+                <td colspan="7" class="pf-u-text-align-center pf-u-color-400" style="padding: 2rem;">No instances found</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="pf-c-card__footer list-pagination">
+          <span class="list-pagination-summary">Showing {{ pageStart }}-{{ pageEnd }} of {{ total }}</span>
+          <div class="list-pagination-actions">
+            <button class="pf-c-button pf-m-secondary pf-m-small" @click="changePage(page - 1)" :disabled="page <= 1">Previous</button>
+            <span class="list-pagination-page">Page {{ page }}</span>
+            <button class="pf-c-button pf-m-secondary pf-m-small" @click="changePage(page + 1)" :disabled="pageEnd >= total">Next</button>
+          </div>
+        </div>
+      </div>
+    </section>`,
   data: function() { return { loading: true, error: null, instances: [], actionLoading: {}, page: 1, pageSize: 20, total: 0, statusFilter: '', customerFilter: '', appFilter: '' }; },
   computed: {
     pageStart: function() { return this.total === 0 ? 0 : ((this.page - 1) * this.pageSize) + 1; },
@@ -1909,67 +1909,67 @@ var InstancesView = {
 };
 
 var InstanceCreateView = {
-  template: '\
-    <section class="pf-c-page__main-section">\
-      <div class="pf-c-content pf-u-mb-lg">\
-        <router-link to="/instances" class="back-link"><i class="fas fa-arrow-left"></i>Back to Instances</router-link>\
-        <h1 class="pf-c-title pf-m-2xl"><i class="fas fa-plus"></i> New Instance</h1>\
-      </div>\
-      <div v-if="loading" class="loading"><i class="fas fa-spinner fa-spin pf-u-mr-sm"></i>Loading form...</div>\
-      <div v-else class="pf-l-grid pf-m-gutter">\
-        <div class="pf-l-grid__item pf-m-12-col pf-m-7-col-on-lg">\
-          <div class="pf-c-card">\
-            <div class="pf-c-card__body">\
-              <div v-if="error" class="pf-c-alert pf-m-danger pf-m-inline pf-u-mb-md" role="alert"><p class="pf-c-alert__title">{{ error }}</p></div>\
-              <div class="pf-c-form__group">\
-                <label class="pf-c-form__label"><span class="pf-c-form__label-text">Customer ID</span></label>\
-                <input class="pf-c-form-control" type="text" v-model="form.customer_id" placeholder="customer_001">\
-              </div>\
-              <div class="pf-c-form__group">\
-                <label class="pf-c-form__label"><span class="pf-c-form__label-text">App</span></label>\
-                <select class="pf-c-form-control" v-model="form.app_id" @change="onAppChange">\
-                  <option value="">Select an app</option>\
-                  <option v-for="app in activeApps" :key="app.id || app.name" :value="app.id || app.name">{{ app.name || app.id }}</option>\
-                </select>\
-              </div>\
-              <div class="pf-c-form__group">\
-                <label class="pf-c-form__label"><span class="pf-c-form__label-text">Tier</span></label>\
-                <select class="pf-c-form-control" v-model="form.tier_name" :disabled="tiers.length === 0">\
-                  <option value="">Select a tier</option>\
-                  <option v-for="tier in tiers" :key="tier.name" :value="tier.name">{{ tier.name }} | CPU {{ tier.cpu }} | RAM {{ tier.memory }} | Storage {{ tier.storage }}</option>\
-                </select>\
-              </div>\
-              <div class="pf-c-form__group">\
-                <label class="pf-c-form__label"><span class="pf-c-form__label-text">Node</span></label>\
-                <select class="pf-c-form-control" v-model="form.node_id">\
-                  <option value="">Select a node</option>\
-                  <option v-for="node in nodes" :key="node.id" :value="node.id">{{ node.hostname || node.id }} | {{ node.status }} | {{ node.region || "-" }}</option>\
-                </select>\
-              </div>\
-              <div class="action-buttons">\
-                <button class="pf-c-button pf-m-primary" @click="createInstance" :disabled="saving"><i class="fas fa-save"></i>{{ saving ? "Creating..." : "Create Instance" }}</button>\
-              </div>\
-            </div>\
-          </div>\
-        </div>\
-        <div class="pf-l-grid__item pf-m-12-col pf-m-5-col-on-lg">\
-          <div class="pf-c-card">\
-            <div class="pf-c-card__header"><h2 class="pf-c-title pf-m-lg">Provisioning Summary</h2></div>\
-            <div class="pf-c-card__body">\
-              <dl class="pf-c-description-list">\
-                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Customer</dt><dd class="pf-c-description-list__description">{{ form.customer_id || "-" }}</dd></div>\
-                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">App</dt><dd class="pf-c-description-list__description">{{ selectedAppName || "-" }}</dd></div>\
-                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Tier</dt><dd class="pf-c-description-list__description">{{ selectedTier ? selectedTier.name : "-" }}</dd></div>\
-                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">CPU</dt><dd class="pf-c-description-list__description">{{ selectedTier ? selectedTier.cpu : "-" }}</dd></div>\
-                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Memory</dt><dd class="pf-c-description-list__description">{{ selectedTier ? selectedTier.memory : "-" }}</dd></div>\
-                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Storage</dt><dd class="pf-c-description-list__description">{{ selectedTier ? selectedTier.storage : "-" }}</dd></div>\
-                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Node</dt><dd class="pf-c-description-list__description">{{ selectedNodeName || "-" }}</dd></div>\
-              </dl>\
-            </div>\
-          </div>\
-        </div>\
-      </div>\
-    </section>',
+  template: `
+    <section class="pf-c-page__main-section">
+      <div class="pf-c-content pf-u-mb-lg">
+        <router-link to="/instances" class="back-link"><i class="fas fa-arrow-left"></i>Back to Instances</router-link>
+        <h1 class="pf-c-title pf-m-2xl"><i class="fas fa-plus"></i> New Instance</h1>
+      </div>
+      <div v-if="loading" class="loading"><i class="fas fa-spinner fa-spin pf-u-mr-sm"></i>Loading form...</div>
+      <div v-else class="pf-l-grid pf-m-gutter">
+        <div class="pf-l-grid__item pf-m-12-col pf-m-7-col-on-lg">
+          <div class="pf-c-card">
+            <div class="pf-c-card__body">
+              <div v-if="error" class="pf-c-alert pf-m-danger pf-m-inline pf-u-mb-md" role="alert"><p class="pf-c-alert__title">{{ error }}</p></div>
+              <div class="pf-c-form__group">
+                <label class="pf-c-form__label"><span class="pf-c-form__label-text">Customer ID</span></label>
+                <input class="pf-c-form-control" type="text" v-model="form.customer_id" placeholder="customer_001">
+              </div>
+              <div class="pf-c-form__group">
+                <label class="pf-c-form__label"><span class="pf-c-form__label-text">App</span></label>
+                <select class="pf-c-form-control" v-model="form.app_id" @change="onAppChange">
+                  <option value="">Select an app</option>
+                  <option v-for="app in activeApps" :key="app.id || app.name" :value="app.id || app.name">{{ app.name || app.id }}</option>
+                </select>
+              </div>
+              <div class="pf-c-form__group">
+                <label class="pf-c-form__label"><span class="pf-c-form__label-text">Tier</span></label>
+                <select class="pf-c-form-control" v-model="form.tier_name" :disabled="tiers.length === 0">
+                  <option value="">Select a tier</option>
+                  <option v-for="tier in tiers" :key="tier.name" :value="tier.name">{{ tier.name }} | CPU {{ tier.cpu }} | RAM {{ tier.memory }} | Storage {{ tier.storage }}</option>
+                </select>
+              </div>
+              <div class="pf-c-form__group">
+                <label class="pf-c-form__label"><span class="pf-c-form__label-text">Node</span></label>
+                <select class="pf-c-form-control" v-model="form.node_id">
+                  <option value="">Select a node</option>
+                  <option v-for="node in nodes" :key="node.id" :value="node.id">{{ node.hostname || node.id }} | {{ node.status }} | {{ node.region || "-" }}</option>
+                </select>
+              </div>
+              <div class="action-buttons">
+                <button class="pf-c-button pf-m-primary" @click="createInstance" :disabled="saving"><i class="fas fa-save"></i>{{ saving ? "Creating..." : "Create Instance" }}</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="pf-l-grid__item pf-m-12-col pf-m-5-col-on-lg">
+          <div class="pf-c-card">
+            <div class="pf-c-card__header"><h2 class="pf-c-title pf-m-lg">Provisioning Summary</h2></div>
+            <div class="pf-c-card__body">
+              <dl class="pf-c-description-list">
+                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Customer</dt><dd class="pf-c-description-list__description">{{ form.customer_id || "-" }}</dd></div>
+                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">App</dt><dd class="pf-c-description-list__description">{{ selectedAppName || "-" }}</dd></div>
+                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Tier</dt><dd class="pf-c-description-list__description">{{ selectedTier ? selectedTier.name : "-" }}</dd></div>
+                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">CPU</dt><dd class="pf-c-description-list__description">{{ selectedTier ? selectedTier.cpu : "-" }}</dd></div>
+                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Memory</dt><dd class="pf-c-description-list__description">{{ selectedTier ? selectedTier.memory : "-" }}</dd></div>
+                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Storage</dt><dd class="pf-c-description-list__description">{{ selectedTier ? selectedTier.storage : "-" }}</dd></div>
+                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Node</dt><dd class="pf-c-description-list__description">{{ selectedNodeName || "-" }}</dd></div>
+              </dl>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>`,
   data: function() {
     return {
       loading: true,
@@ -2050,93 +2050,93 @@ var InstanceCreateView = {
 };
 
 var InstanceProvisionedView = {
-  template: '\
-    <section class="pf-c-page__main-section detail-page provision-result-page">\
-      <div class="detail-hero provision-result-hero">\
-        <div class="detail-hero__breadcrumb">\
-          <router-link to="/instances" class="back-link"><i class="fas fa-arrow-left"></i>Instances</router-link>\
-          <span class="detail-muted">/</span>\
-          <span>Provisioning result</span>\
-        </div>\
-        <div class="detail-hero__header">\
-          <div class="detail-hero__copy">\
-            <p class="dashboard-eyebrow">Provision queued</p>\
-            <h1 class="pf-c-title pf-m-2xl detail-hero__title">Instance provisioning in progress</h1>\
-            <p class="dashboard-subtitle">The instance is initializing. Credentials and setup notices are shown here while they are still available.</p>\
-            <div class="detail-inline-meta">\
-              <span class="detail-inline-meta__item"><i class="fas fa-hashtag"></i>{{ operationId }}</span>\
-              <span class="detail-inline-meta__item" v-if="job && (job.instance_id || job.instance)"><i class="fas fa-cube"></i>{{ job.instance_id || job.instance }}</span>\
-              <span class="detail-inline-meta__item" v-if="instance && (instance.customer_id || instance.customer)"><i class="fas fa-user"></i>{{ instance.customer_id || instance.customer }}</span>\
-              <span class="detail-inline-meta__item" v-if="hostname"><i class="fas fa-globe"></i>{{ hostname }}</span>\
-            </div>\
-          </div>\
-          <div class="detail-hero__actions">\
-            <router-link to="/instances/new" class="pf-c-button pf-m-secondary"><i class="fas fa-plus"></i>Create another</router-link>\
-            <router-link v-if="job && (job.instance_id || job.instance)" :to="\'/instances/\' + (job.instance_id || job.instance)" class="pf-c-button pf-m-primary"><i class="fas fa-cube"></i>Open instance</router-link>\
-            <router-link :to="\'/jobs/\' + operationId" class="pf-c-button pf-m-link"><i class="fas fa-clipboard-list"></i>Open job</router-link>\
-          </div>\
-        </div>\
-      </div>\
-      <div v-if="loading" class="loading"><i class="fas fa-spinner fa-spin pf-u-mr-sm"></i>Loading provisioning details...</div>\
-      <div v-else-if="error && !hasAnyContext" class="error-message">{{ error }}</div>\
-      <template v-else>\
-        <div v-if="jobError && !job" class="pf-c-alert pf-m-warning pf-m-inline pf-u-mb-lg" role="alert">\
-          <div class="pf-c-alert__icon"><i class="fas fa-fw fa-exclamation-triangle" aria-hidden="true"></i></div>\
-          <p class="pf-c-alert__title">{{ jobError }}</p>\
-        </div>\
-        <div class="detail-summary-grid">\
-          <div class="pf-c-card detail-summary-card">\
-            <div class="pf-c-card__header"><h2 class="detail-section-title"><i class="fas fa-info-circle"></i>Provision summary</h2><p class="detail-section-meta">Current state and placement for this initial run.</p></div>\
-            <div class="pf-c-card__body">\
-              <dl class="pf-c-description-list compact-description-list">\
-                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Operation</dt><dd class="pf-c-description-list__description">{{ operationId }}</dd></div>\
-                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Status</dt><dd class="pf-c-description-list__description"><span class="pf-c-label" :class="jobStatusClass(jobStatus)">{{ jobStatus || \'queued\' }}</span></dd></div>\
-                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Customer</dt><dd class="pf-c-description-list__description">{{ customerId || \'-\' }}</dd></div>\
-                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">App</dt><dd class="pf-c-description-list__description">{{ appName || \'-\' }}</dd></div>\
-                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Tier</dt><dd class="pf-c-description-list__description">{{ tierName || \'-\' }}</dd></div>\
-                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Node</dt><dd class="pf-c-description-list__description">{{ nodeName || \'-\' }}</dd></div>\
-                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Hostname</dt><dd class="pf-c-description-list__description">{{ hostname || \'-\' }}</dd></div>\
-              </dl>\
-            </div>\
-          </div>\
-          <div class="pf-c-card detail-section-card provision-credentials-card">\
-            <div class="pf-c-card__header"><h2 class="detail-section-title"><i class="fas fa-key"></i>Deployment credentials</h2><p class="detail-section-meta">Save these credentials securely. They are displayed now because the instance is initializing.</p></div>\
-            <div class="pf-c-card__body">\
-              <div v-if="noticesForDisplay(credentials).length > 0" class="pf-u-mb-md">\
-                <div v-for="cred in noticesForDisplay(credentials)" :key="cred.service + \'.\' + cred.name + \'.notice\'" class="pf-c-alert pf-m-info pf-m-inline pf-u-mb-sm" role="alert">\
-                  <p class="pf-c-alert__title">{{ cred.name }}: <code>{{ cred.value }}</code></p>\
-                </div>\
-              </div>\
-              <div v-if="credentialsLoading" class="loading-sm"><i class="fas fa-spinner fa-spin pf-u-mr-sm"></i>Loading credentials...</div>\
-              <div v-else-if="credentialsError" class="pf-c-alert pf-m-danger pf-m-inline" role="alert"><p class="pf-c-alert__title">{{ credentialsError }}</p></div>\
-              <div v-else-if="credentialsForDisplay(credentials).length > 0">\
-                <table class="pf-c-table" role="grid">\
-                  <thead><tr><th>Service</th><th>Name</th><th>Value</th></tr></thead>\
-                  <tbody>\
-                    <tr v-for="cred in credentialsForDisplay(credentials)" :key="cred.service + \'.\' + cred.name + \'.\' + cred.kind">\
-                      <td data-label="Service">{{ cred.service }}</td>\
-                      <td data-label="Name">{{ cred.name }}</td>\
-                      <td data-label="Value"><code>{{ cred.value }}</code></td>\
-                    </tr>\
-                  </tbody>\
-                </table>\
-              </div>\
-              <div v-else class="pf-u-color-400">No credentials exposed for this instance.</div>\
-            </div>\
-          </div>\
-        </div>\
-        <div class="pf-c-card detail-section-card provision-followup-card">\
-          <div class="pf-c-card__header"><h2 class="detail-section-title"><i class="fas fa-route"></i>Next step</h2><p class="detail-section-meta">Continue to the instance detail or return to the list.</p></div>\
-          <div class="pf-c-card__body">\
-            <p class="detail-section-note">If you refresh this page later, the setup notices may no longer be available. The job and instance links remain available.</p>\
-            <div class="action-buttons">\
-              <router-link to="/instances" class="pf-c-button pf-m-primary"><i class="fas fa-list"></i>Go to instances</router-link>\
-              <router-link to="/instances/new" class="pf-c-button pf-m-secondary"><i class="fas fa-plus"></i>Create another instance</router-link>\
-            </div>\
-          </div>\
-        </div>\
-      </template>\
-    </section>',
+  template: `
+    <section class="pf-c-page__main-section detail-page provision-result-page">
+      <div class="detail-hero provision-result-hero">
+        <div class="detail-hero__breadcrumb">
+          <router-link to="/instances" class="back-link"><i class="fas fa-arrow-left"></i>Instances</router-link>
+          <span class="detail-muted">/</span>
+          <span>Provisioning result</span>
+        </div>
+        <div class="detail-hero__header">
+          <div class="detail-hero__copy">
+            <p class="dashboard-eyebrow">Provision queued</p>
+            <h1 class="pf-c-title pf-m-2xl detail-hero__title">Instance provisioning in progress</h1>
+            <p class="dashboard-subtitle">The instance is initializing. Credentials and setup notices are shown here while they are still available.</p>
+            <div class="detail-inline-meta">
+              <span class="detail-inline-meta__item"><i class="fas fa-hashtag"></i>{{ operationId }}</span>
+              <span class="detail-inline-meta__item" v-if="job && (job.instance_id || job.instance)"><i class="fas fa-cube"></i>{{ job.instance_id || job.instance }}</span>
+              <span class="detail-inline-meta__item" v-if="instance && (instance.customer_id || instance.customer)"><i class="fas fa-user"></i>{{ instance.customer_id || instance.customer }}</span>
+              <span class="detail-inline-meta__item" v-if="hostname"><i class="fas fa-globe"></i>{{ hostname }}</span>
+            </div>
+          </div>
+          <div class="detail-hero__actions">
+            <router-link to="/instances/new" class="pf-c-button pf-m-secondary"><i class="fas fa-plus"></i>Create another</router-link>
+            <router-link v-if="job && (job.instance_id || job.instance)" :to="\'/instances/\' + (job.instance_id || job.instance)" class="pf-c-button pf-m-primary"><i class="fas fa-cube"></i>Open instance</router-link>
+            <router-link :to="\'/jobs/\' + operationId" class="pf-c-button pf-m-link"><i class="fas fa-clipboard-list"></i>Open job</router-link>
+          </div>
+        </div>
+      </div>
+      <div v-if="loading" class="loading"><i class="fas fa-spinner fa-spin pf-u-mr-sm"></i>Loading provisioning details...</div>
+      <div v-else-if="error && !hasAnyContext" class="error-message">{{ error }}</div>
+      <template v-else>
+        <div v-if="jobError && !job" class="pf-c-alert pf-m-warning pf-m-inline pf-u-mb-lg" role="alert">
+          <div class="pf-c-alert__icon"><i class="fas fa-fw fa-exclamation-triangle" aria-hidden="true"></i></div>
+          <p class="pf-c-alert__title">{{ jobError }}</p>
+        </div>
+        <div class="detail-summary-grid">
+          <div class="pf-c-card detail-summary-card">
+            <div class="pf-c-card__header"><h2 class="detail-section-title"><i class="fas fa-info-circle"></i>Provision summary</h2><p class="detail-section-meta">Current state and placement for this initial run.</p></div>
+            <div class="pf-c-card__body">
+              <dl class="pf-c-description-list compact-description-list">
+                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Operation</dt><dd class="pf-c-description-list__description">{{ operationId }}</dd></div>
+                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Status</dt><dd class="pf-c-description-list__description"><span class="pf-c-label" :class="jobStatusClass(jobStatus)">{{ jobStatus || \'queued\' }}</span></dd></div>
+                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Customer</dt><dd class="pf-c-description-list__description">{{ customerId || \'-\' }}</dd></div>
+                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">App</dt><dd class="pf-c-description-list__description">{{ appName || \'-\' }}</dd></div>
+                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Tier</dt><dd class="pf-c-description-list__description">{{ tierName || \'-\' }}</dd></div>
+                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Node</dt><dd class="pf-c-description-list__description">{{ nodeName || \'-\' }}</dd></div>
+                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Hostname</dt><dd class="pf-c-description-list__description">{{ hostname || \'-\' }}</dd></div>
+              </dl>
+            </div>
+          </div>
+          <div class="pf-c-card detail-section-card provision-credentials-card">
+            <div class="pf-c-card__header"><h2 class="detail-section-title"><i class="fas fa-key"></i>Deployment credentials</h2><p class="detail-section-meta">Save these credentials securely. They are displayed now because the instance is initializing.</p></div>
+            <div class="pf-c-card__body">
+              <div v-if="noticesForDisplay(credentials).length > 0" class="pf-u-mb-md">
+                <div v-for="cred in noticesForDisplay(credentials)" :key="cred.service + \'.\' + cred.name + \'.notice\'" class="pf-c-alert pf-m-info pf-m-inline pf-u-mb-sm" role="alert">
+                  <p class="pf-c-alert__title">{{ cred.name }}: <code>{{ cred.value }}</code></p>
+                </div>
+              </div>
+              <div v-if="credentialsLoading" class="loading-sm"><i class="fas fa-spinner fa-spin pf-u-mr-sm"></i>Loading credentials...</div>
+              <div v-else-if="credentialsError" class="pf-c-alert pf-m-danger pf-m-inline" role="alert"><p class="pf-c-alert__title">{{ credentialsError }}</p></div>
+              <div v-else-if="credentialsForDisplay(credentials).length > 0">
+                <table class="pf-c-table" role="grid">
+                  <thead><tr><th>Service</th><th>Name</th><th>Value</th></tr></thead>
+                  <tbody>
+                    <tr v-for="cred in credentialsForDisplay(credentials)" :key="cred.service + \'.\' + cred.name + \'.\' + cred.kind">
+                      <td data-label="Service">{{ cred.service }}</td>
+                      <td data-label="Name">{{ cred.name }}</td>
+                      <td data-label="Value"><code>{{ cred.value }}</code></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div v-else class="pf-u-color-400">No credentials exposed for this instance.</div>
+            </div>
+          </div>
+        </div>
+        <div class="pf-c-card detail-section-card provision-followup-card">
+          <div class="pf-c-card__header"><h2 class="detail-section-title"><i class="fas fa-route"></i>Next step</h2><p class="detail-section-meta">Continue to the instance detail or return to the list.</p></div>
+          <div class="pf-c-card__body">
+            <p class="detail-section-note">If you refresh this page later, the setup notices may no longer be available. The job and instance links remain available.</p>
+            <div class="action-buttons">
+              <router-link to="/instances" class="pf-c-button pf-m-primary"><i class="fas fa-list"></i>Go to instances</router-link>
+              <router-link to="/instances/new" class="pf-c-button pf-m-secondary"><i class="fas fa-plus"></i>Create another instance</router-link>
+            </div>
+          </div>
+        </div>
+      </template>
+    </section>`,
   data: function() {
     return {
       loading: true,
@@ -2266,241 +2266,241 @@ var InstanceProvisionedView = {
 };
 
 var InstanceDetailView = {
-  template: `\
-    <section class="pf-c-page__main-section detail-page">\
-      <div class="detail-hero">\
-        <div class="detail-hero__breadcrumb">\
-          <router-link to="/instances" class="back-link"><i class="fas fa-arrow-left"></i>Instances</router-link>\
-          <span class="detail-muted">/</span>\
-          <span>{{ instance ? (instance.id || instance.instance_id || 'Instance Detail') : 'Instance Detail' }}</span>\
-        </div>\
-        <div v-if="instance" class="detail-hero__header">\
-          <div class="detail-hero__copy">\
-            <h1 class="pf-c-title pf-m-2xl detail-hero__title">{{ instance.id || instance.instance_id || 'Instance Detail' }}</h1>\
-            <div class="detail-inline-meta">\
-              <span class="detail-inline-meta__item"><i class="fas fa-hashtag"></i>{{ instance.id || instance.instance_id || '-' }}</span>\
-              <span class="detail-inline-meta__item"><i class="fas fa-user"></i>{{ instance.customer_id || instance.customer || '-' }}</span>\
-              <span class="detail-inline-meta__item"><i class="fas fa-cube"></i>{{ instance.app_definition_name || instance.app_id || instance.app || '-' }}</span>\
-              <span class="detail-inline-meta__item"><i class="fas fa-layer-group"></i>{{ instance.tier_name || instance.tier_id || instance.tier || '-' }}</span>\
-            </div>\
-            <div class="detail-badge-row">\
-              <span class="pf-c-label" :class="statusLabelClass(instance.status)">{{ instance.status || 'unknown' }}</span>\
-              <span class="pf-c-label" :class="healthLabelClass(instance.health)">{{ instance.health || 'unknown' }}</span>\
-              <span class="pf-c-label pf-m-blue">{{ instance.node_id || instance.node || 'No node assigned' }}</span>\
-            </div>\
-          </div>\
-          <div class="detail-hero__actions">\
-            <button v-if="instance.status !== 'running'" class="pf-c-button pf-m-primary" @click="doAction('resume')" :disabled="actionBusy"><i class="fas fa-play"></i>Resume</button>\
-            <button v-if="instance.status === 'running'" class="pf-c-button pf-m-secondary" @click="doActionWithConfirm('pause')" :disabled="actionBusy"><i class="fas fa-pause"></i>Pause</button>\
-            <button class="pf-c-button pf-m-secondary" @click="showDangerZone = !showDangerZone" :aria-expanded="showDangerZone ? 'true' : 'false'"><i class="fas fa-shield-alt"></i>{{ showDangerZone ? 'Hide' : 'Review' }} destructive actions</button>\
-          </div>\
-        </div>\
-      </div>\
-      <div v-if="loading" class="loading"><i class="fas fa-spinner fa-spin pf-u-mr-sm"></i>Loading instance...</div>\
-      <div v-else-if="error" class="error-message">{{ error }}</div>\
-      <div v-else-if="!instance" class="pf-u-text-align-center pf-u-color-400 pf-u-py-xl">Instance not found</div>\
-      <template v-else>\
-        <div v-if="actionError" class="detail-callout detail-callout--danger">\
-          <div class="detail-callout__icon"><i class="fas fa-exclamation-circle" aria-hidden="true"></i></div>\
-          <div class="detail-callout__body">\
-            <p class="detail-callout__title">Action failed</p>\
-            <p class="detail-callout__text">{{ actionError }}</p>\
-          </div>\
-        </div>\
-        <div class="detail-summary-grid">\
-          <div class="pf-c-card detail-summary-card">\
-            <div class="pf-c-card__header"><h2 class="detail-section-title"><i class="fas fa-info-circle"></i>Instance information</h2><p class="detail-section-meta">Operational identity and placement.</p></div>\
-            <div class="pf-c-card__body">\
-              <dl class="pf-c-description-list compact-description-list">\
-                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">ID</dt><dd class="pf-c-description-list__description">{{ instance.id || instance.instance_id || '-' }}</dd></div>\
-                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Customer</dt><dd class="pf-c-description-list__description">{{ instance.customer_id || instance.customer || '-' }}</dd></div>\
-                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">App</dt><dd class="pf-c-description-list__description">{{ instance.app_definition_name || instance.app_id || instance.app || '-' }}</dd></div>\
-                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Tier</dt><dd class="pf-c-description-list__description">{{ instance.tier_name || instance.tier_id || instance.tier || '-' }}</dd></div>\
-                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Hostname</dt><dd class="pf-c-description-list__description">{{ instance.hostname || instance.host || '-' }}</dd></div>\
-                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Node</dt><dd class="pf-c-description-list__description">{{ instance.node_id || instance.node || '-' }}</dd></div>\
-                <div class="pf-c-description-list__group" v-if="instance.port"><dt class="pf-c-description-list__term">Port</dt><dd class="pf-c-description-list__description">{{ instance.port.host_port || instance.port.container_port || '-' }}</dd></div>\
-                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Created</dt><dd class="pf-c-description-list__description">{{ instance.created_at || instance.created || '-' }}</dd></div>\
-              </dl>\
-            </div>\
-          </div>\
-          <div class="detail-stack">\
-            <div class="pf-c-card detail-summary-card">\
-              <div class="pf-c-card__header"><h2 class="detail-section-title"><i class="fas fa-bolt"></i>Runtime actions</h2><p class="detail-section-meta">Primary controls stay focused on reversible runtime changes.</p></div>\
-              <div class="pf-c-card__body">\
-                <div class="detail-panel-note">Primary controls stay focused on reversible runtime changes. Destructive operations require an additional review step.</div>\
-                <div class="action-buttons pf-u-mt-md">\
-                  <button v-if="instance.status !== 'running'" class="pf-c-button pf-m-primary" @click="doAction('resume')" :disabled="actionBusy"><i class="fas fa-play"></i>Resume</button>\
-                  <button v-if="instance.status === 'running'" class="pf-c-button pf-m-secondary" @click="doActionWithConfirm('pause')" :disabled="actionBusy"><i class="fas fa-pause"></i>Pause</button>\
-                  <button class="pf-c-button pf-m-secondary" @click="openMigrateModal" :disabled="actionBusy"><i class="fas fa-truck"></i>Migrate</button>\
-                  <button class="pf-c-button pf-m-secondary" @click="showDangerZone = !showDangerZone" :aria-expanded="showDangerZone ? 'true' : 'false'"><i class="fas fa-shield-alt"></i>{{ showDangerZone ? 'Hide' : 'Review' }} destructive actions</button>\
-                </div>\
-              </div>\
-            </div>\
-            <div v-if="showDangerZone" class="pf-c-card detail-section-card danger-zone-card">\
-              <div class="pf-c-card__header"><h2 class="detail-section-title"><i class="fas fa-exclamation-triangle"></i>Danger zone</h2><p class="detail-section-meta">Deprovision is intentionally secondary and audited.</p></div>\
-              <div class="pf-c-card__body">\
-                <p class="danger-zone-copy">Deprovision is treated as an exceptional operation. This flow is intentionally secondary, audited, and designed to slow down accidental data loss.</p>\
-                <ul class="danger-zone-list">\
-                  <li>Backups found for this instance: <strong>{{ backupCountLabel }}</strong></li>\
-                  <li v-if="latestBackupTimestamp">Latest backup: <strong>{{ formatTimestamp(latestBackupTimestamp) }}</strong></li>\
-                  <li>Server-side permission checks and audit logging are required before the request is accepted.</li>\
-                  <li>Prefer this only when pause, restore, or other recovery paths are not appropriate.</li>\
-                </ul>\
-                <div class="action-buttons">\
-                  <button class="pf-c-button pf-m-danger danger-mobile-hide" @click="openDeprovisionModal" :disabled="actionBusy"><i class="fas fa-trash"></i>Review deprovision</button>\
-                </div>\
-                <div class="pf-c-alert pf-m-warning pf-m-inline pf-u-mt-md mobile-readonly-note" role="alert">\
-                  <div class="pf-c-alert__icon"><i class="fas fa-fw fa-mobile-alt" aria-hidden="true"></i></div>\
-                  <p class="pf-c-alert__title">Mobile keeps this area informational. Destructive actions stay hidden on small screens.</p>\
-                </div>\
-              </div>\
-            </div>\
-            <div class="pf-c-card detail-section-card">\
-              <div class="pf-c-card__header"><h2 class="detail-section-title"><i class="fas fa-exchange-alt"></i>Change tier</h2><p class="detail-section-meta">Adjust the instance size without deprovisioning.</p></div>\
-              <div class="pf-c-card__body">\
-                <div v-if="tiersLoading" class="loading-sm"><i class="fas fa-spinner fa-spin"></i> Loading tiers...</div>\
-                <template v-else>\
-                  <div class="pf-c-form__group pf-u-mb-md">\
-                    <select class="pf-c-form-control" v-model="selectedTier">\
-                      <option value="">Select new tier</option>\
-                      <option v-for="t in tiers" :key="t.name" :value="t.name">{{ t.name }} | CPU {{ t.cpu }} | RAM {{ tryFormatBytes(t.memory) }} | Storage {{ tryFormatBytes(t.storage) }} | \${{ t.price_monthly || '?' }}/mo</option>\
-                    </select>\
-                  </div>\
-                  <button class="pf-c-button pf-m-secondary" @click="doResize" :disabled="!selectedTier || resizeBusy"><i class="fas fa-save pf-u-mr-sm"></i>{{ resizeBusy ? 'Applying...' : 'Apply tier change' }}</button>\
-                  <div v-if="resizeResult" class="pf-c-alert pf-m-success pf-m-inline pf-u-mt-sm" role="alert"><p class="pf-c-alert__title">{{ resizeResult }}</p></div>\
-                </template>\
-              </div>\
-            </div>\
-            <div class="pf-c-card detail-section-card">\
-              <div class="pf-c-card__header"><h2 class="detail-section-title"><i class="fas fa-database"></i>Backups</h2><p class="detail-section-meta">Operational backup actions for this instance.</p></div>\
-              <div class="pf-c-card__body">\
-                <div class="action-buttons">\
-                  <button class="pf-c-button pf-m-secondary" @click="triggerBackup('database')" :disabled="backupBusy"><i class="fas fa-database"></i>Trigger database backup</button>\
-                  <button class="pf-c-button pf-m-secondary" @click="triggerBackup('volumes')" :disabled="backupBusy"><i class="fas fa-hdd"></i>Trigger volume backup</button>\
-                  <router-link :to="'/instances/' + instanceId + '/restore'" class="pf-c-button pf-m-secondary"><i class="fas fa-history"></i>Request restore</router-link>\
-                </div>\
-                <div v-if="backupError" class="pf-c-alert pf-m-danger pf-m-inline pf-u-mt-sm" role="alert"><div class="pf-c-alert__icon"><i class="fas fa-fw fa-exclamation-circle" aria-hidden="true"></i></div><p class="pf-c-alert__title">{{ backupError }}</p></div>\
-                <div v-if="backupSuccess" class="pf-c-alert pf-m-success pf-m-inline pf-u-mt-sm" role="alert"><div class="pf-c-alert__icon"><i class="fas fa-fw fa-check-circle" aria-hidden="true"></i></div><p class="pf-c-alert__title">{{ backupSuccess }}</p></div>\
-              </div>\
-            </div>\
-          </div>\
-        </div>\
-        <div class="pf-c-card detail-section-card">\
-          <div class="pf-c-card__header"><h2 class="detail-section-title"><i class="fas fa-key"></i>Access credentials</h2><p class="detail-section-meta">Exposed secrets and setup notices for the instance.</p></div>\
-          <div class="pf-c-card__body">\
-            <button class="pf-c-button pf-m-secondary" @click="toggleCredentials" :disabled="credentialsLoading"><i class="fas fa-eye"></i>{{ showCredentials ? 'Hide credentials' : 'Show credentials' }}</button>\
-            <div v-if="credentialsLoading" class="loading pf-u-mt-md"><i class="fas fa-spinner fa-spin pf-u-mr-sm"></i>Loading credentials...</div>\
-            <div v-else-if="credentialsError" class="pf-c-alert pf-m-danger pf-m-inline pf-u-mt-md" role="alert"><p class="pf-c-alert__title">{{ credentialsError }}</p></div>\
-            <template v-else-if="showCredentials">\
-              <div v-if="credentials.length === 0" class="pf-u-color-400 pf-u-mt-md">No credentials exposed for this instance.</div>\
-              <div v-else>\
-                <div v-for="cred in credentials" :key="(cred.service || \'\') + \'.\' + (cred.name || \'\')" class="pf-u-mb-sm">\
-                  <span v-if="cred.kind === 'notice'" class="pf-c-content"><strong>{{ cred.name }}:</strong> <code>{{ cred.value }}</code></span>\
-                  <span v-else class="pf-c-content"><strong>{{ cred.service }}.{{ cred.name }}:</strong> <code>{{ cred.value }}</code></span>\
-                </div>\
-              </div>\
-            </template>\
-          </div>\
-        </div>\
-        <div class="pf-c-card detail-section-card">\
-          <div class="pf-c-card__header"><h2 class="detail-section-title"><i class="fas fa-clipboard-list"></i>Recent operations</h2><p class="detail-section-meta">Recent task history for the instance.</p></div>\
-          <div class="pf-c-card__body pf-m-0">\
-            <div v-if="opsLoading" class="loading"><i class="fas fa-spinner fa-spin pf-u-mr-sm"></i>Loading operations...</div>\
-            <table v-else class="pf-c-table" role="grid">\
-              <thead>\
-                <tr><th>ID</th><th>Action</th><th>Status</th><th>Error</th><th>Updated</th></tr>\
-              </thead>\
-              <tbody>\
-                <tr v-for="op in operations" :key="op.id || op.operation_id">\
-                  <td data-label="ID" :title="op.id || op.operation_id">{{ (op.id || op.operation_id || '').substring(0, 12) }}...</td>\
-                  <td data-label="Action">{{ op.action || op.type || '-' }}</td>\
-                  <td data-label="Status"><span class="pf-c-label" :class="jobStatusLabelClass(op.status)">{{ op.status || 'unknown' }}</span></td>\
-                  <td data-label="Error">{{ op.error_message || op.error || '-' }}</td>\
-                  <td data-label="Updated">{{ op.updated_at || op.created_at || '-' }}</td>\
-                </tr>\
-                <tr v-if="operations.length === 0">\
-                  <td colspan="5" class="pf-u-text-align-center pf-u-color-400" style="padding: 2rem;">No operations found for this instance</td>\
-                </tr>\
-              </tbody>\
-            </table>\
-          </div>\
-        </div>\
-      </template>\
-      <div v-if="showDeprovisionModal" class="admiral-modal-backdrop" @click.self="closeDeprovisionModal">\
-        <div class="admiral-modal" role="dialog" aria-modal="true" aria-labelledby="deprovision-modal-title">\
-          <div class="admiral-modal__header">\
-            <h2 id="deprovision-modal-title" class="pf-c-title pf-m-xl"><i class="fas fa-trash-alt"></i> Confirm Instance Deprovision</h2>\
-            <button class="pf-c-button pf-m-plain" type="button" aria-label="Close deprovision dialog" @click="closeDeprovisionModal">\
-              <i class="fas fa-times" aria-hidden="true"></i>\
-            </button>\
-          </div>\
-          <div class="admiral-modal__body">\
-            <div class="pf-c-alert pf-m-danger pf-m-inline pf-u-mb-md" role="alert">\
-              <div class="pf-c-alert__icon"><i class="fas fa-fw fa-exclamation-circle" aria-hidden="true"></i></div>\
-              <p class="pf-c-alert__title">This removes the instance from the platform and may make customer data unavailable.</p>\
-            </div>\
-            <dl class="pf-c-description-list compact-description-list">\
-              <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Instance</dt><dd class="pf-c-description-list__description">{{ instanceId }}</dd></div>\
-              <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Current status</dt><dd class="pf-c-description-list__description">{{ instance.status || 'unknown' }}</dd></div>\
-              <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Backups available</dt><dd class="pf-c-description-list__description">{{ backupCountLabel }}</dd></div>\
-              <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Audit</dt><dd class="pf-c-description-list__description">The backend must validate permission and record the operation before execution.</dd></div>\
-            </dl>\
-            <div class="danger-zone-list-wrapper">\
-              <p class="detail-section-note">Before continuing, verify that the customer impact is understood and that a recoverable backup exists when needed.</p>\
-              <label class="pf-c-form__label" for="deprovision-confirm-input"><span class="pf-c-form__label-text">Type the instance ID to confirm</span></label>\
-              <input id="deprovision-confirm-input" class="pf-c-form-control" type="text" v-model="deprovisionConfirmInput" :placeholder="instanceId">\
-            </div>\
-            <div v-if="deprovisionError" class="pf-c-alert pf-m-danger pf-m-inline pf-u-mt-md" role="alert">\
-              <div class="pf-c-alert__icon"><i class="fas fa-fw fa-exclamation-circle" aria-hidden="true"></i></div>\
-              <p class="pf-c-alert__title">{{ deprovisionError }}</p>\
-            </div>\
-          </div>\
-          <div class="admiral-modal__footer">\
-            <button class="pf-c-button pf-m-link" type="button" @click="closeDeprovisionModal">Cancel</button>\
-            <button class="pf-c-button pf-m-danger" type="button" @click="confirmDeprovision" :disabled="actionBusy || !deprovisionReady">\
-              <i class="fas fa-trash"></i>{{ actionBusy ? 'Submitting...' : 'Confirm deprovision' }}\
-            </button>\
-          </div>\
-        </div>\
-      </div>\
-      <div v-if="showMigrateModal" class="admiral-modal-backdrop" @click.self="closeMigrateModal">\
-        <div class="admiral-modal" role="dialog" aria-modal="true" aria-labelledby="migrate-modal-title">\
-          <div class="admiral-modal__header">\
-            <h2 id="migrate-modal-title" class="pf-c-title pf-m-xl"><i class="fas fa-truck"></i> Migrate Instance</h2>\
-            <button class="pf-c-button pf-m-plain" type="button" aria-label="Close migrate dialog" @click="closeMigrateModal">\
-              <i class="fas fa-times" aria-hidden="true"></i>\
-            </button>\
-          </div>\
-          <div class="admiral-modal__body">\
-            <div class="pf-c-alert pf-m-info pf-m-inline pf-u-mb-md" role="alert">\
-              <div class="pf-c-alert__icon"><i class="fas fa-fw fa-info-circle" aria-hidden="true"></i></div>\
-              <p class="pf-c-alert__title">Migrate this instance to a different worker node. The instance will be moved to the selected node.</p>\
-            </div>\
-            <div class="pf-c-form__group pf-u-mb-md">\
-              <label class="pf-c-form__label" for="migrate-node-select"><span class="pf-c-form__label-text">Target node</span></label>\
-              <select v-if="availableNodes.length > 0" id="migrate-node-select" class="pf-c-form-control" v-model="migrateNodeId">\
-                <option value="">Select a target node</option>\
-                <option v-for="node in availableNodes" :key="node.id" :value="node.id" :disabled="node.id === (instance.node_id || '').trim()">{{ (node.hostname || node.id) }} | {{ node.status || 'unknown' }} {{ node.id === (instance.node_id || '').trim() ? '(current)' : '' }}</option>\
-              </select>\
-              <div v-else class="loading-sm"><i class="fas fa-spinner fa-spin"></i> Loading available nodes...</div>\
-            </div>\
-            <div v-if="migrateError" class="pf-c-alert pf-m-danger pf-m-inline pf-u-mt-md" role="alert">\
-              <div class="pf-c-alert__icon"><i class="fas fa-fw fa-exclamation-circle" aria-hidden="true"></i></div>\
-              <p class="pf-c-alert__title">{{ migrateError }}</p>\
-            </div>\
-            <div v-if="migrateSuccess" class="pf-c-alert pf-m-success pf-m-inline pf-u-mt-md" role="alert">\
-              <div class="pf-c-alert__icon"><i class="fas fa-fw fa-check-circle" aria-hidden="true"></i></div>\
-              <p class="pf-c-alert__title">{{ migrateSuccess }}</p>\
-            </div>\
-          </div>\
-          <div class="admiral-modal__footer">\
-            <button class="pf-c-button pf-m-link" type="button" @click="closeMigrateModal">Cancel</button>\
-            <button class="pf-c-button pf-m-primary" type="button" @click="doMigrate" :disabled="migrateBusy || !migrateNodeId">\
-              <i class="fas fa-truck"></i>{{ migrateBusy ? 'Migrating...' : 'Start migration' }}\
-            </button>\
-          </div>\
-        </div>\
-      </div>\
+  template: `
+    <section class="pf-c-page__main-section detail-page">
+      <div class="detail-hero">
+        <div class="detail-hero__breadcrumb">
+          <router-link to="/instances" class="back-link"><i class="fas fa-arrow-left"></i>Instances</router-link>
+          <span class="detail-muted">/</span>
+          <span>{{ instance ? (instance.id || instance.instance_id || 'Instance Detail') : 'Instance Detail' }}</span>
+        </div>
+        <div v-if="instance" class="detail-hero__header">
+          <div class="detail-hero__copy">
+            <h1 class="pf-c-title pf-m-2xl detail-hero__title">{{ instance.id || instance.instance_id || 'Instance Detail' }}</h1>
+            <div class="detail-inline-meta">
+              <span class="detail-inline-meta__item"><i class="fas fa-hashtag"></i>{{ instance.id || instance.instance_id || '-' }}</span>
+              <span class="detail-inline-meta__item"><i class="fas fa-user"></i>{{ instance.customer_id || instance.customer || '-' }}</span>
+              <span class="detail-inline-meta__item"><i class="fas fa-cube"></i>{{ instance.app_definition_name || instance.app_id || instance.app || '-' }}</span>
+              <span class="detail-inline-meta__item"><i class="fas fa-layer-group"></i>{{ instance.tier_name || instance.tier_id || instance.tier || '-' }}</span>
+            </div>
+            <div class="detail-badge-row">
+              <span class="pf-c-label" :class="statusLabelClass(instance.status)">{{ instance.status || 'unknown' }}</span>
+              <span class="pf-c-label" :class="healthLabelClass(instance.health)">{{ instance.health || 'unknown' }}</span>
+              <span class="pf-c-label pf-m-blue">{{ instance.node_id || instance.node || 'No node assigned' }}</span>
+            </div>
+          </div>
+          <div class="detail-hero__actions">
+            <button v-if="instance.status !== 'running'" class="pf-c-button pf-m-primary" @click="doAction('resume')" :disabled="actionBusy"><i class="fas fa-play"></i>Resume</button>
+            <button v-if="instance.status === 'running'" class="pf-c-button pf-m-secondary" @click="doActionWithConfirm('pause')" :disabled="actionBusy"><i class="fas fa-pause"></i>Pause</button>
+            <button class="pf-c-button pf-m-secondary" @click="showDangerZone = !showDangerZone" :aria-expanded="showDangerZone ? 'true' : 'false'"><i class="fas fa-shield-alt"></i>{{ showDangerZone ? 'Hide' : 'Review' }} destructive actions</button>
+          </div>
+        </div>
+      </div>
+      <div v-if="loading" class="loading"><i class="fas fa-spinner fa-spin pf-u-mr-sm"></i>Loading instance...</div>
+      <div v-else-if="error" class="error-message">{{ error }}</div>
+      <div v-else-if="!instance" class="pf-u-text-align-center pf-u-color-400 pf-u-py-xl">Instance not found</div>
+      <template v-else>
+        <div v-if="actionError" class="detail-callout detail-callout--danger">
+          <div class="detail-callout__icon"><i class="fas fa-exclamation-circle" aria-hidden="true"></i></div>
+          <div class="detail-callout__body">
+            <p class="detail-callout__title">Action failed</p>
+            <p class="detail-callout__text">{{ actionError }}</p>
+          </div>
+        </div>
+        <div class="detail-summary-grid">
+          <div class="pf-c-card detail-summary-card">
+            <div class="pf-c-card__header"><h2 class="detail-section-title"><i class="fas fa-info-circle"></i>Instance information</h2><p class="detail-section-meta">Operational identity and placement.</p></div>
+            <div class="pf-c-card__body">
+              <dl class="pf-c-description-list compact-description-list">
+                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">ID</dt><dd class="pf-c-description-list__description">{{ instance.id || instance.instance_id || '-' }}</dd></div>
+                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Customer</dt><dd class="pf-c-description-list__description">{{ instance.customer_id || instance.customer || '-' }}</dd></div>
+                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">App</dt><dd class="pf-c-description-list__description">{{ instance.app_definition_name || instance.app_id || instance.app || '-' }}</dd></div>
+                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Tier</dt><dd class="pf-c-description-list__description">{{ instance.tier_name || instance.tier_id || instance.tier || '-' }}</dd></div>
+                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Hostname</dt><dd class="pf-c-description-list__description">{{ instance.hostname || instance.host || '-' }}</dd></div>
+                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Node</dt><dd class="pf-c-description-list__description">{{ instance.node_id || instance.node || '-' }}</dd></div>
+                <div class="pf-c-description-list__group" v-if="instance.port"><dt class="pf-c-description-list__term">Port</dt><dd class="pf-c-description-list__description">{{ instance.port.host_port || instance.port.container_port || '-' }}</dd></div>
+                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Created</dt><dd class="pf-c-description-list__description">{{ instance.created_at || instance.created || '-' }}</dd></div>
+              </dl>
+            </div>
+          </div>
+          <div class="detail-stack">
+            <div class="pf-c-card detail-summary-card">
+              <div class="pf-c-card__header"><h2 class="detail-section-title"><i class="fas fa-bolt"></i>Runtime actions</h2><p class="detail-section-meta">Primary controls stay focused on reversible runtime changes.</p></div>
+              <div class="pf-c-card__body">
+                <div class="detail-panel-note">Primary controls stay focused on reversible runtime changes. Destructive operations require an additional review step.</div>
+                <div class="action-buttons pf-u-mt-md">
+                  <button v-if="instance.status !== 'running'" class="pf-c-button pf-m-primary" @click="doAction('resume')" :disabled="actionBusy"><i class="fas fa-play"></i>Resume</button>
+                  <button v-if="instance.status === 'running'" class="pf-c-button pf-m-secondary" @click="doActionWithConfirm('pause')" :disabled="actionBusy"><i class="fas fa-pause"></i>Pause</button>
+                  <button class="pf-c-button pf-m-secondary" @click="openMigrateModal" :disabled="actionBusy"><i class="fas fa-truck"></i>Migrate</button>
+                  <button class="pf-c-button pf-m-secondary" @click="showDangerZone = !showDangerZone" :aria-expanded="showDangerZone ? 'true' : 'false'"><i class="fas fa-shield-alt"></i>{{ showDangerZone ? 'Hide' : 'Review' }} destructive actions</button>
+                </div>
+              </div>
+            </div>
+            <div v-if="showDangerZone" class="pf-c-card detail-section-card danger-zone-card">
+              <div class="pf-c-card__header"><h2 class="detail-section-title"><i class="fas fa-exclamation-triangle"></i>Danger zone</h2><p class="detail-section-meta">Deprovision is intentionally secondary and audited.</p></div>
+              <div class="pf-c-card__body">
+                <p class="danger-zone-copy">Deprovision is treated as an exceptional operation. This flow is intentionally secondary, audited, and designed to slow down accidental data loss.</p>
+                <ul class="danger-zone-list">
+                  <li>Backups found for this instance: <strong>{{ backupCountLabel }}</strong></li>
+                  <li v-if="latestBackupTimestamp">Latest backup: <strong>{{ formatTimestamp(latestBackupTimestamp) }}</strong></li>
+                  <li>Server-side permission checks and audit logging are required before the request is accepted.</li>
+                  <li>Prefer this only when pause, restore, or other recovery paths are not appropriate.</li>
+                </ul>
+                <div class="action-buttons">
+                  <button class="pf-c-button pf-m-danger danger-mobile-hide" @click="openDeprovisionModal" :disabled="actionBusy"><i class="fas fa-trash"></i>Review deprovision</button>
+                </div>
+                <div class="pf-c-alert pf-m-warning pf-m-inline pf-u-mt-md mobile-readonly-note" role="alert">
+                  <div class="pf-c-alert__icon"><i class="fas fa-fw fa-mobile-alt" aria-hidden="true"></i></div>
+                  <p class="pf-c-alert__title">Mobile keeps this area informational. Destructive actions stay hidden on small screens.</p>
+                </div>
+              </div>
+            </div>
+            <div class="pf-c-card detail-section-card">
+              <div class="pf-c-card__header"><h2 class="detail-section-title"><i class="fas fa-exchange-alt"></i>Change tier</h2><p class="detail-section-meta">Adjust the instance size without deprovisioning.</p></div>
+              <div class="pf-c-card__body">
+                <div v-if="tiersLoading" class="loading-sm"><i class="fas fa-spinner fa-spin"></i> Loading tiers...</div>
+                <template v-else>
+                  <div class="pf-c-form__group pf-u-mb-md">
+                    <select class="pf-c-form-control" v-model="selectedTier">
+                      <option value="">Select new tier</option>
+                      <option v-for="t in tiers" :key="t.name" :value="t.name">{{ t.name }} | CPU {{ t.cpu }} | RAM {{ tryFormatBytes(t.memory) }} | Storage {{ tryFormatBytes(t.storage) }} | \${{ t.price_monthly || '?' }}/mo</option>
+                    </select>
+                  </div>
+                  <button class="pf-c-button pf-m-secondary" @click="doResize" :disabled="!selectedTier || resizeBusy"><i class="fas fa-save pf-u-mr-sm"></i>{{ resizeBusy ? 'Applying...' : 'Apply tier change' }}</button>
+                  <div v-if="resizeResult" class="pf-c-alert pf-m-success pf-m-inline pf-u-mt-sm" role="alert"><p class="pf-c-alert__title">{{ resizeResult }}</p></div>
+                </template>
+              </div>
+            </div>
+            <div class="pf-c-card detail-section-card">
+              <div class="pf-c-card__header"><h2 class="detail-section-title"><i class="fas fa-database"></i>Backups</h2><p class="detail-section-meta">Operational backup actions for this instance.</p></div>
+              <div class="pf-c-card__body">
+                <div class="action-buttons">
+                  <button class="pf-c-button pf-m-secondary" @click="triggerBackup('database')" :disabled="backupBusy"><i class="fas fa-database"></i>Trigger database backup</button>
+                  <button class="pf-c-button pf-m-secondary" @click="triggerBackup('volumes')" :disabled="backupBusy"><i class="fas fa-hdd"></i>Trigger volume backup</button>
+                  <router-link :to="'/instances/' + instanceId + '/restore'" class="pf-c-button pf-m-secondary"><i class="fas fa-history"></i>Request restore</router-link>
+                </div>
+                <div v-if="backupError" class="pf-c-alert pf-m-danger pf-m-inline pf-u-mt-sm" role="alert"><div class="pf-c-alert__icon"><i class="fas fa-fw fa-exclamation-circle" aria-hidden="true"></i></div><p class="pf-c-alert__title">{{ backupError }}</p></div>
+                <div v-if="backupSuccess" class="pf-c-alert pf-m-success pf-m-inline pf-u-mt-sm" role="alert"><div class="pf-c-alert__icon"><i class="fas fa-fw fa-check-circle" aria-hidden="true"></i></div><p class="pf-c-alert__title">{{ backupSuccess }}</p></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="pf-c-card detail-section-card">
+          <div class="pf-c-card__header"><h2 class="detail-section-title"><i class="fas fa-key"></i>Access credentials</h2><p class="detail-section-meta">Exposed secrets and setup notices for the instance.</p></div>
+          <div class="pf-c-card__body">
+            <button class="pf-c-button pf-m-secondary" @click="toggleCredentials" :disabled="credentialsLoading"><i class="fas fa-eye"></i>{{ showCredentials ? 'Hide credentials' : 'Show credentials' }}</button>
+            <div v-if="credentialsLoading" class="loading pf-u-mt-md"><i class="fas fa-spinner fa-spin pf-u-mr-sm"></i>Loading credentials...</div>
+            <div v-else-if="credentialsError" class="pf-c-alert pf-m-danger pf-m-inline pf-u-mt-md" role="alert"><p class="pf-c-alert__title">{{ credentialsError }}</p></div>
+            <template v-else-if="showCredentials">
+              <div v-if="credentials.length === 0" class="pf-u-color-400 pf-u-mt-md">No credentials exposed for this instance.</div>
+              <div v-else>
+                <div v-for="cred in credentials" :key="(cred.service || \'\') + \'.\' + (cred.name || \'\')" class="pf-u-mb-sm">
+                  <span v-if="cred.kind === 'notice'" class="pf-c-content"><strong>{{ cred.name }}:</strong> <code>{{ cred.value }}</code></span>
+                  <span v-else class="pf-c-content"><strong>{{ cred.service }}.{{ cred.name }}:</strong> <code>{{ cred.value }}</code></span>
+                </div>
+              </div>
+            </template>
+          </div>
+        </div>
+        <div class="pf-c-card detail-section-card">
+          <div class="pf-c-card__header"><h2 class="detail-section-title"><i class="fas fa-clipboard-list"></i>Recent operations</h2><p class="detail-section-meta">Recent task history for the instance.</p></div>
+          <div class="pf-c-card__body pf-m-0">
+            <div v-if="opsLoading" class="loading"><i class="fas fa-spinner fa-spin pf-u-mr-sm"></i>Loading operations...</div>
+            <table v-else class="pf-c-table" role="grid">
+              <thead>
+                <tr><th>ID</th><th>Action</th><th>Status</th><th>Error</th><th>Updated</th></tr>
+              </thead>
+              <tbody>
+                <tr v-for="op in operations" :key="op.id || op.operation_id">
+                  <td data-label="ID" :title="op.id || op.operation_id">{{ (op.id || op.operation_id || '').substring(0, 12) }}...</td>
+                  <td data-label="Action">{{ op.action || op.type || '-' }}</td>
+                  <td data-label="Status"><span class="pf-c-label" :class="jobStatusLabelClass(op.status)">{{ op.status || 'unknown' }}</span></td>
+                  <td data-label="Error">{{ op.error_message || op.error || '-' }}</td>
+                  <td data-label="Updated">{{ op.updated_at || op.created_at || '-' }}</td>
+                </tr>
+                <tr v-if="operations.length === 0">
+                  <td colspan="5" class="pf-u-text-align-center pf-u-color-400" style="padding: 2rem;">No operations found for this instance</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </template>
+      <div v-if="showDeprovisionModal" class="admiral-modal-backdrop" @click.self="closeDeprovisionModal">
+        <div class="admiral-modal" role="dialog" aria-modal="true" aria-labelledby="deprovision-modal-title">
+          <div class="admiral-modal__header">
+            <h2 id="deprovision-modal-title" class="pf-c-title pf-m-xl"><i class="fas fa-trash-alt"></i> Confirm Instance Deprovision</h2>
+            <button class="pf-c-button pf-m-plain" type="button" aria-label="Close deprovision dialog" @click="closeDeprovisionModal">
+              <i class="fas fa-times" aria-hidden="true"></i>
+            </button>
+          </div>
+          <div class="admiral-modal__body">
+            <div class="pf-c-alert pf-m-danger pf-m-inline pf-u-mb-md" role="alert">
+              <div class="pf-c-alert__icon"><i class="fas fa-fw fa-exclamation-circle" aria-hidden="true"></i></div>
+              <p class="pf-c-alert__title">This removes the instance from the platform and may make customer data unavailable.</p>
+            </div>
+            <dl class="pf-c-description-list compact-description-list">
+              <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Instance</dt><dd class="pf-c-description-list__description">{{ instanceId }}</dd></div>
+              <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Current status</dt><dd class="pf-c-description-list__description">{{ instance.status || 'unknown' }}</dd></div>
+              <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Backups available</dt><dd class="pf-c-description-list__description">{{ backupCountLabel }}</dd></div>
+              <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Audit</dt><dd class="pf-c-description-list__description">The backend must validate permission and record the operation before execution.</dd></div>
+            </dl>
+            <div class="danger-zone-list-wrapper">
+              <p class="detail-section-note">Before continuing, verify that the customer impact is understood and that a recoverable backup exists when needed.</p>
+              <label class="pf-c-form__label" for="deprovision-confirm-input"><span class="pf-c-form__label-text">Type the instance ID to confirm</span></label>
+              <input id="deprovision-confirm-input" class="pf-c-form-control" type="text" v-model="deprovisionConfirmInput" :placeholder="instanceId">
+            </div>
+            <div v-if="deprovisionError" class="pf-c-alert pf-m-danger pf-m-inline pf-u-mt-md" role="alert">
+              <div class="pf-c-alert__icon"><i class="fas fa-fw fa-exclamation-circle" aria-hidden="true"></i></div>
+              <p class="pf-c-alert__title">{{ deprovisionError }}</p>
+            </div>
+          </div>
+          <div class="admiral-modal__footer">
+            <button class="pf-c-button pf-m-link" type="button" @click="closeDeprovisionModal">Cancel</button>
+            <button class="pf-c-button pf-m-danger" type="button" @click="confirmDeprovision" :disabled="actionBusy || !deprovisionReady">
+              <i class="fas fa-trash"></i>{{ actionBusy ? 'Submitting...' : 'Confirm deprovision' }}
+            </button>
+          </div>
+        </div>
+      </div>
+      <div v-if="showMigrateModal" class="admiral-modal-backdrop" @click.self="closeMigrateModal">
+        <div class="admiral-modal" role="dialog" aria-modal="true" aria-labelledby="migrate-modal-title">
+          <div class="admiral-modal__header">
+            <h2 id="migrate-modal-title" class="pf-c-title pf-m-xl"><i class="fas fa-truck"></i> Migrate Instance</h2>
+            <button class="pf-c-button pf-m-plain" type="button" aria-label="Close migrate dialog" @click="closeMigrateModal">
+              <i class="fas fa-times" aria-hidden="true"></i>
+            </button>
+          </div>
+          <div class="admiral-modal__body">
+            <div class="pf-c-alert pf-m-info pf-m-inline pf-u-mb-md" role="alert">
+              <div class="pf-c-alert__icon"><i class="fas fa-fw fa-info-circle" aria-hidden="true"></i></div>
+              <p class="pf-c-alert__title">Migrate this instance to a different worker node. The instance will be moved to the selected node.</p>
+            </div>
+            <div class="pf-c-form__group pf-u-mb-md">
+              <label class="pf-c-form__label" for="migrate-node-select"><span class="pf-c-form__label-text">Target node</span></label>
+              <select v-if="availableNodes.length > 0" id="migrate-node-select" class="pf-c-form-control" v-model="migrateNodeId">
+                <option value="">Select a target node</option>
+                <option v-for="node in availableNodes" :key="node.id" :value="node.id" :disabled="node.id === (instance.node_id || '').trim()">{{ (node.hostname || node.id) }} | {{ node.status || 'unknown' }} {{ node.id === (instance.node_id || '').trim() ? '(current)' : '' }}</option>
+              </select>
+              <div v-else class="loading-sm"><i class="fas fa-spinner fa-spin"></i> Loading available nodes...</div>
+            </div>
+            <div v-if="migrateError" class="pf-c-alert pf-m-danger pf-m-inline pf-u-mt-md" role="alert">
+              <div class="pf-c-alert__icon"><i class="fas fa-fw fa-exclamation-circle" aria-hidden="true"></i></div>
+              <p class="pf-c-alert__title">{{ migrateError }}</p>
+            </div>
+            <div v-if="migrateSuccess" class="pf-c-alert pf-m-success pf-m-inline pf-u-mt-md" role="alert">
+              <div class="pf-c-alert__icon"><i class="fas fa-fw fa-check-circle" aria-hidden="true"></i></div>
+              <p class="pf-c-alert__title">{{ migrateSuccess }}</p>
+            </div>
+          </div>
+          <div class="admiral-modal__footer">
+            <button class="pf-c-button pf-m-link" type="button" @click="closeMigrateModal">Cancel</button>
+            <button class="pf-c-button pf-m-primary" type="button" @click="doMigrate" :disabled="migrateBusy || !migrateNodeId">
+              <i class="fas fa-truck"></i>{{ migrateBusy ? 'Migrating...' : 'Start migration' }}
+            </button>
+          </div>
+        </div>
+      </div>
     </section>`,
   data: function() {
     return {
@@ -2771,54 +2771,54 @@ var InstanceDetailView = {
 
 var InstanceRestoreView = {
 
-  template: '\
-    <section class="pf-c-page__main-section">\
-      <div class="pf-c-content pf-u-mb-lg">\
-        <router-link :to="\'/instances/\' + instanceId" class="back-link"><i class="fas fa-arrow-left"></i>Back to Instance</router-link>\
-        <h1 class="pf-c-title pf-m-2xl"><i class="fas fa-history"></i> Request Restore</h1>\
-      </div>\
-      <div v-if="loading" class="loading"><i class="fas fa-spinner fa-spin pf-u-mr-sm"></i>Loading restore form...</div>\
-      <div v-else class="pf-l-grid pf-m-gutter">\
-        <div class="pf-l-grid__item pf-m-12-col pf-m-7-col-on-lg">\
-          <div class="pf-c-card">\
-            <div class="pf-c-card__body">\
-              <div v-if="error" class="pf-c-alert pf-m-danger pf-m-inline pf-u-mb-md" role="alert"><p class="pf-c-alert__title">{{ error }}</p></div>\
-              <div v-if="success" class="pf-c-alert pf-m-success pf-m-inline pf-u-mb-md" role="alert"><p class="pf-c-alert__title">{{ success }}</p></div>\
-              <div class="pf-c-form__group">\
-                <label class="pf-c-form__label"><span class="pf-c-form__label-text">Target Instance</span></label>\
-                <input class="pf-c-form-control" type="text" :value="instance ? (instance.id || instance.instance_id) : instanceId" disabled>\
-              </div>\
-              <div class="pf-c-form__group">\
-                <label class="pf-c-form__label"><span class="pf-c-form__label-text">Backup</span></label>\
-                <select class="pf-c-form-control" v-model="form.backup_id">\
-                  <option value="">Select a backup</option>\
-                  <option v-for="backup in backups" :key="backup.id || backup.backup_id" :value="backup.id || backup.backup_id">\
-                    {{ backupLabel(backup) }}\
-                  </option>\
-                </select>\
-              </div>\
-              <div class="action-buttons">\
-                <button class="pf-c-button pf-m-primary" @click="requestRestore" :disabled="submitting || !form.backup_id">\
-                  <i class="fas fa-history"></i>{{ submitting ? "Submitting..." : "Request Restore" }}\
-                </button>\
-              </div>\
-            </div>\
-          </div>\
-        </div>\
-        <div class="pf-l-grid__item pf-m-12-col pf-m-5-col-on-lg">\
-          <div class="pf-c-card">\
-            <div class="pf-c-card__header"><h2 class="pf-c-title pf-m-lg">Restore Summary</h2></div>\
-            <div class="pf-c-card__body">\
-              <dl class="pf-c-description-list">\
-                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Instance</dt><dd class="pf-c-description-list__description">{{ instance ? (instance.id || instance.instance_id) : instanceId }}</dd></div>\
-                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">App</dt><dd class="pf-c-description-list__description">{{ instance ? (instance.app_id || instance.app || "-") : "-" }}</dd></div>\
-                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Selected Backup</dt><dd class="pf-c-description-list__description">{{ selectedBackup ? backupLabel(selectedBackup) : "-" }}</dd></div>\
-              </dl>\
-            </div>\
-          </div>\
-        </div>\
-      </div>\
-    </section>',
+  template: `
+    <section class="pf-c-page__main-section">
+      <div class="pf-c-content pf-u-mb-lg">
+        <router-link :to="\'/instances/\' + instanceId" class="back-link"><i class="fas fa-arrow-left"></i>Back to Instance</router-link>
+        <h1 class="pf-c-title pf-m-2xl"><i class="fas fa-history"></i> Request Restore</h1>
+      </div>
+      <div v-if="loading" class="loading"><i class="fas fa-spinner fa-spin pf-u-mr-sm"></i>Loading restore form...</div>
+      <div v-else class="pf-l-grid pf-m-gutter">
+        <div class="pf-l-grid__item pf-m-12-col pf-m-7-col-on-lg">
+          <div class="pf-c-card">
+            <div class="pf-c-card__body">
+              <div v-if="error" class="pf-c-alert pf-m-danger pf-m-inline pf-u-mb-md" role="alert"><p class="pf-c-alert__title">{{ error }}</p></div>
+              <div v-if="success" class="pf-c-alert pf-m-success pf-m-inline pf-u-mb-md" role="alert"><p class="pf-c-alert__title">{{ success }}</p></div>
+              <div class="pf-c-form__group">
+                <label class="pf-c-form__label"><span class="pf-c-form__label-text">Target Instance</span></label>
+                <input class="pf-c-form-control" type="text" :value="instance ? (instance.id || instance.instance_id) : instanceId" disabled>
+              </div>
+              <div class="pf-c-form__group">
+                <label class="pf-c-form__label"><span class="pf-c-form__label-text">Backup</span></label>
+                <select class="pf-c-form-control" v-model="form.backup_id">
+                  <option value="">Select a backup</option>
+                  <option v-for="backup in backups" :key="backup.id || backup.backup_id" :value="backup.id || backup.backup_id">
+                    {{ backupLabel(backup) }}
+                  </option>
+                </select>
+              </div>
+              <div class="action-buttons">
+                <button class="pf-c-button pf-m-primary" @click="requestRestore" :disabled="submitting || !form.backup_id">
+                  <i class="fas fa-history"></i>{{ submitting ? "Submitting..." : "Request Restore" }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="pf-l-grid__item pf-m-12-col pf-m-5-col-on-lg">
+          <div class="pf-c-card">
+            <div class="pf-c-card__header"><h2 class="pf-c-title pf-m-lg">Restore Summary</h2></div>
+            <div class="pf-c-card__body">
+              <dl class="pf-c-description-list">
+                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Instance</dt><dd class="pf-c-description-list__description">{{ instance ? (instance.id || instance.instance_id) : instanceId }}</dd></div>
+                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">App</dt><dd class="pf-c-description-list__description">{{ instance ? (instance.app_id || instance.app || "-") : "-" }}</dd></div>
+                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Selected Backup</dt><dd class="pf-c-description-list__description">{{ selectedBackup ? backupLabel(selectedBackup) : "-" }}</dd></div>
+              </dl>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>`,
   data: function() {
     return { loading: true, submitting: false, error: '', success: '', instance: null, backups: [], form: { backup_id: '' } };
   },
@@ -2871,72 +2871,72 @@ var InstanceRestoreView = {
 };
 
 var BackupsView = {
-  template: '\
-    <section class="pf-c-page__main-section">\
-      <div class="pf-c-content pf-u-mb-lg">\
-        <div class="list-header-actions">\
-          <h1 class="pf-c-title pf-m-2xl"><i class="fas fa-database"></i> Backups</h1>\
-          <div class="action-buttons">\
-            <router-link to="/backups/settings" class="pf-c-button pf-m-secondary pf-m-small"><i class="fas fa-cog"></i>Settings</router-link>\
-            <button class="pf-c-button pf-m-secondary pf-m-small danger-mobile-hide" @click="pruneBackups" :disabled="pruneBusy"><i class="fas fa-compress-alt"></i>{{ pruneBusy ? "Pruning..." : "Prune Old" }}</button>\
-          </div>\
-        </div>\
-      </div>\
-      <div class="pf-c-card pf-u-mb-lg">\
-        <div class="filter-bar">\
-          <label for="backup-filter-instance">Instance ID:</label>\
-          <input id="backup-filter-instance" class="pf-c-form-control" type="text" v-model="instanceFilter" placeholder="Filter by instance ID">\
-          <button class="pf-c-button pf-m-secondary" @click="applyFilter"><i class="fas fa-search"></i>Filter</button>\
-        </div>\
-      </div>\
-      <div v-if="loading" class="loading"><i class="fas fa-spinner fa-spin pf-u-mr-sm"></i>Loading backups...</div>\
-      <div v-else-if="error" class="error-message">{{ error }}</div>\
-      <div v-else class="pf-c-card">\
-        <div class="pf-c-card__body pf-m-0">\
-          <table class="pf-c-table" role="grid">\
-            <thead>\
-              <tr>\
-                <th>ID</th>\
-                <th>Instance</th>\
-                <th>Node</th>\
-                <th>Location</th>\
-                <th>Type</th>\
-                <th>Status</th>\
-                <th>Created</th>\
-                <th>Size</th>\
-                <th>Actions</th>\
-              </tr>\
-            </thead>\
-            <tbody>\
-              <tr v-for="b in backups" :key="b.id || b.backup_id">\
-                <td data-label="ID"><router-link :to="\'/backups/\' + (b.id || b.backup_id)" class="pf-c-button pf-m-link pf-m-inline" :title="b.id || b.backup_id" style="font-size:0.8125rem;">{{ (b.id || b.backup_id || "").substring(0, 12) }}...</router-link></td>\
-                <td data-label="Instance">{{ b.instance_id || b.instance || "-" }}</td>\
-                <td data-label="Node">{{ b.node_id || b.node || "-" }}</td>\
-                <td data-label="Location">{{ b.storage_key || b.location || b.uri || b.storage_location || b.storage_backend || "local" }}</td>\
-                <td data-label="Type">{{ b.type || b.backup_type || "database" }}</td>\
-                <td data-label="Status"><span class="pf-c-label" :class="statusLabelClass(b.status)">{{ b.status || "unknown" }}</span></td>\
-                <td data-label="Created">{{ b.created_at || b.created || b.timestamp || "-" }}</td>\
-                <td data-label="Size">{{ formatBytes(b.size_bytes || b.size) }}</td>\
-                <td data-label="Actions">\
-                  <button class="pf-c-button pf-m-small pf-m-danger danger-mobile-hide" @click="deleteBackup(b)" :disabled="deleteLoading[b.id || b.backup_id]"><i class="fas fa-trash"></i></button>\
-                </td>\
-              </tr>\
-              <tr v-if="backups.length === 0">\
-                <td colspan="9" class="pf-u-text-align-center pf-u-color-400" style="padding: 2rem;">No backups found</td>\
-              </tr>\
-            </tbody>\
-          </table>\
-        </div>\
-        <div class="pf-c-card__footer list-pagination">\
-          <span class="list-pagination-summary">Showing {{ pageStart }}-{{ pageEnd }} of {{ total }}</span>\
-          <div class="list-pagination-actions">\
-            <button class="pf-c-button pf-m-secondary pf-m-small" @click="changePage(page - 1)" :disabled="page <= 1">Previous</button>\
-            <span class="list-pagination-page">Page {{ page }}</span>\
-            <button class="pf-c-button pf-m-secondary pf-m-small" @click="changePage(page + 1)" :disabled="pageEnd >= total">Next</button>\
-          </div>\
-        </div>\
-      </div>\
-    </section>',
+  template: `
+    <section class="pf-c-page__main-section">
+      <div class="pf-c-content pf-u-mb-lg">
+        <div class="list-header-actions">
+          <h1 class="pf-c-title pf-m-2xl"><i class="fas fa-database"></i> Backups</h1>
+          <div class="action-buttons">
+            <router-link to="/backups/settings" class="pf-c-button pf-m-secondary pf-m-small"><i class="fas fa-cog"></i>Settings</router-link>
+            <button class="pf-c-button pf-m-secondary pf-m-small danger-mobile-hide" @click="pruneBackups" :disabled="pruneBusy"><i class="fas fa-compress-alt"></i>{{ pruneBusy ? "Pruning..." : "Prune Old" }}</button>
+          </div>
+        </div>
+      </div>
+      <div class="pf-c-card pf-u-mb-lg">
+        <div class="filter-bar">
+          <label for="backup-filter-instance">Instance ID:</label>
+          <input id="backup-filter-instance" class="pf-c-form-control" type="text" v-model="instanceFilter" placeholder="Filter by instance ID">
+          <button class="pf-c-button pf-m-secondary" @click="applyFilter"><i class="fas fa-search"></i>Filter</button>
+        </div>
+      </div>
+      <div v-if="loading" class="loading"><i class="fas fa-spinner fa-spin pf-u-mr-sm"></i>Loading backups...</div>
+      <div v-else-if="error" class="error-message">{{ error }}</div>
+      <div v-else class="pf-c-card">
+        <div class="pf-c-card__body pf-m-0">
+          <table class="pf-c-table" role="grid">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Instance</th>
+                <th>Node</th>
+                <th>Location</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Created</th>
+                <th>Size</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="b in backups" :key="b.id || b.backup_id">
+                <td data-label="ID"><router-link :to="\'/backups/\' + (b.id || b.backup_id)" class="pf-c-button pf-m-link pf-m-inline" :title="b.id || b.backup_id" style="font-size:0.8125rem;">{{ (b.id || b.backup_id || "").substring(0, 12) }}...</router-link></td>
+                <td data-label="Instance">{{ b.instance_id || b.instance || "-" }}</td>
+                <td data-label="Node">{{ b.node_id || b.node || "-" }}</td>
+                <td data-label="Location">{{ b.storage_key || b.location || b.uri || b.storage_location || b.storage_backend || "local" }}</td>
+                <td data-label="Type">{{ b.type || b.backup_type || "database" }}</td>
+                <td data-label="Status"><span class="pf-c-label" :class="statusLabelClass(b.status)">{{ b.status || "unknown" }}</span></td>
+                <td data-label="Created">{{ b.created_at || b.created || b.timestamp || "-" }}</td>
+                <td data-label="Size">{{ formatBytes(b.size_bytes || b.size) }}</td>
+                <td data-label="Actions">
+                  <button class="pf-c-button pf-m-small pf-m-danger danger-mobile-hide" @click="deleteBackup(b)" :disabled="deleteLoading[b.id || b.backup_id]"><i class="fas fa-trash"></i></button>
+                </td>
+              </tr>
+              <tr v-if="backups.length === 0">
+                <td colspan="9" class="pf-u-text-align-center pf-u-color-400" style="padding: 2rem;">No backups found</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="pf-c-card__footer list-pagination">
+          <span class="list-pagination-summary">Showing {{ pageStart }}-{{ pageEnd }} of {{ total }}</span>
+          <div class="list-pagination-actions">
+            <button class="pf-c-button pf-m-secondary pf-m-small" @click="changePage(page - 1)" :disabled="page <= 1">Previous</button>
+            <span class="list-pagination-page">Page {{ page }}</span>
+            <button class="pf-c-button pf-m-secondary pf-m-small" @click="changePage(page + 1)" :disabled="pageEnd >= total">Next</button>
+          </div>
+        </div>
+      </div>
+    </section>`,
   data: function() { return { loading: true, error: null, backups: [], instanceFilter: '', page: 1, pageSize: 20, total: 0, pruneBusy: false, deleteLoading: {} }; },
   computed: {
     pageStart: function() { return this.total === 0 ? 0 : ((this.page - 1) * this.pageSize) + 1; },
@@ -3014,88 +3014,88 @@ var BackupsView = {
 };
 
 var BackupDetailView = {
-  template: `\
-    <section class="pf-c-page__main-section detail-page">\
-      <div class="detail-hero">\
-        <div class="detail-hero__breadcrumb">\
-          <router-link to="/backups" class="back-link"><i class="fas fa-arrow-left"></i>Backups</router-link>\
-          <span class="detail-muted">/</span>\
-          <span>{{ backup ? (backup.id || 'Backup Detail') : 'Backup Detail' }}</span>\
-        </div>\
-        <div class="detail-hero__header">\
-          <div class="detail-hero__copy">\
-            <h1 class="pf-c-title pf-m-2xl detail-hero__title">{{ backup ? (backup.id || 'Backup Detail') : 'Backup Detail' }}</h1>\
-            <div class="detail-inline-meta">\
-              <span class="detail-inline-meta__item"><i class="fas fa-hashtag"></i>{{ backup.id || '-' }}</span>\
-              <span class="detail-inline-meta__item"><i class="fas fa-cube"></i>{{ backup.instance_id || '-' }}</span>\
-              <span class="detail-inline-meta__item"><i class="fas fa-database"></i>{{ backup.backup_type || backup.type || '-' }}</span>\
-              <span class="detail-inline-meta__item"><i class="fas fa-server"></i>{{ backup.node_id || '-' }}</span>\
-            </div>\
-            <div class="detail-badge-row">\
-              <span class="pf-c-label" :class="statusLabelClass(backup.status)">{{ backup.status || 'unknown' }}</span>\
-              <span class="pf-c-label pf-m-blue">{{ backup.created_at || 'No creation timestamp' }}</span>\
-            </div>\
-          </div>\
-          <div class="detail-hero__actions">\
-            <button class="pf-c-button pf-m-danger" @click="deleteBackup" :disabled="deleteBusy"><i class="fas fa-trash"></i>{{ deleteBusy ? 'Deleting...' : 'Delete backup' }}</button>\
-          </div>\
-        </div>\
-      </div>\
-      <div v-if="loading" class="loading"><i class="fas fa-spinner fa-spin pf-u-mr-sm"></i>Loading backup...</div>\
-      <div v-else-if="error" class="error-message">{{ error }}</div>\
-      <div v-else-if="!backup" class="pf-u-text-align-center pf-u-color-400 pf-u-py-xl">Backup not found</div>\
-      <template v-else>\
-        <div class="detail-summary-grid">\
-          <div class="detail-stack">\
-            <div class="pf-c-card detail-summary-card">\
-              <div class="pf-c-card__header"><h2 class="detail-section-title"><i class="fas fa-info-circle"></i>Backup information</h2><p class="detail-section-meta">Identity and storage metadata.</p></div>\
-              <div class="pf-c-card__body">\
-                <dl class="pf-c-description-list compact-description-list">\
-                  <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">ID</dt><dd class="pf-c-description-list__description">{{ backup.id || '-' }}</dd></div>\
-                  <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Instance</dt><dd class="pf-c-description-list__description">{{ backup.instance_id || '-' }}</dd></div>\
-                  <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Node</dt><dd class="pf-c-description-list__description">{{ backup.node_id || '-' }}</dd></div>\
-                  <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Type</dt><dd class="pf-c-description-list__description">{{ backup.backup_type || backup.type || '-' }}</dd></div>\
-                  <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Database type</dt><dd class="pf-c-description-list__description">{{ backup.database_type || '-' }}</dd></div>\
-                  <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Triggered by</dt><dd class="pf-c-description-list__description">{{ backup.triggered_by || '-' }}</dd></div>\
-                  <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Storage backend</dt><dd class="pf-c-description-list__description">{{ backup.storage_backend || '-' }}</dd></div>\
-                  <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Storage key</dt><dd class="pf-c-description-list__description"><code>{{ backup.storage_key || '-' }}</code></dd></div>\
-                </dl>\
-              </div>\
-            </div>\
-            <div v-if="backup.error_message" class="pf-c-alert pf-m-danger pf-m-inline" role="alert">\
-              <div class="pf-c-alert__icon"><i class="fas fa-fw fa-exclamation-circle"></i></div>\
-              <p class="pf-c-alert__title">Error: {{ backup.error_message }}</p>\
-            </div>\
-          </div>\
-          <div class="detail-stack">\
-            <div class="pf-c-card detail-summary-card">\
-              <div class="pf-c-card__header"><h2 class="detail-section-title"><i class="fas fa-chart-bar"></i>Size and checksum</h2><p class="detail-section-meta">Integrity details for the stored artifact.</p></div>\
-              <div class="pf-c-card__body">\
-                <dl class="pf-c-description-list compact-description-list">\
-                  <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Size</dt><dd class="pf-c-description-list__description">{{ formatBytes(backup.size_bytes || backup.size) }}</dd></div>\
-                  <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Checksum (SHA256)</dt><dd class="pf-c-description-list__description"><code style="word-break:break-all;">{{ backup.checksum_sha256 || '-' }}</code></dd></div>\
-                </dl>\
-              </div>\
-            </div>\
-            <div class="pf-c-card detail-section-card">\
-              <div class="pf-c-card__header"><h2 class="detail-section-title"><i class="fas fa-clock"></i>Timeline</h2><p class="detail-section-meta">Creation, completion, and expiration.</p></div>\
-              <div class="pf-c-card__body">\
-                <dl class="pf-c-description-list compact-description-list">\
-                  <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Created</dt><dd class="pf-c-description-list__description">{{ backup.created_at || '-' }}</dd></div>\
-                  <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Completed</dt><dd class="pf-c-description-list__description">{{ backup.completed_at || '-' }}</dd></div>\
-                  <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Expires</dt><dd class="pf-c-description-list__description">{{ backup.expires_at || 'No expiration' }}</dd></div>\
-                </dl>\
-              </div>\
-            </div>\
-            <div v-if="backup.storage_uri_admin" class="pf-c-card detail-section-card">\
-              <div class="pf-c-card__header"><h2 class="detail-section-title"><i class="fas fa-download"></i>Download</h2><p class="detail-section-meta">Open the object storage location directly.</p></div>\
-              <div class="pf-c-card__body">\
-                <a :href="backup.storage_uri_admin" class="pf-c-button pf-m-secondary" target="_blank" rel="noopener noreferrer"><i class="fas fa-download pf-u-mr-sm"></i>Download backup</a>\
-              </div>\
-            </div>\
-          </div>\
-        </div>\
-      </template>\
+  template: `
+    <section class="pf-c-page__main-section detail-page">
+      <div class="detail-hero">
+        <div class="detail-hero__breadcrumb">
+          <router-link to="/backups" class="back-link"><i class="fas fa-arrow-left"></i>Backups</router-link>
+          <span class="detail-muted">/</span>
+          <span>{{ backup ? (backup.id || 'Backup Detail') : 'Backup Detail' }}</span>
+        </div>
+        <div class="detail-hero__header">
+          <div class="detail-hero__copy">
+            <h1 class="pf-c-title pf-m-2xl detail-hero__title">{{ backup ? (backup.id || 'Backup Detail') : 'Backup Detail' }}</h1>
+            <div class="detail-inline-meta">
+              <span class="detail-inline-meta__item"><i class="fas fa-hashtag"></i>{{ backup.id || '-' }}</span>
+              <span class="detail-inline-meta__item"><i class="fas fa-cube"></i>{{ backup.instance_id || '-' }}</span>
+              <span class="detail-inline-meta__item"><i class="fas fa-database"></i>{{ backup.backup_type || backup.type || '-' }}</span>
+              <span class="detail-inline-meta__item"><i class="fas fa-server"></i>{{ backup.node_id || '-' }}</span>
+            </div>
+            <div class="detail-badge-row">
+              <span class="pf-c-label" :class="statusLabelClass(backup.status)">{{ backup.status || 'unknown' }}</span>
+              <span class="pf-c-label pf-m-blue">{{ backup.created_at || 'No creation timestamp' }}</span>
+            </div>
+          </div>
+          <div class="detail-hero__actions">
+            <button class="pf-c-button pf-m-danger" @click="deleteBackup" :disabled="deleteBusy"><i class="fas fa-trash"></i>{{ deleteBusy ? 'Deleting...' : 'Delete backup' }}</button>
+          </div>
+        </div>
+      </div>
+      <div v-if="loading" class="loading"><i class="fas fa-spinner fa-spin pf-u-mr-sm"></i>Loading backup...</div>
+      <div v-else-if="error" class="error-message">{{ error }}</div>
+      <div v-else-if="!backup" class="pf-u-text-align-center pf-u-color-400 pf-u-py-xl">Backup not found</div>
+      <template v-else>
+        <div class="detail-summary-grid">
+          <div class="detail-stack">
+            <div class="pf-c-card detail-summary-card">
+              <div class="pf-c-card__header"><h2 class="detail-section-title"><i class="fas fa-info-circle"></i>Backup information</h2><p class="detail-section-meta">Identity and storage metadata.</p></div>
+              <div class="pf-c-card__body">
+                <dl class="pf-c-description-list compact-description-list">
+                  <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">ID</dt><dd class="pf-c-description-list__description">{{ backup.id || '-' }}</dd></div>
+                  <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Instance</dt><dd class="pf-c-description-list__description">{{ backup.instance_id || '-' }}</dd></div>
+                  <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Node</dt><dd class="pf-c-description-list__description">{{ backup.node_id || '-' }}</dd></div>
+                  <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Type</dt><dd class="pf-c-description-list__description">{{ backup.backup_type || backup.type || '-' }}</dd></div>
+                  <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Database type</dt><dd class="pf-c-description-list__description">{{ backup.database_type || '-' }}</dd></div>
+                  <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Triggered by</dt><dd class="pf-c-description-list__description">{{ backup.triggered_by || '-' }}</dd></div>
+                  <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Storage backend</dt><dd class="pf-c-description-list__description">{{ backup.storage_backend || '-' }}</dd></div>
+                  <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Storage key</dt><dd class="pf-c-description-list__description"><code>{{ backup.storage_key || '-' }}</code></dd></div>
+                </dl>
+              </div>
+            </div>
+            <div v-if="backup.error_message" class="pf-c-alert pf-m-danger pf-m-inline" role="alert">
+              <div class="pf-c-alert__icon"><i class="fas fa-fw fa-exclamation-circle"></i></div>
+              <p class="pf-c-alert__title">Error: {{ backup.error_message }}</p>
+            </div>
+          </div>
+          <div class="detail-stack">
+            <div class="pf-c-card detail-summary-card">
+              <div class="pf-c-card__header"><h2 class="detail-section-title"><i class="fas fa-chart-bar"></i>Size and checksum</h2><p class="detail-section-meta">Integrity details for the stored artifact.</p></div>
+              <div class="pf-c-card__body">
+                <dl class="pf-c-description-list compact-description-list">
+                  <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Size</dt><dd class="pf-c-description-list__description">{{ formatBytes(backup.size_bytes || backup.size) }}</dd></div>
+                  <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Checksum (SHA256)</dt><dd class="pf-c-description-list__description"><code style="word-break:break-all;">{{ backup.checksum_sha256 || '-' }}</code></dd></div>
+                </dl>
+              </div>
+            </div>
+            <div class="pf-c-card detail-section-card">
+              <div class="pf-c-card__header"><h2 class="detail-section-title"><i class="fas fa-clock"></i>Timeline</h2><p class="detail-section-meta">Creation, completion, and expiration.</p></div>
+              <div class="pf-c-card__body">
+                <dl class="pf-c-description-list compact-description-list">
+                  <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Created</dt><dd class="pf-c-description-list__description">{{ backup.created_at || '-' }}</dd></div>
+                  <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Completed</dt><dd class="pf-c-description-list__description">{{ backup.completed_at || '-' }}</dd></div>
+                  <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Expires</dt><dd class="pf-c-description-list__description">{{ backup.expires_at || 'No expiration' }}</dd></div>
+                </dl>
+              </div>
+            </div>
+            <div v-if="backup.storage_uri_admin" class="pf-c-card detail-section-card">
+              <div class="pf-c-card__header"><h2 class="detail-section-title"><i class="fas fa-download"></i>Download</h2><p class="detail-section-meta">Open the object storage location directly.</p></div>
+              <div class="pf-c-card__body">
+                <a :href="backup.storage_uri_admin" class="pf-c-button pf-m-secondary" target="_blank" rel="noopener noreferrer"><i class="fas fa-download pf-u-mr-sm"></i>Download backup</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </template>
     </section>`,
   data: function() { return { loading: true, error: null, backup: null, deleteBusy: false }; },
   computed: {
@@ -3141,41 +3141,41 @@ var BackupDetailView = {
 
 var BackupSettingsView = {
 
-  template: '\
-    <section class="pf-c-page__main-section">\
-      <div class="pf-c-content pf-u-mb-lg">\
-        <router-link to="/backups" class="back-link"><i class="fas fa-arrow-left"></i>Back to Backups</router-link>\
-        <h1 class="pf-c-title pf-m-2xl"><i class="fas fa-cog"></i> Backup Settings</h1>\
-      </div>\
-      <div v-if="loading" class="loading"><i class="fas fa-spinner fa-spin pf-u-mr-sm"></i>Loading settings...</div>\
-      <div v-else-if="error" class="error-message">{{ error }}</div>\
-      <div v-else class="pf-l-grid pf-m-gutter">\
-        <div class="pf-l-grid__item pf-m-12-col pf-m-6-col-on-lg">\
-          <div class="pf-c-card">\
-            <div class="pf-c-card__header"><h2 class="pf-c-title pf-m-lg"><i class="fas fa-database"></i> Storage Backend</h2></div>\
-            <div class="pf-c-card__body">\
-              <dl class="pf-c-description-list">\
-                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Backend</dt><dd class="pf-c-description-list__description">{{ settings.storage_backend || settings.backend || "-" }}</dd></div>\
-                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Bucket / Path</dt><dd class="pf-c-description-list__description"><code>{{ settings.bucket || settings.path || settings.storage_path || "-" }}</code></dd></div>\
-                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Region</dt><dd class="pf-c-description-list__description">{{ settings.region || "-" }}</dd></div>\
-                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Endpoint</dt><dd class="pf-c-description-list__description"><code>{{ settings.endpoint || settings.storage_endpoint || "-" }}</code></dd></div>\
-              </dl>\
-            </div>\
-          </div>\
-        </div>\
-        <div class="pf-l-grid__item pf-m-12-col pf-m-6-col-on-lg">\
-          <div class="pf-c-card">\
-            <div class="pf-c-card__header"><h2 class="pf-c-title pf-m-lg"><i class="fas fa-clock"></i> Retention</h2></div>\
-            <div class="pf-c-card__body">\
-              <dl class="pf-c-description-list">\
-                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Retention Days</dt><dd class="pf-c-description-list__description">{{ settings.retention_days || settings.retention || "-" }}</dd></div>\
-                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Max Backups</dt><dd class="pf-c-description-list__description">{{ settings.max_backups || settings.maximum_backups || "-" }}</dd></div>\
-              </dl>\
-            </div>\
-          </div>\
-        </div>\
-      </div>\
-    </section>',
+  template: `
+    <section class="pf-c-page__main-section">
+      <div class="pf-c-content pf-u-mb-lg">
+        <router-link to="/backups" class="back-link"><i class="fas fa-arrow-left"></i>Back to Backups</router-link>
+        <h1 class="pf-c-title pf-m-2xl"><i class="fas fa-cog"></i> Backup Settings</h1>
+      </div>
+      <div v-if="loading" class="loading"><i class="fas fa-spinner fa-spin pf-u-mr-sm"></i>Loading settings...</div>
+      <div v-else-if="error" class="error-message">{{ error }}</div>
+      <div v-else class="pf-l-grid pf-m-gutter">
+        <div class="pf-l-grid__item pf-m-12-col pf-m-6-col-on-lg">
+          <div class="pf-c-card">
+            <div class="pf-c-card__header"><h2 class="pf-c-title pf-m-lg"><i class="fas fa-database"></i> Storage Backend</h2></div>
+            <div class="pf-c-card__body">
+              <dl class="pf-c-description-list">
+                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Backend</dt><dd class="pf-c-description-list__description">{{ settings.storage_backend || settings.backend || "-" }}</dd></div>
+                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Bucket / Path</dt><dd class="pf-c-description-list__description"><code>{{ settings.bucket || settings.path || settings.storage_path || "-" }}</code></dd></div>
+                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Region</dt><dd class="pf-c-description-list__description">{{ settings.region || "-" }}</dd></div>
+                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Endpoint</dt><dd class="pf-c-description-list__description"><code>{{ settings.endpoint || settings.storage_endpoint || "-" }}</code></dd></div>
+              </dl>
+            </div>
+          </div>
+        </div>
+        <div class="pf-l-grid__item pf-m-12-col pf-m-6-col-on-lg">
+          <div class="pf-c-card">
+            <div class="pf-c-card__header"><h2 class="pf-c-title pf-m-lg"><i class="fas fa-clock"></i> Retention</h2></div>
+            <div class="pf-c-card__body">
+              <dl class="pf-c-description-list">
+                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Retention Days</dt><dd class="pf-c-description-list__description">{{ settings.retention_days || settings.retention || "-" }}</dd></div>
+                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Max Backups</dt><dd class="pf-c-description-list__description">{{ settings.max_backups || settings.maximum_backups || "-" }}</dd></div>
+              </dl>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>`,
   data: function() { return { loading: true, error: null, settings: {} }; },
   methods: {
     loadSettings: async function() {
@@ -3193,73 +3193,73 @@ var BackupSettingsView = {
 };
 
 var JobsView = {
-  template: '\
-    <section class="pf-c-page__main-section">\
-      <div class="pf-c-content pf-u-mb-lg">\
-        <h1 class="pf-c-title pf-m-2xl"><i class="fas fa-tasks pf-u-mr-sm"></i>Jobs / Operations</h1>\
-      </div>\
-      <div class="pf-c-card pf-u-mb-lg">\
-        <div class="filter-bar">\
-          <label for="job-filter-status">Status:</label>\
-          <select id="job-filter-status" class="pf-c-form-control" v-model="statusFilter">\
-            <option value="">All</option>\
-            <option value="running">Running</option>\
-            <option value="queued">Queued</option>\
-            <option value="pending">Pending</option>\
-            <option value="failed">Failed</option>\
-            <option value="completed">Completed</option>\
-          </select>\
-          <button class="pf-c-button pf-m-secondary" @click="applyFilter"><i class="fas fa-search"></i>Filter</button>\
-          <button class="pf-c-button pf-m-link" @click="clearFilters" v-if="statusFilter"><i class="fas fa-times"></i>Clear</button>\
-        </div>\
-      </div>\
-      <div v-if="loading" class="loading"><i class="fas fa-spinner fa-spin pf-u-mr-sm"></i>Loading jobs...</div>\
-      <div v-else-if="error" class="error-message">{{ error }}</div>\
-      <div v-else class="pf-c-card">\
-        <div class="pf-c-card__body pf-m-0">\
-          <table class="pf-c-table pf-m-grid-md" role="grid">\
-            <thead>\
-              <tr>\
-                <th>ID</th>\
-                <th>Type / Action</th>\
-                <th>Instance ID</th>\
-                <th>Status</th>\
-                <th>Created</th>\
-                <th>Updated</th>\
-                <th>Actions</th>\
-              </tr>\
-            </thead>\
-            <tbody>\
-              <tr v-for="job in jobs" :key="job.id || job.operation_id">\
-                <td><router-link :to="\'/jobs/\' + (job.id || job.operation_id)" class="pf-c-button pf-m-link pf-m-inline" :title="job.id || job.operation_id" style="font-size:0.8125rem;">{{ (job.id || job.operation_id || "").substring(0, 12) }}...</router-link></td>\
-                <td>{{ job.type || job.action || job.operation_type || "-" }}</td>\
-                <td>{{ job.instance_id || job.instance || "-" }}</td>\
-                <td>\
-                  <span class="pf-c-label" :class="statusLabelClass(job.status)">\
-                    <span v-if="job.status === \'running\'"><i class="fas fa-spinner fa-spin pf-u-mr-xs"></i></span>\
-                    {{ job.status || "unknown" }}\
-                  </span>\
-                </td>\
-                <td>{{ job.created_at || job.created || job.timestamp || "-" }}</td>\
-                <td>{{ job.updated_at || job.updated || "-" }}</td>\
-                <td>-</td>\
-              </tr>\
-              <tr v-if="jobs.length === 0">\
-                <td colspan="7" class="pf-u-text-align-center pf-u-color-400">No jobs found</td>\
-              </tr>\
-            </tbody>\
-          </table>\
-        </div>\
-        <div class="pf-c-card__footer list-pagination">\
-          <span class="list-pagination-summary">Showing {{ pageStart }}-{{ pageEnd }} of {{ total }}</span>\
-          <div class="list-pagination-actions">\
-            <button class="pf-c-button pf-m-secondary pf-m-small" @click="changePage(page - 1)" :disabled="page <= 1">Previous</button>\
-            <span class="list-pagination-page">Page {{ page }}</span>\
-            <button class="pf-c-button pf-m-secondary pf-m-small" @click="changePage(page + 1)" :disabled="pageEnd >= total">Next</button>\
-          </div>\
-        </div>\
-      </div>\
-    </section>',
+  template: `
+    <section class="pf-c-page__main-section">
+      <div class="pf-c-content pf-u-mb-lg">
+        <h1 class="pf-c-title pf-m-2xl"><i class="fas fa-tasks pf-u-mr-sm"></i>Jobs / Operations</h1>
+      </div>
+      <div class="pf-c-card pf-u-mb-lg">
+        <div class="filter-bar">
+          <label for="job-filter-status">Status:</label>
+          <select id="job-filter-status" class="pf-c-form-control" v-model="statusFilter">
+            <option value="">All</option>
+            <option value="running">Running</option>
+            <option value="queued">Queued</option>
+            <option value="pending">Pending</option>
+            <option value="failed">Failed</option>
+            <option value="completed">Completed</option>
+          </select>
+          <button class="pf-c-button pf-m-secondary" @click="applyFilter"><i class="fas fa-search"></i>Filter</button>
+          <button class="pf-c-button pf-m-link" @click="clearFilters" v-if="statusFilter"><i class="fas fa-times"></i>Clear</button>
+        </div>
+      </div>
+      <div v-if="loading" class="loading"><i class="fas fa-spinner fa-spin pf-u-mr-sm"></i>Loading jobs...</div>
+      <div v-else-if="error" class="error-message">{{ error }}</div>
+      <div v-else class="pf-c-card">
+        <div class="pf-c-card__body pf-m-0">
+          <table class="pf-c-table pf-m-grid-md" role="grid">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Type / Action</th>
+                <th>Instance ID</th>
+                <th>Status</th>
+                <th>Created</th>
+                <th>Updated</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="job in jobs" :key="job.id || job.operation_id">
+                <td><router-link :to="\'/jobs/\' + (job.id || job.operation_id)" class="pf-c-button pf-m-link pf-m-inline" :title="job.id || job.operation_id" style="font-size:0.8125rem;">{{ (job.id || job.operation_id || "").substring(0, 12) }}...</router-link></td>
+                <td>{{ job.type || job.action || job.operation_type || "-" }}</td>
+                <td>{{ job.instance_id || job.instance || "-" }}</td>
+                <td>
+                  <span class="pf-c-label" :class="statusLabelClass(job.status)">
+                    <span v-if="job.status === \'running\'"><i class="fas fa-spinner fa-spin pf-u-mr-xs"></i></span>
+                    {{ job.status || "unknown" }}
+                  </span>
+                </td>
+                <td>{{ job.created_at || job.created || job.timestamp || "-" }}</td>
+                <td>{{ job.updated_at || job.updated || "-" }}</td>
+                <td>-</td>
+              </tr>
+              <tr v-if="jobs.length === 0">
+                <td colspan="7" class="pf-u-text-align-center pf-u-color-400">No jobs found</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="pf-c-card__footer list-pagination">
+          <span class="list-pagination-summary">Showing {{ pageStart }}-{{ pageEnd }} of {{ total }}</span>
+          <div class="list-pagination-actions">
+            <button class="pf-c-button pf-m-secondary pf-m-small" @click="changePage(page - 1)" :disabled="page <= 1">Previous</button>
+            <span class="list-pagination-page">Page {{ page }}</span>
+            <button class="pf-c-button pf-m-secondary pf-m-small" @click="changePage(page + 1)" :disabled="pageEnd >= total">Next</button>
+          </div>
+        </div>
+      </div>
+    </section>`,
   data: function() { return { loading: true, error: null, jobs: [], page: 1, pageSize: 20, total: 0, statusFilter: '' }; },
   computed: {
     pageStart: function() { return this.total === 0 ? 0 : ((this.page - 1) * this.pageSize) + 1; },
@@ -3307,71 +3307,71 @@ var JobsView = {
 };
 
 var JobDetailView = {
-  template: `\
-    <section class="pf-c-page__main-section detail-page">\
-      <div class="detail-hero">\
-        <div class="detail-hero__breadcrumb">\
-          <router-link to="/jobs" class="back-link"><i class="fas fa-arrow-left"></i>Jobs</router-link>\
-          <span class="detail-muted">/</span>\
-          <span>{{ job ? (job.id || job.operation_id || 'Job Detail') : 'Job Detail' }}</span>\
-        </div>\
-        <div class="detail-hero__header">\
-          <div class="detail-hero__copy">\
-            <h1 class="pf-c-title pf-m-2xl detail-hero__title">{{ job ? (job.id || job.operation_id || 'Job Detail') : 'Job Detail' }}</h1>\
-            <div class="detail-inline-meta">\
-              <span class="detail-inline-meta__item"><i class="fas fa-hashtag"></i>{{ job.id || job.operation_id || '-' }}</span>\
-              <span class="detail-inline-meta__item"><i class="fas fa-bolt"></i>{{ job.type || job.action || job.operation_type || '-' }}</span>\
-              <span class="detail-inline-meta__item"><i class="fas fa-cube"></i>{{ job.instance_id || job.instance || '-' }}</span>\
-              <span class="detail-inline-meta__item"><i class="fas fa-server"></i>{{ job.node_id || '-' }}</span>\
-            </div>\
-            <div class="detail-badge-row">\
-              <span class="pf-c-label" :class="statusLabelClass(job.status)">{{ job.status || '-' }}</span>\
-              <span class="pf-c-label pf-m-blue">{{ formatTimestamp(job.created_at) || 'No creation timestamp' }}</span>\
-            </div>\
-          </div>\
-        </div>\
-      </div>\
-      <div v-if="loading" class="loading"><i class="fas fa-spinner fa-spin pf-u-mr-sm"></i>Loading job...</div>\
-      <div v-else-if="error" class="error-message">{{ error }}</div>\
-      <div v-else-if="!job" class="pf-u-text-align-center pf-u-color-400 pf-u-py-xl">Job not found</div>\
-      <template v-else>\
-        <div class="detail-summary-grid">\
-          <div class="pf-c-card detail-summary-card">\
-            <div class="pf-c-card__header"><h2 class="detail-section-title"><i class="fas fa-info-circle"></i>Job information</h2><p class="detail-section-meta">Core task metadata and timing.</p></div>\
-            <div class="pf-c-card__body">\
-              <dl class="pf-c-description-list compact-description-list">\
-                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">ID</dt><dd class="pf-c-description-list__description">{{ job.id || job.operation_id || '-' }}</dd></div>\
-                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Action</dt><dd class="pf-c-description-list__description">{{ job.type || job.action || job.operation_type || '-' }}</dd></div>\
-                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Status</dt><dd class="pf-c-description-list__description"><span class="pf-c-label" :class="statusLabelClass(job.status)">{{ job.status || '-' }}</span></dd></div>\
-                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Instance</dt><dd class="pf-c-description-list__description">{{ job.instance_id || job.instance || '-' }}</dd></div>\
-                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Node</dt><dd class="pf-c-description-list__description">{{ job.node_id || '-' }}</dd></div>\
-                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Created</dt><dd class="pf-c-description-list__description">{{ formatTimestamp(job.created_at) || '-' }}</dd></div>\
-                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Updated</dt><dd class="pf-c-description-list__description">{{ formatTimestamp(job.updated_at) || '-' }}</dd></div>\
-                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Duration</dt><dd class="pf-c-description-list__description">{{ formatDuration(durationSeconds) }}</dd></div>\
-                <div v-if="progressPercent !== null" class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Progress</dt><dd class="pf-c-description-list__description">{{ progressPercent }}%</dd></div>\
-                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Admin user</dt><dd class="pf-c-description-list__description">{{ job.admin_user || '-' }}</dd></div>\
-              </dl>\
-            </div>\
-          </div>\
-          <div class="detail-stack">\
-            <div v-if="job.error_message" class="pf-c-card detail-summary-card">\
-              <div class="pf-c-card__header"><h2 class="detail-section-title"><i class="fas fa-exclamation-triangle"></i>Error</h2><p class="detail-section-meta">Failure context returned by the backend.</p></div>\
-              <div class="pf-c-card__body">\
-                <pre class="detail-code-block">{{ job.error_message }}</pre>\
-              </div>\
-            </div>\
-            <div v-if="recentLogText" class="pf-c-card detail-section-card">\
-              <div class="pf-c-card__header">\
-                <h2 class="detail-section-title"><i class="fas fa-file-alt"></i>Recent logs</h2>\
-                <p class="detail-section-meta">Read-only inspection of the task output.</p>\
-              </div>\
-              <div class="pf-c-card__body">\
-                <pre class="readonly-log-panel">{{ recentLogText }}</pre>\
-              </div>\
-            </div>\
-          </div>\
-        </div>\
-      </template>\
+  template: `
+    <section class="pf-c-page__main-section detail-page">
+      <div class="detail-hero">
+        <div class="detail-hero__breadcrumb">
+          <router-link to="/jobs" class="back-link"><i class="fas fa-arrow-left"></i>Jobs</router-link>
+          <span class="detail-muted">/</span>
+          <span>{{ job ? (job.id || job.operation_id || 'Job Detail') : 'Job Detail' }}</span>
+        </div>
+        <div class="detail-hero__header">
+          <div class="detail-hero__copy">
+            <h1 class="pf-c-title pf-m-2xl detail-hero__title">{{ job ? (job.id || job.operation_id || 'Job Detail') : 'Job Detail' }}</h1>
+            <div class="detail-inline-meta">
+              <span class="detail-inline-meta__item"><i class="fas fa-hashtag"></i>{{ job.id || job.operation_id || '-' }}</span>
+              <span class="detail-inline-meta__item"><i class="fas fa-bolt"></i>{{ job.type || job.action || job.operation_type || '-' }}</span>
+              <span class="detail-inline-meta__item"><i class="fas fa-cube"></i>{{ job.instance_id || job.instance || '-' }}</span>
+              <span class="detail-inline-meta__item"><i class="fas fa-server"></i>{{ job.node_id || '-' }}</span>
+            </div>
+            <div class="detail-badge-row">
+              <span class="pf-c-label" :class="statusLabelClass(job.status)">{{ job.status || '-' }}</span>
+              <span class="pf-c-label pf-m-blue">{{ formatTimestamp(job.created_at) || 'No creation timestamp' }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div v-if="loading" class="loading"><i class="fas fa-spinner fa-spin pf-u-mr-sm"></i>Loading job...</div>
+      <div v-else-if="error" class="error-message">{{ error }}</div>
+      <div v-else-if="!job" class="pf-u-text-align-center pf-u-color-400 pf-u-py-xl">Job not found</div>
+      <template v-else>
+        <div class="detail-summary-grid">
+          <div class="pf-c-card detail-summary-card">
+            <div class="pf-c-card__header"><h2 class="detail-section-title"><i class="fas fa-info-circle"></i>Job information</h2><p class="detail-section-meta">Core task metadata and timing.</p></div>
+            <div class="pf-c-card__body">
+              <dl class="pf-c-description-list compact-description-list">
+                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">ID</dt><dd class="pf-c-description-list__description">{{ job.id || job.operation_id || '-' }}</dd></div>
+                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Action</dt><dd class="pf-c-description-list__description">{{ job.type || job.action || job.operation_type || '-' }}</dd></div>
+                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Status</dt><dd class="pf-c-description-list__description"><span class="pf-c-label" :class="statusLabelClass(job.status)">{{ job.status || '-' }}</span></dd></div>
+                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Instance</dt><dd class="pf-c-description-list__description">{{ job.instance_id || job.instance || '-' }}</dd></div>
+                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Node</dt><dd class="pf-c-description-list__description">{{ job.node_id || '-' }}</dd></div>
+                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Created</dt><dd class="pf-c-description-list__description">{{ formatTimestamp(job.created_at) || '-' }}</dd></div>
+                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Updated</dt><dd class="pf-c-description-list__description">{{ formatTimestamp(job.updated_at) || '-' }}</dd></div>
+                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Duration</dt><dd class="pf-c-description-list__description">{{ formatDuration(durationSeconds) }}</dd></div>
+                <div v-if="progressPercent !== null" class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Progress</dt><dd class="pf-c-description-list__description">{{ progressPercent }}%</dd></div>
+                <div class="pf-c-description-list__group"><dt class="pf-c-description-list__term">Admin user</dt><dd class="pf-c-description-list__description">{{ job.admin_user || '-' }}</dd></div>
+              </dl>
+            </div>
+          </div>
+          <div class="detail-stack">
+            <div v-if="job.error_message" class="pf-c-card detail-summary-card">
+              <div class="pf-c-card__header"><h2 class="detail-section-title"><i class="fas fa-exclamation-triangle"></i>Error</h2><p class="detail-section-meta">Failure context returned by the backend.</p></div>
+              <div class="pf-c-card__body">
+                <pre class="detail-code-block">{{ job.error_message }}</pre>
+              </div>
+            </div>
+            <div v-if="recentLogText" class="pf-c-card detail-section-card">
+              <div class="pf-c-card__header">
+                <h2 class="detail-section-title"><i class="fas fa-file-alt"></i>Recent logs</h2>
+                <p class="detail-section-meta">Read-only inspection of the task output.</p>
+              </div>
+              <div class="pf-c-card__body">
+                <pre class="readonly-log-panel">{{ recentLogText }}</pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </template>
     </section>`,
   data: function() { return { loading: true, error: null, job: null }; },
   computed: {
@@ -3411,51 +3411,51 @@ var JobDetailView = {
 
 var ChangePasswordView = {
 
-  template: '\
-    <section class="pf-c-page__main-section">\
-      <div class="pf-c-content pf-u-mb-lg">\
-        <h1 class="pf-c-title pf-m-2xl"><i class="fas fa-key pf-u-mr-sm"></i>Change Password</h1>\
-      </div>\
-      <div class="pf-c-card">\
-        <div class="pf-c-card__body">\
-          <div v-if="error" class="pf-c-alert pf-m-danger pf-m-inline pf-u-mb-md" role="alert">\
-            <div class="pf-c-alert__icon"><i class="fas fa-fw fa-exclamation-circle" aria-hidden="true"></i></div>\
-            <p class="pf-c-alert__title">{{ error }}</p>\
-          </div>\
-          <div v-if="success" class="pf-c-alert pf-m-success pf-m-inline pf-u-mb-md" role="alert">\
-            <div class="pf-c-alert__icon"><i class="fas fa-fw fa-check-circle" aria-hidden="true"></i></div>\
-            <p class="pf-c-alert__title">Password changed successfully</p>\
-          </div>\
-          <form v-if="!success" class="pf-c-form" @submit.prevent="changePassword">\
-            <div class="pf-c-form__group">\
-              <label class="pf-c-form__label" for="cp-current-password">\
-                <span class="pf-c-form__label-text">Current Password</span>\
-              </label>\
-              <input id="cp-current-password" class="pf-c-form-control" type="password" v-model="currentPassword" required autocomplete="current-password">\
-            </div>\
-            <div class="pf-c-form__group">\
-              <label class="pf-c-form__label" for="cp-new-password">\
-                <span class="pf-c-form__label-text">New Password</span>\
-              </label>\
-              <input id="cp-new-password" class="pf-c-form-control" type="password" v-model="newPassword" required autocomplete="new-password" minlength="12">\
-              <p class="pf-c-form__helper-text">must be at least 12 characters</p>\
-            </div>\
-            <div class="pf-c-form__group">\
-              <label class="pf-c-form__label" for="cp-confirm-password">\
-                <span class="pf-c-form__label-text">Confirm New Password</span>\
-              </label>\
-              <input id="cp-confirm-password" class="pf-c-form-control" type="password" v-model="confirmPassword" required autocomplete="new-password">\
-            </div>\
-            <div class="pf-c-form__group pf-m-action">\
-              <button class="pf-c-button pf-m-primary" type="submit" :disabled="loading">\
-                <span v-if="loading"><i class="fas fa-spinner fa-spin pf-u-mr-sm"></i>Updating...</span>\
-                <span v-else><i class="fas fa-key pf-u-mr-sm"></i>Change Password</span>\
-              </button>\
-            </div>\
-          </form>\
-        </div>\
-      </div>\
-    </section>',
+  template: `
+    <section class="pf-c-page__main-section">
+      <div class="pf-c-content pf-u-mb-lg">
+        <h1 class="pf-c-title pf-m-2xl"><i class="fas fa-key pf-u-mr-sm"></i>Change Password</h1>
+      </div>
+      <div class="pf-c-card">
+        <div class="pf-c-card__body">
+          <div v-if="error" class="pf-c-alert pf-m-danger pf-m-inline pf-u-mb-md" role="alert">
+            <div class="pf-c-alert__icon"><i class="fas fa-fw fa-exclamation-circle" aria-hidden="true"></i></div>
+            <p class="pf-c-alert__title">{{ error }}</p>
+          </div>
+          <div v-if="success" class="pf-c-alert pf-m-success pf-m-inline pf-u-mb-md" role="alert">
+            <div class="pf-c-alert__icon"><i class="fas fa-fw fa-check-circle" aria-hidden="true"></i></div>
+            <p class="pf-c-alert__title">Password changed successfully</p>
+          </div>
+          <form v-if="!success" class="pf-c-form" @submit.prevent="changePassword">
+            <div class="pf-c-form__group">
+              <label class="pf-c-form__label" for="cp-current-password">
+                <span class="pf-c-form__label-text">Current Password</span>
+              </label>
+              <input id="cp-current-password" class="pf-c-form-control" type="password" v-model="currentPassword" required autocomplete="current-password">
+            </div>
+            <div class="pf-c-form__group">
+              <label class="pf-c-form__label" for="cp-new-password">
+                <span class="pf-c-form__label-text">New Password</span>
+              </label>
+              <input id="cp-new-password" class="pf-c-form-control" type="password" v-model="newPassword" required autocomplete="new-password" minlength="12">
+              <p class="pf-c-form__helper-text">must be at least 12 characters</p>
+            </div>
+            <div class="pf-c-form__group">
+              <label class="pf-c-form__label" for="cp-confirm-password">
+                <span class="pf-c-form__label-text">Confirm New Password</span>
+              </label>
+              <input id="cp-confirm-password" class="pf-c-form-control" type="password" v-model="confirmPassword" required autocomplete="new-password">
+            </div>
+            <div class="pf-c-form__group pf-m-action">
+              <button class="pf-c-button pf-m-primary" type="submit" :disabled="loading">
+                <span v-if="loading"><i class="fas fa-spinner fa-spin pf-u-mr-sm"></i>Updating...</span>
+                <span v-else><i class="fas fa-key pf-u-mr-sm"></i>Change Password</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>`,
   data: function() {
     return { currentPassword: '', newPassword: '', confirmPassword: '', error: '', success: false, loading: false };
   },
@@ -3529,60 +3529,60 @@ var routes = [
 ];
 
 var ChangePasswordStandaloneView = {
-  template: '\
-    <div class="login-bg">\
-        <div class="login-container">\
-          <div class="pf-c-card login-card">\
-            <div class="pf-c-card__head">\
-              <div class="login-logo">\
-                <div class="sidebar-brand-icon" style="font-size:2rem;width:64px;height:64px;line-height:64px;margin:0 auto 8px;">A</div>\
-                <h1 class="pf-c-title pf-m-2xl" style="text-align:center;">Change Required</h1>\
-                <p class="pf-c-content" style="text-align:center;color:var(--pf-global--Color--200);">You must change your password before continuing.</p>\
-              </div>\
-            </div>\
-            <div class="pf-c-card__body">\
-              <div v-if="error" class="pf-c-alert pf-m-danger pf-m-inline pf-u-mb-md" role="alert">\
-                <div class="pf-c-alert__icon"><i class="fas fa-fw fa-exclamation-circle" aria-hidden="true"></i></div>\
-                <p class="pf-c-alert__title">{{ error }}</p>\
-              </div>\
-              <div v-if="success" class="pf-c-alert pf-m-success pf-m-inline pf-u-mb-md" role="alert">\
-                <div class="pf-c-alert__icon"><i class="fas fa-fw fa-check-circle" aria-hidden="true"></i></div>\
-                <p class="pf-c-alert__title">Password changed successfully</p>\
-              </div>\
-              <div v-if="success" class="pf-u-text-align-center" style="margin-top:0.5rem;">\
-                <a href="/" class="pf-c-button pf-m-primary pf-m-block">Go to Dashboard</a>\
-              </div>\
-              <form v-if="!success" class="pf-c-form" @submit.prevent="changePassword">\
-                <div class="pf-c-form__group">\
-                  <label class="pf-c-form__label" for="cp-current-password">\
-                    <span class="pf-c-form__label-text">Current Password</span>\
-                  </label>\
-                  <input id="cp-current-password" class="pf-c-form-control" type="password" v-model="currentPassword" required autocomplete="current-password">\
-                </div>\
-                <div class="pf-c-form__group">\
-                  <label class="pf-c-form__label" for="cp-new-password">\
-                    <span class="pf-c-form__label-text">New Password</span>\
-                  </label>\
-                  <input id="cp-new-password" class="pf-c-form-control" type="password" v-model="newPassword" required autocomplete="new-password" minlength="12">\
-                  <p class="pf-c-form__helper-text">must be at least 12 characters</p>\
-                </div>\
-                <div class="pf-c-form__group">\
-                  <label class="pf-c-form__label" for="cp-confirm-password">\
-                    <span class="pf-c-form__label-text">Confirm New Password</span>\
-                  </label>\
-                  <input id="cp-confirm-password" class="pf-c-form-control" type="password" v-model="confirmPassword" required autocomplete="new-password">\
-                </div>\
-                <div class="pf-c-form__group pf-m-action">\
-                  <button class="pf-c-button pf-m-primary pf-m-block" type="submit" :disabled="loading">\
-                    <span v-if="loading"><i class="fas fa-spinner fa-spin pf-u-mr-sm"></i>Updating...</span>\
-                    <span v-else><i class="fas fa-key pf-u-mr-sm"></i>Change Password</span>\
-                  </button>\
-                </div>\
-              </form>\
-            </div>\
-          </div>\
-        </div>\
-      </div>',
+  template: `
+    <div class="login-bg">
+        <div class="login-container">
+          <div class="pf-c-card login-card">
+            <div class="pf-c-card__head">
+              <div class="login-logo">
+                <div class="sidebar-brand-icon" style="font-size:2rem;width:64px;height:64px;line-height:64px;margin:0 auto 8px;">A</div>
+                <h1 class="pf-c-title pf-m-2xl" style="text-align:center;">Change Required</h1>
+                <p class="pf-c-content" style="text-align:center;color:var(--pf-global--Color--200);">You must change your password before continuing.</p>
+              </div>
+            </div>
+            <div class="pf-c-card__body">
+              <div v-if="error" class="pf-c-alert pf-m-danger pf-m-inline pf-u-mb-md" role="alert">
+                <div class="pf-c-alert__icon"><i class="fas fa-fw fa-exclamation-circle" aria-hidden="true"></i></div>
+                <p class="pf-c-alert__title">{{ error }}</p>
+              </div>
+              <div v-if="success" class="pf-c-alert pf-m-success pf-m-inline pf-u-mb-md" role="alert">
+                <div class="pf-c-alert__icon"><i class="fas fa-fw fa-check-circle" aria-hidden="true"></i></div>
+                <p class="pf-c-alert__title">Password changed successfully</p>
+              </div>
+              <div v-if="success" class="pf-u-text-align-center" style="margin-top:0.5rem;">
+                <a href="/" class="pf-c-button pf-m-primary pf-m-block">Go to Dashboard</a>
+              </div>
+              <form v-if="!success" class="pf-c-form" @submit.prevent="changePassword">
+                <div class="pf-c-form__group">
+                  <label class="pf-c-form__label" for="cp-current-password">
+                    <span class="pf-c-form__label-text">Current Password</span>
+                  </label>
+                  <input id="cp-current-password" class="pf-c-form-control" type="password" v-model="currentPassword" required autocomplete="current-password">
+                </div>
+                <div class="pf-c-form__group">
+                  <label class="pf-c-form__label" for="cp-new-password">
+                    <span class="pf-c-form__label-text">New Password</span>
+                  </label>
+                  <input id="cp-new-password" class="pf-c-form-control" type="password" v-model="newPassword" required autocomplete="new-password" minlength="12">
+                  <p class="pf-c-form__helper-text">must be at least 12 characters</p>
+                </div>
+                <div class="pf-c-form__group">
+                  <label class="pf-c-form__label" for="cp-confirm-password">
+                    <span class="pf-c-form__label-text">Confirm New Password</span>
+                  </label>
+                  <input id="cp-confirm-password" class="pf-c-form-control" type="password" v-model="confirmPassword" required autocomplete="new-password">
+                </div>
+                <div class="pf-c-form__group pf-m-action">
+                  <button class="pf-c-button pf-m-primary pf-m-block" type="submit" :disabled="loading">
+                    <span v-if="loading"><i class="fas fa-spinner fa-spin pf-u-mr-sm"></i>Updating...</span>
+                    <span v-else><i class="fas fa-key pf-u-mr-sm"></i>Change Password</span>
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>`,
   data: function() {
     return { currentPassword: '', newPassword: '', confirmPassword: '', error: '', success: false, loading: false };
   },

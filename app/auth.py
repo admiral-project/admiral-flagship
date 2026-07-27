@@ -74,12 +74,17 @@ def login():
         status = e.response.status_code if e.response is not None else 401
         detail = _extract_error(e)
         logger.warning(
-            "admin login failed",
-            extra={"username": data["username"], "status": status, "error": detail},
+            "[client %s] admin login failed",
+            ip,
+            extra={"username": data["username"], "status": status, "error": detail, "ip": ip},
         )
         return _generic_auth_failure(status if status in (401, 403) else 401)
     except Exception as e:
-        logger.warning("admin login failed", extra={"username": data["username"], "error": str(e)})
+        logger.warning(
+            "[client %s] admin login failed",
+            ip,
+            extra={"username": data["username"], "error": str(e), "ip": ip},
+        )
         return _generic_auth_failure()
 
 

@@ -4,6 +4,7 @@
 import logging
 
 from flask import Blueprint, jsonify, request
+
 from app.admiral_client import api_get, api_post
 from app.bff.pagination import normalize_page, parse_paging_args
 from app.security import validate_resource_id
@@ -32,8 +33,9 @@ def normalize_instance(data):
 
 @bp.route("")
 def list_instances():
-    from app.security import sanitize_error_message
     from urllib.parse import urlencode
+
+    from app.security import sanitize_error_message
 
     page, page_size = parse_paging_args()
     status = request.args.get("status", "").strip()

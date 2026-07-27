@@ -3,9 +3,10 @@
 
 import ipaddress
 import os
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
-from flask import Blueprint, render_template, jsonify, request
+from flask import Blueprint, jsonify, render_template, request
+
 from app.admiral_client import api_get
 from app.security import sanitize_error_message
 
@@ -47,7 +48,7 @@ def ready():
             {
                 "status": "ok",
                 "admirald": "ok",
-                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
             }
         )
     except Exception as e:
@@ -56,6 +57,6 @@ def ready():
                 "status": "error",
                 "admirald": "error",
                 "error": sanitize_error_message(e, "ready"),
-                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
             }
         )

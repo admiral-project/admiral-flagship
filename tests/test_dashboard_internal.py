@@ -1,11 +1,11 @@
 from app.bff.dashboard import (
     _as_list,
-    _safe_int,
-    _status_lower,
+    _duration_seconds,
     _first,
     _parse_datetime,
-    _duration_seconds,
     _progress_percent,
+    _safe_int,
+    _status_lower,
 )
 
 

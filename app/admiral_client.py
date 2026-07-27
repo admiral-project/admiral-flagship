@@ -4,7 +4,7 @@
 import logging
 
 import requests
-from flask import session, current_app, g
+from flask import current_app, g, session
 
 logger = logging.getLogger("admiral-flagship")
 

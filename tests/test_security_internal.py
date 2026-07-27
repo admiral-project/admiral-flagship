@@ -1,12 +1,14 @@
 import os
-import pytest
 from unittest.mock import patch
+
+import pytest
+
 from app.security import (
-    validate_resource_id,
     get_required_env_var,
+    init_security_headers,
     sanitize_error_message,
     validate_production_config,
-    init_security_headers,
+    validate_resource_id,
 )
 
 

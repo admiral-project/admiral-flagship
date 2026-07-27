@@ -4,6 +4,7 @@
 import re
 
 from flask import Blueprint, jsonify, request
+
 from app.admiral_client import api_get, api_get_text, api_post, api_put
 from app.bff.pagination import normalize_page, parse_paging_args
 from app.security import validate_resource_id

@@ -2,8 +2,9 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from flask import Blueprint, jsonify, request
+
 from app.admiral_client import api_get
-from app.bff.pagination import normalize_page, parse_paging_args, paginate_items
+from app.bff.pagination import normalize_page, paginate_items, parse_paging_args
 from app.security import validate_resource_id
 
 bp = Blueprint("bff_jobs", __name__, url_prefix="/flagship/api/jobs")

@@ -5,11 +5,11 @@ import logging
 import os
 import time
 
-from flask import Flask, g, request, session, jsonify, redirect, url_for
+from flask import Flask, g, jsonify, redirect, request, session, url_for
 from werkzeug.middleware.proxy_fix import ProxyFix
 
+from app.csrf import generate_csrf_token, init_csrf_protection
 from app.log_config import configure_logging
-from app.csrf import init_csrf_protection, generate_csrf_token
 from app.rate_limit import RateLimiter
 from app.security import init_security_headers, validate_production_config
 
@@ -102,7 +102,7 @@ def create_app():
                 return unauthenticated_response("not authenticated")
 
             # Check local inactivity timeout
-            from app.auth import _session_is_expired, _session_absolute_expired, SESSION_ACTIVITY_AT_KEY
+            from app.auth import SESSION_ACTIVITY_AT_KEY, _session_absolute_expired, _session_is_expired
 
             if _session_is_expired():
                 session.clear()
@@ -155,16 +155,16 @@ def create_app():
     @app.context_processor
     def inject_csrf_token():
         """Make CSRF token available in templates."""
-        return dict(csrf_token=generate_csrf_token)
+        return {"csrf_token": generate_csrf_token}
 
-    from app.routes import bp as main_bp
     from app.auth import bp as auth_bp
-    from app.bff.dashboard import bp as dashboard_bp
-    from app.bff.nodes import bp as nodes_bp
-    from app.bff.catalog import bp as catalog_bp
-    from app.bff.instances import bp as instances_bp
     from app.bff.backups import bp as backups_bp
+    from app.bff.catalog import bp as catalog_bp
+    from app.bff.dashboard import bp as dashboard_bp
+    from app.bff.instances import bp as instances_bp
     from app.bff.jobs import bp as jobs_bp
+    from app.bff.nodes import bp as nodes_bp
+    from app.routes import bp as main_bp
 
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp)

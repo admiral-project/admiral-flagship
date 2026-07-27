@@ -1,4 +1,5 @@
-from flask import session, jsonify
+from flask import jsonify, session
+
 from app.csrf import generate_csrf_token, require_csrf_token
 
 

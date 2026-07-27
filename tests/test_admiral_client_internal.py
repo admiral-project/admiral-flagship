@@ -1,17 +1,19 @@
-import os
 import importlib
+import os
+from unittest.mock import Mock, patch
+
 import pytest
 import requests
 from flask import g, session
-from unittest.mock import patch, Mock
+
 from app.admiral_client import (
+    _handle_request_exception,
     _headers,
     _verify,
-    _handle_request_exception,
+    api_delete,
     api_get,
     api_get_text,
     api_post,
-    api_delete,
     api_put,
     logout_admin,
     reset_rate_limit,
@@ -29,10 +31,9 @@ def test_config_loads_insecure_verify_switch(monkeypatch):
 
 
 def test_headers_admin(app):
-    with app.test_request_context():
-        with patch.dict(session, {"admin_token": "secret-admin-token"}):
-            headers = _headers("/api/admin/nodes")
-            assert headers == {"X-Admiral-Admin-Token": "secret-admin-token"}
+    with app.test_request_context(), patch.dict(session, {"admin_token": "secret-admin-token"}):
+        headers = _headers("/api/admin/nodes")
+        assert headers == {"X-Admiral-Admin-Token": "secret-admin-token"}
 
 
 def test_headers_general(app):
@@ -49,16 +50,14 @@ def test_verify_skip(app):
 
 def test_verify_ca_file(app):
     app.config["ADMIRAL_CA_FILE"] = "/path/to/ca.pem"
-    with patch.dict(os.environ, {"ADMIRAL_INSECURE_SKIP_VERIFY": "false"}):
-        with app.app_context():
-            assert _verify() == "/path/to/ca.pem"
+    with patch.dict(os.environ, {"ADMIRAL_INSECURE_SKIP_VERIFY": "false"}), app.app_context():
+        assert _verify() == "/path/to/ca.pem"
 
 
 def test_verify_default(app):
     app.config["ADMIRAL_CA_FILE"] = ""
-    with patch.dict(os.environ, {"ADMIRAL_INSECURE_SKIP_VERIFY": "false"}):
-        with app.app_context():
-            assert _verify() is True
+    with patch.dict(os.environ, {"ADMIRAL_INSECURE_SKIP_VERIFY": "false"}), app.app_context():
+        assert _verify() is True
 
 
 def test_handle_request_exception(app):
@@ -86,11 +85,14 @@ def test_api_get_failure(app):
     with app.app_context():
         mock_response = Mock()
         mock_response.status_code = 500
-        with patch(
-            "app.admiral_client.requests.get", side_effect=requests.RequestException("error", response=mock_response)
+        with (
+            patch(
+                "app.admiral_client.requests.get",
+                side_effect=requests.RequestException("error", response=mock_response),
+            ),
+            pytest.raises(requests.RequestException),
         ):
-            with pytest.raises(requests.RequestException):
-                api_get("/some/path")
+            api_get("/some/path")
 
 
 def test_api_get_text_success(app):
@@ -107,11 +109,14 @@ def test_api_get_text_failure(app):
     with app.app_context():
         mock_response = Mock()
         mock_response.status_code = 500
-        with patch(
-            "app.admiral_client.requests.get", side_effect=requests.RequestException("error", response=mock_response)
+        with (
+            patch(
+                "app.admiral_client.requests.get",
+                side_effect=requests.RequestException("error", response=mock_response),
+            ),
+            pytest.raises(requests.RequestException),
         ):
-            with pytest.raises(requests.RequestException):
-                api_get_text("/some/path")
+            api_get_text("/some/path")
 
 
 def test_api_post_success(app):
@@ -128,11 +133,14 @@ def test_api_post_failure(app):
     with app.app_context():
         mock_response = Mock()
         mock_response.status_code = 500
-        with patch(
-            "app.admiral_client.requests.post", side_effect=requests.RequestException("error", response=mock_response)
+        with (
+            patch(
+                "app.admiral_client.requests.post",
+                side_effect=requests.RequestException("error", response=mock_response),
+            ),
+            pytest.raises(requests.RequestException),
         ):
-            with pytest.raises(requests.RequestException):
-                api_post("/some/path", data={"data": 1})
+            api_post("/some/path", data={"data": 1})
 
 
 def test_api_delete_success(app):
@@ -149,11 +157,14 @@ def test_api_delete_failure(app):
     with app.app_context():
         mock_response = Mock()
         mock_response.status_code = 500
-        with patch(
-            "app.admiral_client.requests.delete", side_effect=requests.RequestException("error", response=mock_response)
+        with (
+            patch(
+                "app.admiral_client.requests.delete",
+                side_effect=requests.RequestException("error", response=mock_response),
+            ),
+            pytest.raises(requests.RequestException),
         ):
-            with pytest.raises(requests.RequestException):
-                api_delete("/some/path")
+            api_delete("/some/path")
 
 
 def test_api_put_success(app):
@@ -170,11 +181,14 @@ def test_api_put_failure(app):
     with app.app_context():
         mock_response = Mock()
         mock_response.status_code = 500
-        with patch(
-            "app.admiral_client.requests.put", side_effect=requests.RequestException("error", response=mock_response)
+        with (
+            patch(
+                "app.admiral_client.requests.put",
+                side_effect=requests.RequestException("error", response=mock_response),
+            ),
+            pytest.raises(requests.RequestException),
         ):
-            with pytest.raises(requests.RequestException):
-                api_put("/some/path", data={"data": 1})
+            api_put("/some/path", data={"data": 1})
 
 
 def test_logout_admin_success(app):
@@ -194,9 +208,8 @@ def test_logout_admin_failure(app):
 
 
 def test_logout_admin_exception(app):
-    with app.app_context():
-        with patch("app.admiral_client.requests.post", side_effect=requests.RequestException()):
-            assert logout_admin("token") is False
+    with app.app_context(), patch("app.admiral_client.requests.post", side_effect=requests.RequestException()):
+        assert logout_admin("token") is False
 
 
 def test_check_rate_limit_success(app):
@@ -225,13 +238,12 @@ def test_check_rate_limit_non_200(app):
 
 
 def test_check_rate_limit_exception(app):
-    with app.app_context():
-        with patch("app.admiral_client.requests.post", side_effect=requests.RequestException()):
-            from app.admiral_client import check_rate_limit
+    with app.app_context(), patch("app.admiral_client.requests.post", side_effect=requests.RequestException()):
+        from app.admiral_client import check_rate_limit
 
-            allowed, remaining = check_rate_limit("id")
-            assert allowed is False
-            assert remaining == 0
+        allowed, remaining = check_rate_limit("id")
+        assert allowed is False
+        assert remaining == 0
 
 
 def test_reset_rate_limit_failure(app):
@@ -244,10 +256,9 @@ def test_reset_rate_limit_failure(app):
 
 
 def test_reset_rate_limit_exception(app):
-    with app.app_context():
-        with patch("app.admiral_client.requests.post", side_effect=requests.RequestException()):
-            # Should not raise exception
-            reset_rate_limit("id")
+    with app.app_context(), patch("app.admiral_client.requests.post", side_effect=requests.RequestException()):
+        # Should not raise exception
+        reset_rate_limit("id")
 
 
 def test_login_admin_success(app):

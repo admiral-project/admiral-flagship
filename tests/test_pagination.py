@@ -1,4 +1,4 @@
-from app.bff.pagination import parse_paging_args, paginate_items, normalize_page
+from app.bff.pagination import normalize_page, paginate_items, parse_paging_args
 
 
 def test_parse_paging_args(app):

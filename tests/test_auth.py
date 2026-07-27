@@ -24,12 +24,11 @@ def test_active_session_expires_at_absolute_deadline(client, app):
     app.config["SESSION_TIMEOUT_MINUTES"] = 30
     app.config["SESSION_ABSOLUTE_TIMEOUT_HOURS"] = 1
     app.config["SESSION_COOKIE_SECURE"] = False
-    with patch("time.time", return_value=3500):
-        with client.session_transaction() as sess:
-            sess["admin_token"] = "test-admin-token"
-            sess["admin_username"] = "admin"
-            sess["session_login_at"] = 1000
-            sess["session_activity_at"] = 3500
+    with patch("time.time", return_value=3500), client.session_transaction() as sess:
+        sess["admin_token"] = "test-admin-token"
+        sess["admin_username"] = "admin"
+        sess["session_login_at"] = 1000
+        sess["session_activity_at"] = 3500
     with (
         patch("time.time", return_value=4601),
         patch("app.admiral_client.api_get", return_value={"username": "admin"}),
@@ -214,12 +213,11 @@ def test_active_session_expires_at_absolute_deadline_html(client, app):
     app.config["SESSION_TIMEOUT_MINUTES"] = 30
     app.config["SESSION_ABSOLUTE_TIMEOUT_HOURS"] = 1
     app.config["SESSION_COOKIE_SECURE"] = False
-    with patch("time.time", return_value=3500):
-        with client.session_transaction() as sess:
-            sess["admin_token"] = "test-admin-token"
-            sess["admin_username"] = "admin"
-            sess["session_login_at"] = 1000
-            sess["session_activity_at"] = 3500
+    with patch("time.time", return_value=3500), client.session_transaction() as sess:
+        sess["admin_token"] = "test-admin-token"
+        sess["admin_username"] = "admin"
+        sess["session_login_at"] = 1000
+        sess["session_activity_at"] = 3500
     with patch("time.time", return_value=4601):
         response = client.get(
             "/flagship/api/nodes",
@@ -251,8 +249,9 @@ def test_bff_endpoint_token_revoked_by_backend(client):
         sess["admin_username"] = "admin"
         sess["session_started_at"] = int(time.time())
 
-    import requests
     from unittest.mock import Mock
+
+    import requests
 
     mock_response = Mock()
     mock_response.status_code = 401

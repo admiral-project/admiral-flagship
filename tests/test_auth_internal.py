@@ -1,6 +1,8 @@
-import requests
 import time
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
+
+import requests
+
 from app.auth import _extract_error
 
 

@@ -5,7 +5,7 @@ import logging
 import time
 
 import requests
-from flask import Blueprint, request, jsonify, session, current_app
+from flask import Blueprint, current_app, jsonify, request, session
 
 logger = logging.getLogger("admiral-flagship")
 

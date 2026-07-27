@@ -6,10 +6,11 @@ Simple CSRF protection without external dependencies.
 Generates and validates CSRF tokens stored in session.
 """
 
-import os
 import hmac
+import os
 from functools import wraps
-from flask import session, request, jsonify
+
+from flask import jsonify, request, session
 
 
 def _generate_token():

@@ -1,4 +1,4 @@
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
 from app.rate_limit import RateLimiter
 
@@ -97,8 +97,9 @@ def test_login_passes_rate_limit_then_resets(app, client):
 
 
 def test_login_failure_returns_generic_unauthorized(app, client):
-    import requests
     from unittest.mock import Mock
+
+    import requests
 
     with patch("app.admiral_client.check_rate_limit", return_value=(True, 0)):
         mock_response = Mock()

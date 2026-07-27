@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: William Moreno Reyes CP | MBA
 # SPDX-License-Identifier: Apache-2.0
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from flask import Blueprint, jsonify
 
@@ -65,7 +65,7 @@ def _sort_datetime(item):
         parsed = _parse_datetime(_first(item, key))
         if parsed is not None:
             return parsed
-    return datetime.min.replace(tzinfo=timezone.utc)
+    return datetime.min.replace(tzinfo=UTC)
 
 
 def _duration_seconds(item):
@@ -110,9 +110,7 @@ def _instance_status_summary(instances):
                 counts["deprovisioned_instances"] += 1
         elif status in ("provisioning", "pending_provision", "initializing"):
             counts["provisioning_instances"] += 1
-        elif status in ("error", "failed"):
-            counts["error_instances"] += 1
-        elif status == "setup_failed":
+        elif status in ("error", "failed") or status == "setup_failed":
             counts["error_instances"] += 1
         elif status == "past_due":
             counts["past_due_instances"] += 1

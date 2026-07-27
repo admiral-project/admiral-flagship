@@ -5,10 +5,9 @@
 Security utilities: secret validation, safe error messages, security headers.
 """
 
+import logging
 import os
 import re
-import logging
-from typing import Optional
 
 logger = logging.getLogger("admiral-flagship")
 
@@ -36,9 +35,7 @@ def validate_resource_id(resource_id: str, context: str = "resource") -> None:
         raise ValueError(f"Invalid {context} identifier: {resource_id!r}")
 
 
-def get_required_env_var(
-    name: str, default: Optional[str] = None, prod_mode: bool = False, required: bool = False
-) -> str:
+def get_required_env_var(name: str, default: str | None = None, prod_mode: bool = False, required: bool = False) -> str:
     """
     Get required environment variable with validation.
 

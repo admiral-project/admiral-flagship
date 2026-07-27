@@ -22,8 +22,7 @@ def parse_paging_args():
         page = DEFAULT_PAGE
     if page_size < 1:
         page_size = DEFAULT_PAGE_SIZE
-    if page_size > MAX_PAGE_SIZE:
-        page_size = MAX_PAGE_SIZE
+    page_size = min(page_size, MAX_PAGE_SIZE)
     return page, page_size
 
 

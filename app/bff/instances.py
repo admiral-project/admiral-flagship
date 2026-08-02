@@ -155,6 +155,7 @@ ALLOWED_INSTANCE_ACTIONS = frozenset(
         "deprovision",
         "start",
         "stop",
+        "resize",
     }
 )
 
@@ -172,6 +173,8 @@ def instance_action(instance_id):
     action = data["action"]
     if action not in ALLOWED_INSTANCE_ACTIONS:
         return jsonify({"error": f"action {action!r} is not allowed"}), 400
+    if action == "resize" and not isinstance(data.get("tier"), str):
+        return jsonify({"error": "tier is required for resize"}), 400
 
     try:
         result = api_post(f"/api/admin/instances/{instance_id}/{action}", data)

@@ -117,7 +117,7 @@ def disable_node(node_id):
     validate_node_id(node_id)
 
     try:
-        data = api_post(f"/api/admin/nodes/{node_id}/disable")
+        data = api_post(f"/api/v1/nodes/{node_id}/disable")
         return jsonify(data)
     except Exception as e:
         msg = sanitize_error_message(e, "disable_node")
@@ -131,7 +131,7 @@ def enable_node(node_id):
     validate_node_id(node_id)
 
     try:
-        data = api_post(f"/api/admin/nodes/{node_id}/enable")
+        data = api_post(f"/api/v1/nodes/{node_id}/enable")
         return jsonify(data)
     except Exception as e:
         msg = sanitize_error_message(e, "enable_node")

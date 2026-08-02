@@ -297,12 +297,27 @@ class TestBFFBackups:
         assert resp.status_code == 400
 
     def test_restore_backup(self, client):
-        with patch("app.bff.backups.api_post", _mock_api_post({"operation_id": "op1"})):
+        with (
+            patch("app.bff.backups.api_get", _mock_api_get({"service": "web"})),
+            patch("app.bff.backups.api_post", _mock_api_post({"operation_id": "op1"})),
+        ):
             resp = client.post(
                 "/flagship/api/backups/restore",
                 json={"backup_id": "b1", "target_app_id": "i2"},
             )
             assert resp.status_code == 200
+
+    def test_restore_backup_includes_service(self, client):
+        with (
+            patch("app.bff.backups.api_get", _mock_api_get({"service_name": "db"})),
+            patch("app.bff.backups.api_post", return_value={"operation_id": "op1"}) as mock_post,
+        ):
+            resp = client.post(
+                "/flagship/api/backups/restore",
+                json={"backup_id": "b1", "target_app_id": "i2"},
+            )
+            assert resp.status_code == 200
+            assert mock_post.call_args.args[1]["service"] == "db"
 
     def test_restore_rejects_invalid_target_app_id(self, client):
         resp = client.post(

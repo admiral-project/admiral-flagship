@@ -40,10 +40,11 @@ def test_node_detail_failure(client):
 
 
 def test_disable_node_success(client):
-    with patch("app.bff.nodes.api_post", _mock_api_post({"success": True})):
+    with patch("app.bff.nodes.api_post", return_value={"success": True}) as mock_post:
         resp = client.post("/flagship/api/nodes/n1/disable")
         assert resp.status_code == 200
         assert resp.json["success"] is True
+        assert mock_post.call_args.args[0] == "/api/v1/nodes/n1/disable"
 
 
 def test_disable_node_failure(client):
@@ -53,9 +54,22 @@ def test_disable_node_failure(client):
 
 
 def test_enable_node_success(client):
-    with patch("app.bff.nodes.api_post", _mock_api_post({"success": True})):
+    with patch("app.bff.nodes.api_post", return_value={"success": True}) as mock_post:
         resp = client.post("/flagship/api/nodes/n1/enable")
         assert resp.status_code == 200
+        assert mock_post.call_args.args[0] == "/api/v1/nodes/n1/enable"
+
+
+def test_resize_instance_success(client):
+    with patch("app.bff.instances.api_post", return_value={"operation_id": "op1"}) as mock_post:
+        resp = client.post("/flagship/api/instances/i1/action", json={"action": "resize", "tier": "large"})
+        assert resp.status_code == 200
+        assert mock_post.call_args.args[0] == "/api/admin/instances/i1/resize"
+
+
+def test_resize_instance_requires_tier(client):
+    resp = client.post("/flagship/api/instances/i1/action", json={"action": "resize"})
+    assert resp.status_code == 400
 
 
 def test_enable_node_failure(client):

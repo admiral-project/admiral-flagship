@@ -166,9 +166,17 @@ def restore_backup():
     try:
         validate_backup_id(data["backup_id"])
         validate_resource_id(data["target_app_id"], "target app")
+        backup = api_get(f"/api/admin/backups/{data['backup_id']}")
+        service = backup.get("service") or backup.get("service_name")
+        if not isinstance(service, str) or not service:
+            return jsonify({"error": "backup has no restorable service"}), 400
         result = api_post(
             "/api/admin/backups/restore",
-            {"backup_id": data["backup_id"], "target_app_id": data["target_app_id"]},
+            {
+                "backup_id": data["backup_id"],
+                "target_app_id": data["target_app_id"],
+                "service": service,
+            },
         )
         return jsonify(result)
     except ValueError as e:

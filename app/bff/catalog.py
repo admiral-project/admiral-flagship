@@ -12,6 +12,7 @@ from app.security import validate_resource_id
 bp = Blueprint("bff_catalog", __name__, url_prefix="/flagship/api/catalog")
 
 _VERSION_RE = re.compile(r"(?m)^version:\s*[\"']?([^\"'\n]+)[\"']?\s*$")
+_NAME_RE = re.compile(r"(?m)^name:\s*[\"']?([^\"'\n]+)[\"']?\s*$")
 
 
 def validate_app_id(app_id):
@@ -162,6 +163,9 @@ def save_app():
         return jsonify({"error": "yaml is required"}), 400
     try:
         if app_id:
+            name_match = _NAME_RE.search(yaml_text)
+            if not name_match or name_match.group(1).strip() != app_id:
+                return jsonify({"error": "app_id does not match the YAML application name"}), 400
             yaml_text, bumped_version = _bump_version(yaml_text)
         else:
             bumped_version = None

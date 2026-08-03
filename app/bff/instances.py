@@ -177,7 +177,12 @@ def instance_action(instance_id):
         return jsonify({"error": "tier is required for resize"}), 400
 
     try:
-        result = api_post(f"/api/admin/instances/{instance_id}/{action}", data)
+        path = f"/api/admin/instances/{instance_id}/{action}"
+        if action == "resize":
+            from urllib.parse import quote
+
+            path += f"?tier={quote(data['tier'], safe='')}"
+        result = api_post(path, data)
         return jsonify(result)
     except Exception as e:
         msg = sanitize_error_message(e, "instance_action")

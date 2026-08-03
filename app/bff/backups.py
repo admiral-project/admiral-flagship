@@ -1,6 +1,8 @@
 # SPDX-FileCopyrightText: William Moreno Reyes CP | MBA
 # SPDX-License-Identifier: Apache-2.0
 
+import re
+
 from flask import Blueprint, jsonify, request
 
 from app.admiral_client import api_delete, api_get, api_post, api_put
@@ -168,6 +170,11 @@ def restore_backup():
         validate_resource_id(data["target_app_id"], "target app")
         backup = api_get(f"/api/admin/backups/{data['backup_id']}")
         service = backup.get("service") or backup.get("service_name")
+        if not service:
+            storage_key = str(backup.get("storage_key") or "")
+            match = re.search(r"/([^/]+)/(?:database|volumes)-[^/]+$", storage_key)
+            if match:
+                service = match.group(1)
         if not isinstance(service, str) or not service:
             return jsonify({"error": "backup has no restorable service"}), 400
         result = api_post(

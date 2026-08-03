@@ -64,7 +64,7 @@ def test_resize_instance_success(client):
     with patch("app.bff.instances.api_post", return_value={"operation_id": "op1"}) as mock_post:
         resp = client.post("/flagship/api/instances/i1/action", json={"action": "resize", "tier": "large"})
         assert resp.status_code == 200
-        assert mock_post.call_args.args[0] == "/api/admin/instances/i1/resize"
+        assert mock_post.call_args.args[0] == "/api/admin/instances/i1/resize?tier=large"
 
 
 def test_resize_instance_requires_tier(client):

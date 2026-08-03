@@ -1800,7 +1800,10 @@ var InstancesView = {
                 <td data-label="Customer">{{ inst.customer_id || inst.customer || "-" }}</td>
                 <td data-label="App">{{ inst.app_id || inst.app || "-" }}</td>
                 <td data-label="Node">{{ inst.node_id || inst.node || "-" }}</td>
-                <td data-label="Status"><span class="pf-c-label" :class="statusLabelClass(inst.status)">{{ inst.status || "unknown" }}</span></td>
+                <td data-label="Status">
+                  <span class="pf-c-label" :class="statusLabelClass(inst.status)">{{ inst.status || "unknown" }}</span>
+                  <span v-if="inst.need_restarting" class="pf-c-label pf-m-orange pf-u-ml-sm" title="The application definition changed and this instance must be restarted">Restart required</span>
+                </td>
                 <td data-label="Health"><span class="pf-c-label" :class="healthLabelClass(inst.health)">{{ inst.health || "unknown" }}</span></td>
                 <td data-label="Actions">
                   <div class="action-buttons">
@@ -2300,6 +2303,13 @@ var InstanceDetailView = {
       <div v-else-if="error" class="error-message">{{ error }}</div>
       <div v-else-if="!instance" class="pf-u-text-align-center pf-u-color-400 pf-u-py-xl">Instance not found</div>
       <template v-else>
+        <div v-if="instance.need_restarting" class="detail-callout detail-callout--warning">
+          <div class="detail-callout__icon"><i class="fas fa-sync-alt" aria-hidden="true"></i></div>
+          <div class="detail-callout__body">
+            <p class="detail-callout__title">Restart required</p>
+            <p class="detail-callout__text">The application definition changed. Restart this instance to apply the new container images.</p>
+          </div>
+        </div>
         <div v-if="actionError" class="detail-callout detail-callout--danger">
           <div class="detail-callout__icon"><i class="fas fa-exclamation-circle" aria-hidden="true"></i></div>
           <div class="detail-callout__body">

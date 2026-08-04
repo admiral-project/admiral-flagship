@@ -172,7 +172,10 @@ def restore_backup():
         service = backup.get("service") or backup.get("service_name")
         if not service:
             storage_key = str(backup.get("storage_key") or "")
-            match = re.search(r"/([^/]+)/(?:database|volumes)-[^/]+$", storage_key)
+            # Admirald stores keys as .../<service>-database-<operation> or
+            # .../<service>-volumes-<operation>.  The service is the segment
+            # before the backup type, not a segment named "database".
+            match = re.search(r"/([^/]+)-(?:database|volumes)-[^/]+$", storage_key)
             if match:
                 service = match.group(1)
         if not isinstance(service, str) or not service:

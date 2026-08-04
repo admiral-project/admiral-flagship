@@ -319,6 +319,21 @@ class TestBFFBackups:
             assert resp.status_code == 200
             assert mock_post.call_args.args[1]["service"] == "db"
 
+    def test_restore_derives_service_from_admirald_storage_key(self, client):
+        with (
+            patch(
+                "app.bff.backups.api_get",
+                _mock_api_get({"storage_key": "backups/node-1/inst-1/web-database-op-1"}),
+            ),
+            patch("app.bff.backups.api_post", return_value={"operation_id": "op1"}) as mock_post,
+        ):
+            resp = client.post(
+                "/flagship/api/backups/restore",
+                json={"backup_id": "b1", "target_app_id": "i2"},
+            )
+            assert resp.status_code == 200
+            assert mock_post.call_args.args[1]["service"] == "web"
+
     def test_restore_rejects_invalid_target_app_id(self, client):
         resp = client.post(
             "/flagship/api/backups/restore",

@@ -218,7 +218,9 @@ def validate_production_config(config):
         errors.append("SECRET_KEY must be at least 32 characters in production")
 
     # Check ADMIRAL_ADMIN_TOKEN not dev default
-    if is_placeholder(config.get("ADMIRAL_ADMIN_TOKEN", "")) or config.get("ADMIRAL_ADMIN_TOKEN", "").startswith("dev-"):
+    if is_placeholder(config.get("ADMIRAL_ADMIN_TOKEN", "")) or config.get("ADMIRAL_ADMIN_TOKEN", "").startswith(
+        "dev-"
+    ):
         errors.append("ADMIRAL_ADMIN_TOKEN must not use development default in production")
 
     # Check HTTPS enabled

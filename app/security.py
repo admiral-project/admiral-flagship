@@ -57,7 +57,7 @@ def get_required_env_var(name: str, default: str | None = None, prod_mode: bool 
     """
     value = os.environ.get(name)
 
-    if not value:
+    if not value or value.strip() == "__REQUIRED__":
         is_production = os.environ.get("ENV", "").lower() == "production"
 
         if required or (is_production and prod_mode):
@@ -207,15 +207,18 @@ def validate_production_config(config):
 
     errors = []
 
+    def is_placeholder(value):
+        return not value or value.strip() == "__REQUIRED__"
+
     # Check SECRET_KEY not dev default
-    if config.get("SECRET_KEY", "").startswith("dev-"):
+    if is_placeholder(config.get("SECRET_KEY", "")) or config.get("SECRET_KEY", "").startswith("dev-"):
         errors.append("SECRET_KEY must not use development default in production")
 
     if len(config.get("SECRET_KEY", "")) < 32:
         errors.append("SECRET_KEY must be at least 32 characters in production")
 
     # Check ADMIRAL_ADMIN_TOKEN not dev default
-    if config.get("ADMIRAL_ADMIN_TOKEN", "").startswith("dev-"):
+    if is_placeholder(config.get("ADMIRAL_ADMIN_TOKEN", "")) or config.get("ADMIRAL_ADMIN_TOKEN", "").startswith("dev-"):
         errors.append("ADMIRAL_ADMIN_TOKEN must not use development default in production")
 
     # Check HTTPS enabled

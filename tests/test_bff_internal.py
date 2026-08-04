@@ -128,7 +128,10 @@ def test_save_app_no_yaml(client):
 
 def test_save_app_value_error(client):
     with patch("app.bff.catalog._bump_version", side_effect=ValueError("bad version")):
-        resp = client.post("/flagship/api/catalog/apps/save", json={"app_id": "a1", "yaml": "..."})
+        resp = client.post(
+            "/flagship/api/catalog/apps/save",
+            json={"app_id": "a1", "yaml": "name: a1\n"},
+        )
         assert resp.status_code == 400
         assert resp.json["error"] == "bad version"
 
@@ -241,13 +244,19 @@ other_root: 42
 
 
 def test_save_app_no_version(client):
-    resp = client.post("/flagship/api/catalog/apps/save", json={"app_id": "a1", "yaml": "no-version: true"})
+    resp = client.post(
+        "/flagship/api/catalog/apps/save",
+        json={"app_id": "a1", "yaml": "name: a1\nno-version: true"},
+    )
     assert resp.status_code == 400
     assert "version field is required" in resp.json["error"]
 
 
 def test_save_app_invalid_version_parts(client):
-    resp = client.post("/flagship/api/catalog/apps/save", json={"app_id": "a1", "yaml": "version: 1.0.a"})
+    resp = client.post(
+        "/flagship/api/catalog/apps/save",
+        json={"app_id": "a1", "yaml": "name: a1\nversion: 1.0.a"},
+    )
     assert resp.status_code == 400
     assert "version must use only numeric segments" in resp.json["error"]
 

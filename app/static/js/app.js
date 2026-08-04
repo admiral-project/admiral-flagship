@@ -1802,7 +1802,9 @@ var InstancesView = {
                 <td data-label="Node">{{ inst.node_id || inst.node || "-" }}</td>
                 <td data-label="Status">
                   <span class="pf-c-label" :class="statusLabelClass(inst.status)">{{ inst.status || "unknown" }}</span>
-                  <span v-if="inst.need_restarting" class="pf-c-label pf-m-orange pf-u-ml-sm" title="The application definition changed and this instance must be restarted">Restart required</span>
+                  <span v-if="inst.need_restarting && (inst.update_type === 'security_critical' || inst.update_type === 'security')" class="pf-c-label pf-m-red pf-u-ml-sm" :title="'Security update pending (' + (inst.update_type || 'pending') + ')'"><i class="fas fa-shield-alt"></i> Security update</span>
+                  <span v-else-if="inst.need_restarting && inst.update_type === 'bugfix'" class="pf-c-label pf-m-orange pf-u-ml-sm" title="Bug fix available"><i class="fas fa-wrench"></i> Bug fix</span>
+                  <span v-else-if="inst.need_restarting" class="pf-c-label pf-m-blue pf-u-ml-sm" title="Improvement available"><i class="fas fa-info-circle"></i> Update available</span>
                 </td>
                 <td data-label="Health"><span class="pf-c-label" :class="healthLabelClass(inst.health)">{{ inst.health || "unknown" }}</span></td>
                 <td data-label="Actions">
@@ -2303,11 +2305,25 @@ var InstanceDetailView = {
       <div v-else-if="error" class="error-message">{{ error }}</div>
       <div v-else-if="!instance" class="pf-u-text-align-center pf-u-color-400 pf-u-py-xl">Instance not found</div>
       <template v-else>
-        <div v-if="instance.need_restarting" class="detail-callout detail-callout--warning">
-          <div class="detail-callout__icon"><i class="fas fa-sync-alt" aria-hidden="true"></i></div>
+        <div v-if="instance.need_restarting && (instance.update_type === 'security_critical' || instance.update_type === 'security')" class="detail-callout detail-callout--danger">
+          <div class="detail-callout__icon"><i class="fas fa-shield-alt" aria-hidden="true"></i></div>
           <div class="detail-callout__body">
-            <p class="detail-callout__title">Restart required</p>
-            <p class="detail-callout__text">The application definition changed. Restart this instance to apply the new container images.</p>
+            <p class="detail-callout__title">Security update pending</p>
+            <p class="detail-callout__text">A security patch is available for this application. Restart the instance to apply the fix.</p>
+          </div>
+        </div>
+        <div v-else-if="instance.need_restarting && instance.update_type === 'bugfix'" class="detail-callout detail-callout--warning">
+          <div class="detail-callout__icon"><i class="fas fa-wrench" aria-hidden="true"></i></div>
+          <div class="detail-callout__body">
+            <p class="detail-callout__title">Bug fix available</p>
+            <p class="detail-callout__text">A bug fix is available for this application. Restart the instance to apply the fix.</p>
+          </div>
+        </div>
+        <div v-else-if="instance.need_restarting" class="detail-callout detail-callout--info">
+          <div class="detail-callout__icon"><i class="fas fa-info-circle" aria-hidden="true"></i></div>
+          <div class="detail-callout__body">
+            <p class="detail-callout__title">Update available</p>
+            <p class="detail-callout__text">An improvement is available for this application. Restart the instance to apply the update.</p>
           </div>
         </div>
         <div v-if="actionError" class="detail-callout detail-callout--danger">

@@ -41,6 +41,8 @@ def list_instances():
     status = request.args.get("status", "").strip()
     customer = request.args.get("customer_id", "").strip()
     app = request.args.get("app_definition_name", "").strip()
+    need_restarting = request.args.get("need_restarting", "").strip()
+    update_type = request.args.get("update_type", "").strip()
     try:
         if customer:
             validate_resource_id(customer, "customer")
@@ -54,6 +56,10 @@ def list_instances():
             params["customer_id"] = customer
         if app:
             params["app_definition_name"] = app
+        if need_restarting:
+            params["need_restarting"] = need_restarting
+        if update_type:
+            params["update_type"] = update_type
 
         path = f"/api/admin/instances?{urlencode(params)}"
         data = api_get(path)

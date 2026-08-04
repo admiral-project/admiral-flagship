@@ -28,6 +28,13 @@ Current UI areas include:
 - Jobs
 - Change password
 
+### Operator authorization
+
+Flagship has one operator role: `admin`, with full administrative access.
+Delegated `support` and `audit` roles are intentionally not part of the
+product authorization model. Operational auditability is provided by the
+platform's existing operation and request audit records.
+
 Current instance detail capabilities include:
 
 - instance summary and placement data

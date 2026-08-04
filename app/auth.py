@@ -163,6 +163,7 @@ def me():
             {
                 "username": username,
                 "authenticated": True,
+                "role": "admin",
                 "password_change_required": True,
             }
         )
@@ -177,6 +178,7 @@ def me():
         {
             "username": username,
             "authenticated": True,
+            "role": "admin",
             "password_change_required": session.get("password_change_required", False),
         }
     )

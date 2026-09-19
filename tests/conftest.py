@@ -19,7 +19,7 @@ def app():
             "TESTING": True,
             "SECRET_KEY": "test-secret",
             "ADMIRAL_API_URL": "https://admirald.test:8080",
-            "ADMIRAL_ADMIN_TOKEN": "test-token",
+            "ADMIRAL_INTERNAL_TOKEN": "test-token",
             "ADMIRAL_CA_FILE": "",
         }
     )

@@ -69,6 +69,7 @@ def create_app():
                 "/flagship/api/health",
                 "/flagship/api/ready",
                 "/flagship/api/auth/login",
+                "/flagship/api/auth/mfa/confirm",
                 "/flagship/api/auth/me",
             ]
             if request.path in public_endpoints:

@@ -51,6 +51,21 @@ def login():
     from app.admiral_client import login_admin
 
     try:
+        result = login_admin(data["username"], data["password"], verify_only=True)
+        if result.get("mfa_email_enabled"):
+            from app.mfa import send_code
+
+            session.clear()
+            session["mfa_pending_username"] = data["username"]
+            session["mfa_pending_at"] = int(time.time())
+            try:
+                send_code(result["email"], "login")
+            except Exception:
+                logger.warning("MFA email delivery failed", extra={"username": data["username"]})
+                return _generic_auth_failure(503)
+            # The browser resubmits the password with the code. No bearer token
+            # is kept in the Flask session before MFA completes.
+            return jsonify({"mfa_required": True})
         result = login_admin(data["username"], data["password"])
         # Reset rate limit on successful login
         reset_rate_limit(ip)
@@ -85,6 +100,108 @@ def login():
             ip,
             extra={"username": data["username"], "error": str(e), "ip": ip},
         )
+        return _generic_auth_failure()
+
+
+@bp.route("/mfa/confirm", methods=["POST"])
+def confirm_mfa():
+    data = request.get_json() or {}
+    username = data.get("username", "")
+    password = data.get("password", "")
+    code = str(data.get("code", ""))
+    if not username or not password or not code or session.get("mfa_pending_username") != username:
+        return _generic_auth_failure()
+    from app.mfa import verify_code
+    if not verify_code(code, "login"):
+        return _generic_auth_failure()
+    from app.admiral_client import login_admin
+    try:
+        result = login_admin(username, password)
+    except requests.RequestException:
+        return _generic_auth_failure()
+    session.clear()
+    session.permanent = True
+    from app.csrf import _generate_token
+    session["csrf_token"] = _generate_token()
+    session["admin_token"] = result["token"]
+    session["admin_username"] = username
+    session["password_change_required"] = result.get("password_change_required", False)
+    session[SESSION_STARTED_AT_KEY] = int(time.time())
+    session[SESSION_LOGIN_AT_KEY] = session[SESSION_STARTED_AT_KEY]
+    session[SESSION_ACTIVITY_AT_KEY] = session[SESSION_STARTED_AT_KEY]
+    return jsonify({"status": "ok", "username": username})
+
+
+@bp.route("/profile", methods=["GET", "PUT"])
+def profile():
+    if "admin_token" not in session:
+        return _generic_auth_failure()
+    from app.admiral_client import get_operator_profile, update_operator_profile
+    if request.method == "GET":
+        try:
+            return jsonify(get_operator_profile())
+        except requests.RequestException:
+            return _generic_auth_failure()
+    data = request.get_json() or {}
+    email = str(data.get("email", "")).strip()
+    try:
+        current = get_operator_profile()
+        # Enabling MFA always requires the separate email verification flow.
+        if data.get("mfa_email_enabled") and not current.get("email_verified_at"):
+            return jsonify({"error": "verify email before enabling MFA"}), 400
+        return jsonify(update_operator_profile(email, bool(current.get("email_verified_at")) and email == current.get("email"), bool(data.get("mfa_email_enabled"))))
+    except requests.RequestException:
+        return jsonify({"error": "profile update failed"}), 400
+
+
+@bp.route("/profile/email/request", methods=["POST"])
+def request_profile_email():
+    if "admin_token" not in session:
+        return _generic_auth_failure()
+    email = str((request.get_json() or {}).get("email", "")).strip().lower()
+    if not email or "@" not in email:
+        return jsonify({"error": "valid email required"}), 400
+    session["email_verification_address"] = email
+    from app.mfa import send_code
+    try:
+        send_code(email, "email verification")
+    except Exception:
+        logger.warning("profile email delivery failed", extra={"username": session.get("admin_username")})
+        return jsonify({"error": "email verification is unavailable"}), 503
+    return jsonify({"status": "verification_sent"})
+
+
+@bp.route("/profile/email/confirm", methods=["POST"])
+def confirm_profile_email():
+    if "admin_token" not in session:
+        return _generic_auth_failure()
+    data = request.get_json() or {}
+    from app.mfa import verify_code
+    if not verify_code(str(data.get("code", "")), "email verification"):
+        return jsonify({"error": "invalid verification code"}), 400
+    email = session.pop("email_verification_address", "")
+    if not email:
+        return jsonify({"error": "email verification expired"}), 400
+    from app.admiral_client import update_operator_profile
+    try:
+        return jsonify(update_operator_profile(email, True, False))
+    except requests.RequestException:
+        return jsonify({"error": "profile update failed"}), 400
+
+
+@bp.route("/profile/mfa/disable", methods=["POST"])
+def disable_profile_mfa():
+    if "admin_token" not in session:
+        return _generic_auth_failure()
+    password = str((request.get_json() or {}).get("current_password", ""))
+    if not password:
+        return jsonify({"error": "current_password required"}), 400
+    from app.admiral_client import login_admin, get_operator_profile, update_operator_profile
+    try:
+        login_admin(session.get("admin_username", ""), password, verify_only=True)
+        current = get_operator_profile()
+        return jsonify(update_operator_profile(current.get("email", ""), bool(current.get("email_verified_at")), False))
+    except requests.RequestException:
         return _generic_auth_failure()
 
 

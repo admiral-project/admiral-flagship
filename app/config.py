@@ -22,13 +22,19 @@ class Config:
         required=True,
     )
 
-    ADMIRAL_ADMIN_TOKEN = get_required_env_var(
-        "ADMIRAL_ADMIN_TOKEN", default="dev-token-change-in-production", prod_mode=True
+    ADMIRAL_INTERNAL_TOKEN = get_required_env_var(
+        "ADMIRAL_INTERNAL_TOKEN", default="dev-token-change-in-production", prod_mode=True
     )
 
     ADMIRAL_API_URL = os.environ.get("ADMIRAL_API_URL", "https://127.0.0.1:8080")
     ADMIRAL_CA_FILE = os.environ.get("ADMIRAL_CA_FILE", "")
     ADMIRAL_INSECURE_SKIP_VERIFY = os.environ.get("ADMIRAL_INSECURE_SKIP_VERIFY", "0") == "1"
+    FLAGSHIP_SMTP_HOST = os.environ.get("FLAGSHIP_SMTP_HOST", "")
+    FLAGSHIP_SMTP_PORT = int(os.environ.get("FLAGSHIP_SMTP_PORT", "587"))
+    FLAGSHIP_SMTP_USERNAME = os.environ.get("FLAGSHIP_SMTP_USERNAME", "")
+    FLAGSHIP_SMTP_PASSWORD = os.environ.get("FLAGSHIP_SMTP_PASSWORD", "")
+    FLAGSHIP_SMTP_FROM = os.environ.get("FLAGSHIP_SMTP_FROM", "")
+    FLAGSHIP_SMTP_STARTTLS = _env_bool("FLAGSHIP_SMTP_STARTTLS", True)
 
     # Session security settings
     SESSION_COOKIE_NAME = "flagship_session"

@@ -13,7 +13,7 @@ def _headers(path):
     if path.startswith("/api/admin/"):
         token = session.get("admin_token", "")
         return {"X-Admiral-Admin-Token": token}
-    return {"Authorization": f"Bearer {current_app.config['ADMIRAL_ADMIN_TOKEN']}"}
+    return {"Authorization": f"Bearer {current_app.config['ADMIRAL_INTERNAL_TOKEN']}"}
 
 
 def _verify():
@@ -126,12 +126,12 @@ def api_put(path, data=None):
         raise
 
 
-def login_admin(username, password):
+def login_admin(username, password, verify_only=False):
     url = current_app.config["ADMIRAL_API_URL"] + "/api/admin/auth/login"
     try:
         resp = requests.post(
             url,
-            json={"username": username, "password": password},
+            json={"username": username, "password": password, "verify_only": verify_only},
             verify=_verify(),
             timeout=30,
         )
@@ -147,6 +147,14 @@ def login_admin(username, password):
             },
         )
         raise
+
+
+def get_operator_profile():
+    return api_get("/api/admin/profile")
+
+
+def update_operator_profile(email, email_verified, mfa_email_enabled):
+    return api_put("/api/admin/profile", {"email": email, "email_verified": email_verified, "mfa_email_enabled": mfa_email_enabled})
 
 
 def logout_admin(token):

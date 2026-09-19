@@ -68,21 +68,21 @@ def test_sanitize_error_message_patterns():
 
 def test_validate_production_config_non_prod(app):
     with patch.dict(os.environ, {"ENV": "development"}):
-        config = {"SECRET_KEY": "dev-key", "ADMIRAL_ADMIN_TOKEN": "dev-token"}
+        config = {"SECRET_KEY": "dev-key", "ADMIRAL_INTERNAL_TOKEN": "dev-token"}
         # Should not raise, just log warnings
         validate_production_config(config)
 
 
 def test_validate_production_config_prod_errors():
     with patch.dict(os.environ, {"ENV": "production"}):
-        config = {"SECRET_KEY": "dev-key", "ADMIRAL_ADMIN_TOKEN": "dev-token", "SESSION_COOKIE_SECURE": False}
+        config = {"SECRET_KEY": "dev-key", "ADMIRAL_INTERNAL_TOKEN": "dev-token", "SESSION_COOKIE_SECURE": False}
         with pytest.raises(ValueError) as excinfo:
             validate_production_config(config)
 
         err_msg = str(excinfo.value)
         assert "SECRET_KEY must not use development default" in err_msg
         assert "SECRET_KEY must be at least 32 characters" in err_msg
-        assert "ADMIRAL_ADMIN_TOKEN must not use development default" in err_msg
+        assert "ADMIRAL_INTERNAL_TOKEN must not use development default" in err_msg
         assert "SESSION_COOKIE_SECURE must be True" in err_msg
 
 
@@ -90,7 +90,7 @@ def test_validate_production_config_prod_success():
     with patch.dict(os.environ, {"ENV": "production"}):
         config = {
             "SECRET_KEY": "a" * 32,
-            "ADMIRAL_ADMIN_TOKEN": "not-dev-token",
+            "ADMIRAL_INTERNAL_TOKEN": "not-dev-token",
             "SESSION_COOKIE_SECURE": True,
             "ADMIRAL_CA_FILE": "/path/to/ca",
         }

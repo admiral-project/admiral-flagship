@@ -42,7 +42,11 @@ def send_code(email, purpose):
 def verify_code(code, purpose):
     expiry = session.get("mfa_code_expires_at", 0)
     digest = session.get("mfa_code_digest", "")
-    valid = int(time.time()) <= int(expiry) and session.get("mfa_code_purpose") == purpose and hmac.compare_digest(digest, _digest(str(code)))
+    valid = (
+        int(time.time()) <= int(expiry)
+        and session.get("mfa_code_purpose") == purpose
+        and hmac.compare_digest(digest, _digest(str(code)))
+    )
     if valid:
         for key in ("mfa_code_digest", "mfa_code_expires_at", "mfa_code_purpose"):
             session.pop(key, None)

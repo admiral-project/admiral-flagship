@@ -112,9 +112,11 @@ def confirm_mfa():
     if not username or not password or not code or session.get("mfa_pending_username") != username:
         return _generic_auth_failure()
     from app.mfa import verify_code
+
     if not verify_code(code, "login"):
         return _generic_auth_failure()
     from app.admiral_client import login_admin
+
     try:
         result = login_admin(username, password)
     except requests.RequestException:
@@ -122,6 +124,7 @@ def confirm_mfa():
     session.clear()
     session.permanent = True
     from app.csrf import _generate_token
+
     session["csrf_token"] = _generate_token()
     session["admin_token"] = result["token"]
     session["admin_username"] = username
@@ -137,6 +140,7 @@ def profile():
     if "admin_token" not in session:
         return _generic_auth_failure()
     from app.admiral_client import get_operator_profile, update_operator_profile
+
     if request.method == "GET":
         try:
             return jsonify(get_operator_profile())
@@ -149,7 +153,13 @@ def profile():
         # Enabling MFA always requires the separate email verification flow.
         if data.get("mfa_email_enabled") and not current.get("email_verified_at"):
             return jsonify({"error": "verify email before enabling MFA"}), 400
-        return jsonify(update_operator_profile(email, bool(current.get("email_verified_at")) and email == current.get("email"), bool(data.get("mfa_email_enabled"))))
+        return jsonify(
+            update_operator_profile(
+                email,
+                bool(current.get("email_verified_at")) and email == current.get("email"),
+                bool(data.get("mfa_email_enabled")),
+            )
+        )
     except requests.RequestException:
         return jsonify({"error": "profile update failed"}), 400
 
@@ -163,6 +173,7 @@ def request_profile_email():
         return jsonify({"error": "valid email required"}), 400
     session["email_verification_address"] = email
     from app.mfa import send_code
+
     try:
         send_code(email, "email verification")
     except Exception:
@@ -177,12 +188,14 @@ def confirm_profile_email():
         return _generic_auth_failure()
     data = request.get_json() or {}
     from app.mfa import verify_code
+
     if not verify_code(str(data.get("code", "")), "email verification"):
         return jsonify({"error": "invalid verification code"}), 400
     email = session.pop("email_verification_address", "")
     if not email:
         return jsonify({"error": "email verification expired"}), 400
     from app.admiral_client import update_operator_profile
+
     try:
         return jsonify(update_operator_profile(email, True, False))
     except requests.RequestException:
@@ -196,7 +209,8 @@ def disable_profile_mfa():
     password = str((request.get_json() or {}).get("current_password", ""))
     if not password:
         return jsonify({"error": "current_password required"}), 400
-    from app.admiral_client import login_admin, get_operator_profile, update_operator_profile
+    from app.admiral_client import get_operator_profile, login_admin, update_operator_profile
+
     try:
         login_admin(session.get("admin_username", ""), password, verify_only=True)
         current = get_operator_profile()

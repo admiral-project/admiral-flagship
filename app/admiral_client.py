@@ -154,7 +154,9 @@ def get_operator_profile():
 
 
 def update_operator_profile(email, email_verified, mfa_email_enabled):
-    return api_put("/api/admin/profile", {"email": email, "email_verified": email_verified, "mfa_email_enabled": mfa_email_enabled})
+    return api_put(
+        "/api/admin/profile", {"email": email, "email_verified": email_verified, "mfa_email_enabled": mfa_email_enabled}
+    )
 
 
 def logout_admin(token):

@@ -224,6 +224,7 @@ var LoginView = {
             <div class="pf-c-alert__icon"><i class="fas fa-fw fa-exclamation-circle" aria-hidden="true"></i></div>
             <p class="pf-c-alert__title">{{ error }}</p>
           </div>
+          <template v-if="!mfaRequired">
           <form class="pf-c-form" @submit.prevent="login">
             <div class="pf-c-form__group">
               <label class="pf-c-form__label" for="login-username">
@@ -244,13 +245,51 @@ var LoginView = {
               </button>
             </div>
           </form>
+          </template>
+          <template v-else>
+          <div class="pf-c-alert pf-m-info pf-m-inline pf-u-mb-md" role="alert">
+            <div class="pf-c-alert__icon"><i class="fas fa-fw fa-shield-alt" aria-hidden="true"></i></div>
+            <p class="pf-c-alert__title">Verification required</p>
+            <p class="pf-c-alert__description">A single-use verification code was sent to your registered email address.</p>
+          </div>
+          <form class="pf-c-form" @submit.prevent="confirmMfa">
+            <div class="pf-c-form__group">
+              <label class="pf-c-form__label" for="login-mfa-code">
+                <span class="pf-c-form__label-text">Verification Code</span>
+              </label>
+              <input id="login-mfa-code" class="pf-c-form-control" type="text" v-model="mfaCode" required autocomplete="one-time-code" inputmode="numeric" autofocus placeholder="Enter the code from your email" @keydown.enter="confirmMfa">
+            </div>
+            <div class="pf-c-form__group pf-m-action">
+              <button class="pf-c-button pf-m-primary pf-m-block" type="submit" :disabled="mfaLoading">
+                <span v-if="mfaLoading"><i class="fas fa-spinner fa-spin pf-u-mr-sm"></i>Verifying...</span>
+                <span v-else><i class="fas fa-check-circle pf-u-mr-sm"></i>Verify &amp; Sign In</span>
+              </button>
+            </div>
+            <div class="pf-c-form__group pf-u-text-align-center">
+              <button class="pf-c-button pf-m-link pf-m-inline" type="button" @click="resendMfa" :disabled="resending">
+                <span v-if="resending"><i class="fas fa-spinner fa-spin pf-u-mr-sm"></i>Resending...</span>
+                <span v-else><i class="fas fa-envelope pf-u-mr-sm"></i>Resend code</span>
+              </button>
+            </div>
+          </form>
+          </template>
         </div>
       </div>
     </div>`,
   data: function() {
     var flash = sessionStorage.getItem('session_expired') === '1' ? 'Your session has expired. Please log in again.' : '';
     if (flash) sessionStorage.removeItem('session_expired');
-    return { username: '', password: '', error: '', loading: false, flashMessage: flash };
+    return {
+      username: '',
+      password: '',
+      error: '',
+      loading: false,
+      flashMessage: flash,
+      mfaRequired: false,
+      mfaCode: '',
+      mfaLoading: false,
+      resending: false
+    };
   },
   methods: {
     login: async function() {
@@ -261,6 +300,11 @@ var LoginView = {
           method: 'POST',
           body: JSON.stringify({ username: this.username, password: this.password })
         });
+        if (resp.mfa_required) {
+          this.mfaRequired = true;
+          this.mfaCode = '';
+          return;
+        }
         if (resp.username) {
           sessionStorage.setItem('first_login_username', resp.username);
         }
@@ -269,6 +313,38 @@ var LoginView = {
         this.error = e.message;
       } finally {
         this.loading = false;
+      }
+    },
+    confirmMfa: async function() {
+      this.mfaLoading = true;
+      this.error = '';
+      try {
+        var resp = await bffFetch('/flagship/api/auth/mfa/confirm', {
+          method: 'POST',
+          body: JSON.stringify({ username: this.username, password: this.password, code: this.mfaCode })
+        });
+        if (resp.username) {
+          sessionStorage.setItem('first_login_username', resp.username);
+        }
+        window.location.href = '/';
+      } catch (e) {
+        this.error = e.message;
+      } finally {
+        this.mfaLoading = false;
+      }
+    },
+    resendMfa: async function() {
+      this.resending = true;
+      this.error = '';
+      try {
+        await bffFetch('/flagship/api/auth/login', {
+          method: 'POST',
+          body: JSON.stringify({ username: this.username, password: this.password })
+        });
+      } catch (e) {
+        this.error = e.message;
+      } finally {
+        this.resending = false;
       }
     }
   }
@@ -3532,6 +3608,202 @@ var ChangePasswordView = {
   }
 };
 
+var SecurityView = {
+  template: `
+    <div>
+      <div class="detail-heading mb-4">
+        <h1 class="pf-c-title pf-m-2xl"><i class="fas fa-shield-alt pf-u-mr-sm"></i>Security</h1>
+        <p class="pf-c-content detail-subtitle">Manage your verified email and browser verification.</p>
+      </div>
+      <div v-if="loading" class="loading"><i class="fas fa-spinner fa-spin pf-u-mr-sm"></i>Loading...</div>
+
+      <div v-if="error" class="pf-c-alert pf-m-danger pf-m-inline pf-u-mb-md" role="alert">
+        <div class="pf-c-alert__icon"><i class="fas fa-fw fa-exclamation-circle" aria-hidden="true"></i></div>
+        <p class="pf-c-alert__title">{{ error }}</p>
+      </div>
+      <div v-if="success" class="pf-c-alert pf-m-success pf-m-inline pf-u-mb-md" role="alert">
+        <div class="pf-c-alert__icon"><i class="fas fa-fw fa-check-circle" aria-hidden="true"></i></div>
+        <p class="pf-c-alert__title">{{ success }}</p>
+      </div>
+
+      <div v-if="!loading" class="pf-c-card pf-u-mb-lg">
+        <div class="pf-c-card__body">
+          <h2 class="pf-c-title pf-m-lg pf-u-mb-md">Registered email</h2>
+          <p class="pf-u-mb-sm">A verified email is required to enable browser verification.</p>
+          <div class="pf-c-form pf-u-mb-sm" style="max-width: 480px;">
+            <div class="pf-c-form__group">
+              <label class="pf-c-form__label" for="security-email">
+                <span class="pf-c-form__label-text">Email address</span>
+              </label>
+              <input id="security-email" class="pf-c-form-control" type="email" v-model="email" autocomplete="email" placeholder="operator@example.com">
+              <p class="pf-c-form__helper-text" v-if="profileEmail">
+                Current verified address: <strong>{{ profileEmail }}</strong>
+                <span v-if="emailVerified" class="pf-c-label pf-m-green pf-u-ml-sm"><i class="fas fa-check"></i>Verified</span>
+                <span v-else class="pf-c-label pf-m-orange pf-u-ml-sm">Not verified</span>
+              </p>
+            </div>
+            <div class="pf-c-form__group pf-m-action">
+              <button class="pf-c-button pf-m-secondary" type="button" @click="sendVerificationCode" :disabled="emailLoading">
+                <span v-if="emailLoading"><i class="fas fa-spinner fa-spin pf-u-mr-sm"></i>Sending...</span>
+                <span v-else><i class="fas fa-paper-plane pf-u-mr-sm"></i>Send verification code</span>
+              </button>
+            </div>
+            <div v-if="codeSent" class="pf-c-form__group">
+              <label class="pf-c-form__label" for="security-code">
+                <span class="pf-c-form__label-text">Verification code</span>
+              </label>
+              <input id="security-code" class="pf-c-form-control" type="text" v-model="code" autocomplete="one-time-code" inputmode="numeric" placeholder="Code from email">
+              <div class="pf-c-form__group pf-m-action">
+                <button class="pf-c-button pf-m-secondary pf-u-mt-sm" type="button" @click="verifyEmailCode" :disabled="codeLoading">
+                  <span v-if="codeLoading"><i class="fas fa-spinner fa-spin pf-u-mr-sm"></i>Verifying...</span>
+                  <span v-else><i class="fas fa-check pf-u-mr-sm"></i>Verify code</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div v-if="!loading && emailVerified" class="pf-c-card pf-u-mb-lg">
+        <div class="pf-c-card__body">
+          <h2 class="pf-c-title pf-m-lg pf-u-mb-md">Require verification for new browsers</h2>
+          <p class="pf-u-mb-sm">
+            When enabled, logging in from a browser that has not completed email verification requires a single-use code
+            sent to your registered address. Verified browsers keep access until you forget this device.
+          </p>
+          <div class="pf-c-check">
+            <input id="mfa-toggle" class="pf-c-check__input" type="checkbox" v-model="mfaEnabled" @change="toggleMfa">
+            <label class="pf-c-check__label" for="mfa-toggle">Require a single-use email code on new browsers</label>
+          </div>
+        </div>
+      </div>
+
+      <div v-if="!loading" class="pf-c-card">
+        <div class="pf-c-card__body">
+          <h2 class="pf-c-title pf-m-lg pf-u-mb-md">This browser</h2>
+          <p class="pf-u-mb-sm">
+            Forgetting this browser revokes its trusted status, so the next login from it will require the email code again.
+          </p>
+          <button class="pf-c-button pf-m-danger pf-m-outline" type="button" @click="forgetDevice" :disabled="deviceLoading">
+            <span v-if="deviceLoading"><i class="fas fa-spinner fa-spin pf-u-mr-sm"></i>Forgetting...</span>
+            <span v-else><i class="fas fa-eraser pf-u-mr-sm"></i>Forget this browser</span>
+          </button>
+        </div>
+      </div>
+    </div>`,
+  data: function() {
+    return {
+      loading: true,
+      error: '',
+      success: '',
+      email: '',
+      code: '',
+      profileEmail: '',
+      emailVerified: false,
+      mfaEnabled: false,
+      codeSent: false,
+      emailLoading: false,
+      codeLoading: false,
+      deviceLoading: false
+    };
+  },
+  methods: {
+    loadProfile: async function() {
+      this.loading = true;
+      try {
+        var profile = await bffFetch('/flagship/api/auth/profile');
+        this.profileEmail = profile.email || '';
+        this.email = this.profileEmail;
+        this.emailVerified = !!profile.email_verified_at;
+        this.mfaEnabled = profile.mfa_email_enabled === true;
+      } catch (e) {
+        this.error = e.message;
+      } finally {
+        this.loading = false;
+      }
+    },
+    sendVerificationCode: async function() {
+      this.error = '';
+      this.success = '';
+      if (!this.email || this.email.indexOf('@') === -1) {
+        this.error = 'Enter a valid email address first.';
+        return;
+      }
+      this.emailLoading = true;
+      try {
+        await bffFetch('/flagship/api/auth/profile/email/request', {
+          method: 'POST',
+          body: JSON.stringify({ email: this.email })
+        });
+        this.codeSent = true;
+        this.success = 'Verification code sent.';
+      } catch (e) {
+        this.error = e.message;
+      } finally {
+        this.emailLoading = false;
+      }
+    },
+    verifyEmailCode: async function() {
+      this.error = '';
+      this.success = '';
+      if (!this.code) {
+        this.error = 'Enter the verification code first.';
+        return;
+      }
+      this.codeLoading = true;
+      try {
+        await bffFetch('/flagship/api/auth/profile/email/confirm', {
+          method: 'POST',
+          body: JSON.stringify({ code: this.code })
+        });
+        this.codeSent = false;
+        this.code = '';
+        this.emailVerified = true;
+        this.profileEmail = this.email;
+        this.success = 'Email verified. You can now enable browser verification.';
+      } catch (e) {
+        this.error = e.message;
+      } finally {
+        this.codeLoading = false;
+      }
+    },
+    toggleMfa: async function() {
+      this.error = '';
+      this.success = '';
+      var wanted = this.mfaEnabled;
+      try {
+        var profile = await bffFetch('/flagship/api/auth/profile', {
+          method: 'PUT',
+          body: JSON.stringify({ email: this.email, mfa_email_enabled: wanted })
+        });
+        this.mfaEnabled = profile.mfa_email_enabled === true;
+        this.success = wanted ? 'Browser verification enabled.' : 'Browser verification disabled.';
+      } catch (e) {
+        this.mfaEnabled = !wanted;
+        this.error = e.message;
+      }
+    },
+    forgetDevice: async function() {
+      this.error = '';
+      this.success = '';
+      this.deviceLoading = true;
+      try {
+        await bffFetch('/flagship/api/auth/profile/device/forget', {
+          method: 'POST'
+        });
+        this.success = 'This browser was forgotten. The next login from it will require a verification code.';
+      } catch (e) {
+        this.error = e.message;
+      } finally {
+        this.deviceLoading = false;
+      }
+    }
+  },
+  mounted: function() {
+    this.loadProfile();
+  }
+};
+
 var routes = [
   { path: '/', redirect: '/dashboard' },
   { path: '/dashboard', component: DashboardView },
@@ -3551,6 +3823,7 @@ var routes = [
   { path: '/backups/:id', component: BackupDetailView },
   { path: '/jobs', component: JobsView },
   { path: '/jobs/:id', component: JobDetailView },
+  { path: '/security', component: SecurityView },
   { path: '/change-password', component: ChangePasswordView }
 ];
 
@@ -3717,6 +3990,7 @@ var app = Vue.createApp({
 
 app.component('login-view', LoginView);
 app.component('change-password-standalone', ChangePasswordStandaloneView);
+app.component('security-view', SecurityView);
 
 app.use(router);
 app.mount('#app');

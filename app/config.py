@@ -36,6 +36,14 @@ class Config:
     FLAGSHIP_SMTP_FROM = os.environ.get("FLAGSHIP_SMTP_FROM", "")
     FLAGSHIP_SMTP_STARTTLS = _env_bool("FLAGSHIP_SMTP_STARTTLS", True)
 
+    # Email verification for untrusted browsers (opt-in per operator).
+    TRUSTED_DEVICE_DAYS = int(os.environ.get("FLAGSHIP_TRUSTED_DEVICE_DAYS", "30"))
+    MFA_VERIFY_MAX_ATTEMPTS = int(os.environ.get("FLAGSHIP_MFA_VERIFY_MAX_ATTEMPTS", "5"))
+    MFA_VERIFY_WINDOW_SECONDS = int(os.environ.get("FLAGSHIP_MFA_VERIFY_WINDOW_SECONDS", "300"))
+    MFA_RESEND_COOLDOWN_SECONDS = int(os.environ.get("FLAGSHIP_MFA_RESEND_COOLDOWN_SECONDS", "30"))
+    MFA_RESEND_MAX_ATTEMPTS = int(os.environ.get("FLAGSHIP_MFA_RESEND_MAX_ATTEMPTS", "5"))
+    MFA_RESEND_WINDOW_SECONDS = int(os.environ.get("FLAGSHIP_MFA_RESEND_WINDOW_SECONDS", "3600"))
+
     # Session security settings
     SESSION_COOKIE_NAME = "flagship_session"
     SESSION_COOKIE_HTTPONLY = True  # Prevent JavaScript access

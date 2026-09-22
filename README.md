@@ -27,6 +27,7 @@ Current UI areas include:
 - Backups
 - Jobs
 - Change password
+- Security
 
 ### Operator authorization
 
@@ -58,6 +59,77 @@ Current instance detail capabilities include:
 | `vue` + `vue-router` | CDN (unpkg) | Frontend framework, loaded at runtime |
 
 No build step is required. The frontend runs entirely from the HTML template served by Flask.
+
+## Operator security and browser verification
+
+Each operator owns a **verified email address**. The address is shown and edited
+from the **Security** page (side menu, next to *Change Password*).
+
+### SMTP configuration
+
+Email verification is delivered through SMTP using environment variables:
+
+| Variable | Required | Notes |
+|----------|----------|-------|
+| `FLAGSHIP_SMTP_HOST` | yes (verification in use) | SMTP relay host |
+| `FLAGSHIP_SMTP_PORT` | no | Defaults to `587` |
+| `FLAGSHIP_SMTP_STARTTLS` | no | Defaults to `1`, disables with `0` (implicit TLS only) |
+| `FLAGSHIP_SMTP_USERNAME` | no | Username for authenticated SMTP |
+| `FLAGSHIP_SMTP_PASSWORD` | no | Password for authenticated SMTP |
+| `FLAGSHIP_SMTP_FROM` | yes (verification in use) | Envelope sender used for verification mail |
+
+If `FLAGSHIP_SMTP_HOST` or `FLAGSHIP_SMTP_FROM` is empty, login on an untrusted
+browser **fails closed**: the account cannot sign in from that browser until
+SMTP is configured, because the single-use code cannot be delivered.
+
+### Enrollment
+
+1. Log in as the operator.
+2. Open **Security**.
+3. Set the operator email and click *Send verification code*.
+4. Enter the code and click *Verify code*.
+5. Enable *Require a single-use email code on new browsers*.
+
+From that point on, signing in from any browser **without** the trusted-device
+cookie requires a single-use code that is emailed to the account. Browsers that
+completed the flow once keep a signed trusted-device cookie and skip the code
+on later logins, including over logout.
+
+Notes:
+
+- Each code is single-use and expires after 10 minutes.
+- Code delivery is reattempted once already issued; verification codes are
+  rate-limited per username and source IP, and a failed or repeated code does
+  not open a session.
+- SMTP credentials, the code, and the account email are never written to logs.
+- The Flagship audit log records that a verification code was issued or
+  consumed, without the code itself or the destination address.
+
+### Break-glass recovery
+
+If the operator loses access to the verified email, recovery is **explicit and
+auditable** and requires platform administrative access:
+
+1. The operator still trusts an existing session on some browser: disable the
+   flag from the **Security** page, enroll a fresh verified email, then
+   re-enable it.
+
+2. Otherwise, a host administrator clears the flag in the Admiral database
+   (the operator profile row is preserved, only `mfa_email_enabled` changes):
+
+   ```console
+   $ sudo -u postgres psql admiral -c \
+     "UPDATE admin_users SET mfa_email_enabled = false WHERE username = 'OPERATOR';"
+   ```
+
+   That file-level change is visible to platform admins in the PostgreSQL
+   statement log and in subsequent Flagship request logs. After recovery
+   completes, re-enable the flag from the **Security** page and rotate the
+   operator password as a precaution.
+
+There is deliberately no self-service "reset this code" path: an attacker who
+can read the email inbox or relay must still know the password, and the
+rate-limiter and fail-closed behavior remain active during every attempt.
 
 ## Installation model
 

@@ -142,6 +142,231 @@ describe('LoginView', function() {
 
     setFetch(originalFetch);
   });
+
+  it('switches to MFA step when login requires verification', async function() {
+    const originalFetch = global.fetch;
+    setFetch(async () => {
+      return mockFetchResponse({ mfa_required: true });
+    });
+
+    const ctx = {
+      username: 'userA',
+      password: 'passwordA',
+      loading: false,
+      error: '',
+      mfaRequired: false,
+      mfaCode: 'old-code',
+    };
+
+    await LoginView.methods.login.call(ctx);
+
+    expect(ctx.mfaRequired).to.be.true;
+    expect(ctx.mfaCode).to.equal('');
+
+    setFetch(originalFetch);
+  });
+
+  it('confirms MFA with username, password and code', async function() {
+    const originalFetch = global.fetch;
+    let confirmPayload = null;
+
+    setFetch(async (url, opts) => {
+      expect(url).to.equal('/flagship/api/auth/mfa/confirm');
+      confirmPayload = JSON.parse(opts.body);
+      return mockFetchResponse({ username: 'operator1' });
+    });
+
+    originalWin.__location_href = '';
+    const ctx = {
+      username: 'userA',
+      password: 'passwordA',
+      mfaCode: '12345678',
+      mfaLoading: false,
+      error: '',
+    };
+
+    await LoginView.methods.confirmMfa.call(ctx);
+
+    expect(ctx.mfaLoading).to.be.false;
+    expect(confirmPayload).to.deep.equal({
+      username: 'userA',
+      password: 'passwordA',
+      code: '12345678',
+    });
+    expect(originalWin.__location_href).to.equal('/');
+
+    setFetch(originalFetch);
+  });
+
+  it('handles confirm MFA failure', async function() {
+    const originalFetch = global.fetch;
+    setFetch(async () => {
+      return mockFetchResponse({ error: 'invalid verification code' }, false, 401);
+    });
+
+    const ctx = {
+      username: 'userA',
+      password: 'passwordA',
+      mfaCode: '00000000',
+      mfaLoading: false,
+      error: '',
+    };
+
+    await LoginView.methods.confirmMfa.call(ctx);
+
+    expect(ctx.mfaLoading).to.be.false;
+    expect(ctx.error).to.equal('invalid verification code');
+
+    setFetch(originalFetch);
+  });
+
+  it('resends MFA code without clearing the pending state', async function() {
+    const originalFetch = global.fetch;
+    let resendPayload = null;
+
+    setFetch(async (url, opts) => {
+      expect(url).to.equal('/flagship/api/auth/login');
+      resendPayload = JSON.parse(opts.body);
+      return mockFetchResponse({ mfa_required: true });
+    });
+
+    const ctx = {
+      username: 'userA',
+      password: 'passwordA',
+      mfaRequired: true,
+      resending: false,
+      error: '',
+    };
+
+    await LoginView.methods.resendMfa.call(ctx);
+
+    expect(ctx.resending).to.be.false;
+    expect(ctx.mfaRequired).to.be.true;
+    expect(resendPayload).to.deep.equal({ username: 'userA', password: 'passwordA' });
+
+    setFetch(originalFetch);
+  });
+});
+
+describe('SecurityView', function() {
+  it('initializes data correctly', function() {
+    const data = SecurityView.data();
+    expect(data.loading).to.be.true;
+    expect(data.mfaEnabled).to.be.false;
+    expect(data.emailVerified).to.be.false;
+    expect(data.codeSent).to.be.false;
+  });
+
+  it('loads the operator profile', async function() {
+    const originalFetch = global.fetch;
+    setFetch(async () => {
+      return mockFetchResponse({
+        email: 'operator@example.test',
+        email_verified_at: '2026-01-01T00:00:00Z',
+        mfa_email_enabled: true,
+      });
+    });
+
+    const ctx = SecurityView.data();
+    await SecurityView.methods.loadProfile.call(ctx);
+
+    expect(ctx.loading).to.be.false;
+    expect(ctx.profileEmail).to.equal('operator@example.test');
+    expect(ctx.email).to.equal('operator@example.test');
+    expect(ctx.emailVerified).to.be.true;
+    expect(ctx.mfaEnabled).to.be.true;
+
+    setFetch(originalFetch);
+  });
+
+  it('sends a verification code', async function() {
+    const originalFetch = global.fetch;
+    let reqPayload = null;
+    setFetch(async (url, opts) => {
+      expect(url).to.equal('/flagship/api/auth/profile/email/request');
+      reqPayload = JSON.parse(opts.body);
+      return mockFetchResponse({ status: 'verification_sent' });
+    });
+
+    const ctx = {
+      email: 'operator@example.test',
+      codeSent: false,
+      emailLoading: false,
+      error: '',
+      success: '',
+    };
+    await SecurityView.methods.sendVerificationCode.call(ctx);
+
+    expect(ctx.codeSent).to.be.true;
+    expect(reqPayload).to.deep.equal({ email: 'operator@example.test' });
+
+    setFetch(originalFetch);
+  });
+
+  it('verifies the email code', async function() {
+    const originalFetch = global.fetch;
+    let reqPayload = null;
+    setFetch(async (url, opts) => {
+      expect(url).to.equal('/flagship/api/auth/profile/email/confirm');
+      reqPayload = JSON.parse(opts.body);
+      return mockFetchResponse({ email: 'operator@example.test', email_verified_at: '2026-01-01T00:00:00Z', mfa_email_enabled: false });
+    });
+
+    const ctx = {
+      email: 'operator@example.test',
+      code: '12345678',
+      codeSent: true,
+      codeLoading: false,
+      emailVerified: false,
+      profileEmail: '',
+      error: '',
+      success: '',
+    };
+    await SecurityView.methods.verifyEmailCode.call(ctx);
+
+    expect(ctx.emailVerified).to.be.true;
+    expect(ctx.profileEmail).to.equal('operator@example.test');
+    expect(ctx.codeSent).to.be.false;
+    expect(reqPayload).to.deep.equal({ code: '12345678' });
+
+    setFetch(originalFetch);
+  });
+
+  it('toggles MFA and reverts on failure', async function() {
+    const originalFetch = global.fetch;
+    setFetch(async () => {
+      return mockFetchResponse({ error: 'verify email before enabling MFA' }, false, 400);
+    });
+
+    const ctx = {
+      email: 'operator@example.test',
+      mfaEnabled: true,
+      error: '',
+      success: '',
+    };
+    await SecurityView.methods.toggleMfa.call(ctx);
+
+    expect(ctx.mfaEnabled).to.be.false;
+    expect(ctx.error).to.include('verify email');
+
+    setFetch(originalFetch);
+  });
+
+  it('forgets the current device', async function() {
+    const originalFetch = global.fetch;
+    setFetch(async (url) => {
+      expect(url).to.equal('/flagship/api/auth/profile/device/forget');
+      return mockFetchResponse({ status: 'device_forgotten' });
+    });
+
+    const ctx = SecurityView.data();
+    await SecurityView.methods.forgetDevice.call(ctx);
+
+    expect(ctx.deviceLoading).to.be.false;
+    expect(ctx.success).to.include('forgotten');
+
+    setFetch(originalFetch);
+  });
 });
 
 describe('DashboardView', function() {

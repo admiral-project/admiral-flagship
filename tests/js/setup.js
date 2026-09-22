@@ -105,6 +105,7 @@ var exposed = [
   'JobDetailView',
   'ChangePasswordView',
   'ChangePasswordStandaloneView',
+  'SecurityView',
   'bffFetch',
   '__location_href',
   '__location_reload',

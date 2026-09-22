@@ -2,10 +2,14 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import logging
+import os
 import time
 
 import requests
 from flask import Blueprint, current_app, jsonify, request, session
+
+from app.mfa import browser_is_trusted, clear_trusted_device, send_code, set_trusted_device, verify_code
+from app.rate_limit import RateLimiter
 
 logger = logging.getLogger("admiral-flagship")
 
@@ -15,6 +19,18 @@ AUTH_ME_RETRY_DELAY_SECONDS = 0.2
 SESSION_STARTED_AT_KEY = "session_started_at"
 SESSION_ACTIVITY_AT_KEY = "session_activity_at"
 SESSION_LOGIN_AT_KEY = "session_login_at"
+
+# Per-process in-memory limits for the email verification step. The login
+# password step is already limited through admirald; these cover the second
+# factor on the untrusted-browser path.
+MFA_VERIFY_MAX_ATTEMPTS = int(os.environ.get("FLAGSHIP_MFA_VERIFY_MAX_ATTEMPTS", "5"))
+MFA_VERIFY_WINDOW_SECONDS = int(os.environ.get("FLAGSHIP_MFA_VERIFY_WINDOW_SECONDS", "300"))
+MFA_RESEND_MAX_ATTEMPTS = int(os.environ.get("FLAGSHIP_MFA_RESEND_MAX_ATTEMPTS", "5"))
+MFA_RESEND_WINDOW_SECONDS = int(os.environ.get("FLAGSHIP_MFA_RESEND_WINDOW_SECONDS", "3600"))
+MFA_RESEND_COOLDOWN_SECONDS = int(os.environ.get("FLAGSHIP_MFA_RESEND_COOLDOWN_SECONDS", "30"))
+
+mfa_verify_limiter = RateLimiter(max_attempts=MFA_VERIFY_MAX_ATTEMPTS, window_seconds=MFA_VERIFY_WINDOW_SECONDS)
+mfa_resend_limiter = RateLimiter(max_attempts=MFA_RESEND_MAX_ATTEMPTS, window_seconds=MFA_RESEND_WINDOW_SECONDS)
 
 
 def _extract_error(err):
@@ -27,6 +43,16 @@ def _extract_error(err):
 
 def _generic_auth_failure(status=401):
     return jsonify({"error": "unauthorized"}), status
+
+
+def _mfa_resend_allowed(username, ip):
+    """Enforce per-account cooldown and resend limits for the email code."""
+    now = int(time.time())
+    sent_at = session.get("mfa_code_sent_at") or session.get("mfa_pending_at")
+    if sent_at and now - int(sent_at) < MFA_RESEND_COOLDOWN_SECONDS:
+        return False
+    allowed, _ = mfa_resend_limiter.is_allowed(f"mfa-resend:{username}:{ip}")
+    return allowed
 
 
 @bp.route("/login", methods=["POST"])
@@ -52,17 +78,34 @@ def login():
 
     try:
         result = login_admin(data["username"], data["password"], verify_only=True)
-        if result.get("mfa_email_enabled"):
-            from app.mfa import send_code
-
+        username = data["username"]
+        if result.get("mfa_email_enabled") and not browser_is_trusted(username):
+            # Unknown browser: require single-use email verification before
+            # creating an admin session.
+            if not _mfa_resend_allowed(username, ip):
+                logger.warning(
+                    "mfa code resend limited",
+                    extra={"username": username, "ip": ip},
+                )
+                return (
+                    jsonify({"error": "Too many verification code requests. Try again later."}),
+                    429,
+                )
             session.clear()
-            session["mfa_pending_username"] = data["username"]
+            session["mfa_pending_username"] = username
             session["mfa_pending_at"] = int(time.time())
             try:
                 send_code(result["email"], "login")
             except Exception:
-                logger.warning("MFA email delivery failed", extra={"username": data["username"]})
+                logger.warning(
+                    "mfa code delivery failed, login denied",
+                    extra={"username": username, "ip": ip},
+                )
                 return _generic_auth_failure(503)
+            logger.info(
+                "mfa code issued",
+                extra={"username": username, "ip": ip, "purpose": "login"},
+            )
             # The browser resubmits the password with the code. No bearer token
             # is kept in the Flask session before MFA completes.
             return jsonify({"mfa_required": True})
@@ -109,18 +152,36 @@ def confirm_mfa():
     username = data.get("username", "")
     password = data.get("password", "")
     code = str(data.get("code", ""))
+    ip = request.remote_addr or "unknown"
     if not username or not password or not code or session.get("mfa_pending_username") != username:
         return _generic_auth_failure()
-    from app.mfa import verify_code
 
-    if not verify_code(code, "login"):
+    scope = f"mfa-verify:{username}:{ip}"
+    allowed, remaining = mfa_verify_limiter.is_allowed(scope)
+    if not allowed:
+        session.clear()
+        logger.warning(
+            "mfa verification locked out",
+            extra={"username": username, "ip": ip, "remaining_seconds": remaining},
+        )
+        return jsonify({"error": f"Too many verification attempts. Try again in {remaining} second(s)."}), 429
+
+    outcome = verify_code(code, "login")
+    if outcome == "expired":
+        logger.warning("mfa code expired", extra={"username": username, "ip": ip})
         return _generic_auth_failure()
+    if outcome != "ok":
+        logger.warning("mfa verification failed", extra={"username": username, "ip": ip})
+        return _generic_auth_failure()
+
     from app.admiral_client import login_admin
 
     try:
         result = login_admin(username, password)
     except requests.RequestException:
+        logger.warning("mfa confirm login failed", extra={"username": username, "ip": ip})
         return _generic_auth_failure()
+
     session.clear()
     session.permanent = True
     from app.csrf import _generate_token
@@ -132,7 +193,14 @@ def confirm_mfa():
     session[SESSION_STARTED_AT_KEY] = int(time.time())
     session[SESSION_LOGIN_AT_KEY] = session[SESSION_STARTED_AT_KEY]
     session[SESSION_ACTIVITY_AT_KEY] = session[SESSION_STARTED_AT_KEY]
-    return jsonify({"status": "ok", "username": username})
+    # The login endpoint resets the password-attempt limiter on success; reset
+    # the equivalent verification limiter scope here.
+    mfa_verify_limiter.reset(scope)
+    logger.info("mfa verified and login ok", extra={"username": username, "ip": ip})
+
+    response = jsonify({"status": "ok", "username": username})
+    set_trusted_device(response, username)
+    return response
 
 
 @bp.route("/profile", methods=["GET", "PUT"])
@@ -171,14 +239,19 @@ def request_profile_email():
     email = str((request.get_json() or {}).get("email", "")).strip().lower()
     if not email or "@" not in email:
         return jsonify({"error": "valid email required"}), 400
+    username = session.get("admin_username", "unknown")
+    ip = request.remote_addr or "unknown"
+    if not _mfa_resend_allowed(username, ip):
+        logger.warning("email verification resend limited", extra={"username": username, "ip": ip})
+        return jsonify({"error": "Too many verification code requests. Try again later."}), 429
+    session.pop("email_verification_address", None)
     session["email_verification_address"] = email
-    from app.mfa import send_code
-
     try:
         send_code(email, "email verification")
     except Exception:
-        logger.warning("profile email delivery failed", extra={"username": session.get("admin_username")})
+        logger.warning("profile email delivery failed", extra={"username": username})
         return jsonify({"error": "email verification is unavailable"}), 503
+    logger.info("email verification code issued", extra={"username": username, "ip": ip})
     return jsonify({"status": "verification_sent"})
 
 
@@ -187,9 +260,14 @@ def confirm_profile_email():
     if "admin_token" not in session:
         return _generic_auth_failure()
     data = request.get_json() or {}
-    from app.mfa import verify_code
-
-    if not verify_code(str(data.get("code", "")), "email verification"):
+    username = session.get("admin_username", "unknown")
+    ip = request.remote_addr or "unknown"
+    outcome = verify_code(str(data.get("code", "")), "email verification")
+    if outcome == "expired":
+        logger.warning("email verification code expired", extra={"username": username, "ip": ip})
+        return jsonify({"error": "invalid verification code"}), 400
+    if outcome != "ok":
+        logger.warning("email verification failed", extra={"username": username, "ip": ip})
         return jsonify({"error": "invalid verification code"}), 400
     email = session.pop("email_verification_address", "")
     if not email:
@@ -197,6 +275,7 @@ def confirm_profile_email():
     from app.admiral_client import update_operator_profile
 
     try:
+        logger.info("email verified", extra={"username": username, "ip": ip})
         return jsonify(update_operator_profile(email, True, False))
     except requests.RequestException:
         return jsonify({"error": "profile update failed"}), 400
@@ -217,6 +296,17 @@ def disable_profile_mfa():
         return jsonify(update_operator_profile(current.get("email", ""), bool(current.get("email_verified_at")), False))
     except requests.RequestException:
         return _generic_auth_failure()
+
+
+@bp.route("/profile/device/forget", methods=["POST"])
+def forget_device():
+    if "admin_token" not in session:
+        return _generic_auth_failure()
+    username = session.get("admin_username", "unknown")
+    ip = request.remote_addr or "unknown"
+    logger.info("trusted device forgotten", extra={"username": username, "ip": ip})
+    response = jsonify({"status": "device_forgotten"})
+    return clear_trusted_device(response)
 
 
 @bp.route("/logout", methods=["POST"])

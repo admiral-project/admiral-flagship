@@ -13,6 +13,19 @@ function csrfToken() {
   return meta ? meta.getAttribute('content') : '';
 }
 
+function newProvisionIdempotencyKey() {
+  if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+    return window.crypto.randomUUID();
+  }
+  var entropy = new Uint32Array(4);
+  if (window.crypto && typeof window.crypto.getRandomValues === 'function') {
+    window.crypto.getRandomValues(entropy);
+  } else {
+    for (var i = 0; i < entropy.length; i++) entropy[i] = Math.floor(Math.random() * 0xffffffff);
+  }
+  return Array.prototype.map.call(entropy, function(value) { return value.toString(16); }).join('-');
+}
+
 async function bffFetch(url, opts) {
   opts = opts || {};
   var headers = __({ 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }, opts.headers || {});
@@ -2060,7 +2073,14 @@ var InstanceCreateView = {
       nodes: [],
       tiers: [],
       form: { customer_id: '', app_id: '', tier_name: '', node_id: '' },
+      idempotencyKey: newProvisionIdempotencyKey(),
     };
+  },
+  watch: {
+    'form.customer_id': function() { this.idempotencyKey = newProvisionIdempotencyKey(); },
+    'form.app_id': function() { this.idempotencyKey = newProvisionIdempotencyKey(); },
+    'form.tier_name': function() { this.idempotencyKey = newProvisionIdempotencyKey(); },
+    'form.node_id': function() { this.idempotencyKey = newProvisionIdempotencyKey(); },
   },
   computed: {
     activeApps: function() {
@@ -2112,7 +2132,8 @@ var InstanceCreateView = {
             customer_id: this.form.customer_id,
             app_definition_name: this.form.app_id,
             tier_name: this.form.tier_name,
-            node_id: this.form.node_id
+            node_id: this.form.node_id,
+            idempotency_key: this.idempotencyKey
           })
         });
         storeProvisionResultSnapshot(result);

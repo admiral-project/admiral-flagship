@@ -124,9 +124,10 @@ def test_api_post_success(app):
         mock_resp = Mock()
         mock_resp.json.return_value = {"status": "ok"}
         mock_resp.status_code = 200
-        with patch("app.admiral_client.requests.post", return_value=mock_resp):
-            result = api_post("/some/path", data={"data": 1})
+        with patch("app.admiral_client.requests.post", return_value=mock_resp) as mock_post:
+            result = api_post("/some/path", data={"data": 1}, extra_headers={"Idempotency-Key": "stable-1"})
             assert result == {"status": "ok"}
+            assert mock_post.call_args.kwargs["headers"]["Idempotency-Key"] == "stable-1"
 
 
 def test_api_post_failure(app):

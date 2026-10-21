@@ -69,10 +69,12 @@ def api_get_text(path):
         raise
 
 
-def api_post(path, data=None):
+def api_post(path, data=None, extra_headers=None):
     url = current_app.config["ADMIRAL_API_URL"] + path
+    headers = _headers(path)
+    headers.update(extra_headers or {})
     try:
-        resp = requests.post(url, headers=_headers(path), json=data, verify=_verify(), timeout=60)
+        resp = requests.post(url, headers=headers, json=data, verify=_verify(), timeout=60)
         resp.raise_for_status()
         return resp.json()
     except requests.RequestException as e:

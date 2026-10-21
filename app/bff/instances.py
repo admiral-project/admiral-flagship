@@ -226,7 +226,7 @@ def provision_instance():
     from app.security import sanitize_error_message
 
     data = request.get_json(silent=True) or {}
-    required = ["app_definition_name", "tier_name", "customer_id"]
+    required = ["app_definition_name", "tier_name", "customer_id", "idempotency_key"]
     missing = [key for key in required if not data.get(key)]
     if missing:
         return jsonify({"error": ", ".join(missing) + " required"}), 400
@@ -244,7 +244,17 @@ def provision_instance():
         if node_id:
             validate_resource_id(node_id, "node")
             body["node_id"] = node_id
-        result = api_post("/api/v1/customer-apps", body)
+        raw_idempotency_key = data["idempotency_key"]
+        if not isinstance(raw_idempotency_key, str):
+            return jsonify({"error": "valid idempotency_key is required"}), 400
+        idempotency_key = raw_idempotency_key.strip()
+        if (
+            not idempotency_key
+            or len(idempotency_key.encode("utf-8")) > 255
+            or any(ord(char) < 32 or 127 <= ord(char) <= 159 for char in idempotency_key)
+        ):
+            return jsonify({"error": "valid idempotency_key is required"}), 400
+        result = api_post("/api/v1/customer-apps", body, extra_headers={"Idempotency-Key": idempotency_key})
         return jsonify(result)
     except ValueError as e:
         return jsonify({"error": str(e)}), 400

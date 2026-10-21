@@ -368,7 +368,12 @@ def test_provision_instance_exception(client):
     with patch("app.bff.instances.api_post", side_effect=Exception("fail")):
         resp = client.post(
             "/flagship/api/instances/provision",
-            json={"app_definition_name": "app1", "tier_name": "t1", "customer_id": "c1"},
+            json={
+                "app_definition_name": "app1",
+                "tier_name": "t1",
+                "customer_id": "c1",
+                "idempotency_key": "internal-provision-failure",
+            },
         )
         assert resp.status_code == 502
 

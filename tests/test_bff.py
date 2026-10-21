@@ -24,7 +24,7 @@ def _mock_api_get(data):
 def _mock_api_post(data):
     """Helper to mock admirald_client.api_post with static data."""
 
-    def mock_post(path, body=None):
+    def mock_post(path, body=None, extra_headers=None):
         return data
 
     return mock_post
@@ -227,25 +227,33 @@ class TestBFFInstances:
             assert resp.status_code == 502
 
     def test_provision_instance(self, client):
-        with patch(
-            "app.bff.instances.api_post",
-            _mock_api_post({"operation_id": "op1", "status": "queued"}),
-        ):
+        with patch("app.bff.instances.api_post", return_value={"operation_id": "op1", "status": "queued"}) as api_post:
             resp = client.post(
                 "/flagship/api/instances/provision",
                 json={
                     "app_definition_name": "whoami",
                     "tier_name": "starter",
                     "customer_id": "cust1",
+                    "idempotency_key": "provision-attempt-1",
                 },
             )
             assert resp.status_code == 200
             assert resp.json["operation_id"] == "op1"
+            api_post.assert_called_once_with(
+                "/api/v1/customer-apps",
+                {"app_definition_name": "whoami", "tier_name": "starter", "customer_id": "cust1"},
+                extra_headers={"Idempotency-Key": "provision-attempt-1"},
+            )
 
     def test_provision_rejects_invalid_customer_id(self, client):
         resp = client.post(
             "/flagship/api/instances/provision",
-            json={"app_definition_name": "whoami", "tier_name": "starter", "customer_id": "../cust"},
+            json={
+                "app_definition_name": "whoami",
+                "tier_name": "starter",
+                "customer_id": "../cust",
+                "idempotency_key": "provision-attempt-2",
+            },
         )
         assert resp.status_code == 400
 
@@ -574,10 +582,11 @@ class TestBFFInstanceMigrate:
 
 class TestBFFProvisionWithLogicalID:
     def test_provision_with_logical_id(self, client):
-        def check_body(path, body=None):
+        def check_body(path, body=None, extra_headers=None):
             assert body is not None
             assert body["logical_instance_id"] == "li_001"
             assert body["node_id"] == "worker-02"
+            assert extra_headers == {"Idempotency-Key": "provision-attempt-3"}
             return {"operation_id": "op1", "status": "queued"}
 
         with patch("app.bff.instances.api_post", check_body):
@@ -589,15 +598,17 @@ class TestBFFProvisionWithLogicalID:
                     "customer_id": "cust1",
                     "logical_instance_id": "li_001",
                     "node_id": "worker-02",
+                    "idempotency_key": "provision-attempt-3",
                 },
             )
             assert resp.status_code == 200
             assert resp.json["operation_id"] == "op1"
 
     def test_provision_accepts_legacy_target_node_id(self, client):
-        def check_body(path, body=None):
+        def check_body(path, body=None, extra_headers=None):
             assert body is not None
             assert body["node_id"] == "worker-02"
+            assert extra_headers == {"Idempotency-Key": "provision-attempt-4"}
             return {"operation_id": "op1", "status": "queued"}
 
         with patch("app.bff.instances.api_post", check_body):
@@ -608,6 +619,7 @@ class TestBFFProvisionWithLogicalID:
                     "tier_name": "starter",
                     "customer_id": "cust1",
                     "target_node_id": "worker-02",
+                    "idempotency_key": "provision-attempt-4",
                 },
             )
             assert resp.status_code == 200

@@ -49,7 +49,10 @@ Current instance detail capabilities include:
 
 ## Dependencies
 
-**All dependencies are available in official repositories — no pip, no npm, no external registries required.**
+Python runtime dependencies are installed from distribution packages; there is
+no npm build step. The browser loads PatternFly and Vue from the unpkg CDN at
+runtime, so the operator must allow access to that CDN or provide an equivalent
+locally hosted asset source.
 
 | Package | Repository | Notes |
 |---------|-----------|-------|
